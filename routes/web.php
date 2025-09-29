@@ -15,6 +15,11 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Analytics
+    Route::get('analytics', function () {
+        return Inertia::render('analytics');
+    })->name('analytics');
 });
 
 // Catch-all route for 404 handling

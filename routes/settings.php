@@ -23,6 +23,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/appearance');
     })->name('appearance.edit');
 
+    Route::get('settings/crawler-analytics', function () {
+        return Inertia::render('settings/crawler-analytics');
+    })->name('crawler-analytics');
+
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 });

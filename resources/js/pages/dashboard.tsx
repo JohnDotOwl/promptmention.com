@@ -1,36 +1,198 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { type BreadcrumbItem, type SharedData } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import { DashboardContent } from '@/components/dashboard/dashboard-content';
+import { usePartialReloadPolling } from '@/hooks/use-smart-polling';
+import WaitlistDialog from '@/components/WaitlistDialog';
+
+interface DashboardMetrics {
+    totalMonitors: number;
+    totalPrompts: number;
+    totalResponses: number;
+    visibilityScore: number;
+    mentionsThisWeek: number;
+    responseRate: number;
+}
+
+interface DashboardChartData {
+    timeline: {
+        labels: string[];
+        datasets: Array<{
+            label: string;
+            data: number[];
+            borderColor: string;
+            backgroundColor: string;
+        }>;
+    };
+    modelUsage: Array<{
+        name: string;
+        value: number;
+        color: string;
+    }>;
+    citedDomains: Array<{
+        domain: string;
+        mentions: number;
+        percentage: number;
+    }>;
+}
+
+interface DashboardActivity {
+    id: number;
+    type: string;
+    title: string;
+    description: string;
+    time: string;
+    icon: string;
+}
+
+interface DashboardProps {
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        avatar?: string;
+        waitlist_joined_at: string | null;
+    };
+    metrics?: DashboardMetrics;
+    chartData?: DashboardChartData;
+    recentActivity?: DashboardActivity[];
+    monitorStatus?: {
+        active: number;
+        pending: number;
+        failed: number;
+        total: number;
+    };
+    queueStatus?: {
+        domain_analysis: { pending: number; processing: number };
+        prompt_generation: { pending: number; processing: number };
+        monitor_setup: { pending: number; processing: number };
+        total_jobs: number;
+    };
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard().url,
+        href: '/dashboard',
     },
 ];
 
 export default function Dashboard() {
+    const {
+        user,
+        metrics,
+        chartData,
+        recentActivity,
+        monitorStatus,
+        queueStatus
+    } = usePage<SharedData & DashboardProps>().props;
+
+    const [showWaitlistDialog, setShowWaitlistDialog] = useState(false);
+
+    // Smart polling for different dashboard sections with different priorities
+    const metricsPolling = usePartialReloadPolling(['metrics'], {
+        interval: 30000, // 30 seconds
+        priority: 'medium',
+        pauseWhenHidden: true,
+        shouldPoll: () => true // Always poll metrics
+    });
+
+    const realtimePolling = usePartialReloadPolling(['recentActivity', 'queueStatus'], {
+        interval: 10000, // 10 seconds
+        priority: 'high',
+        pauseWhenHidden: true,
+        shouldPoll: () => (queueStatus?.total_jobs ?? 0) > 0 // Poll when there are active jobs
+    });
+
+    const chartPolling = usePartialReloadPolling(['chartData'], {
+        interval: 60000, // 1 minute
+        priority: 'low',
+        pauseWhenHidden: true,
+        shouldPoll: () => true
+    });
+
+    const monitorStatusPolling = usePartialReloadPolling(['monitorStatus'], {
+        interval: 15000, // 15 seconds
+        priority: 'medium',
+        pauseWhenHidden: true,
+        shouldPoll: () => (monitorStatus?.pending ?? 0) > 0
+    });
+
+    // Start polling based on conditions
+    useEffect(() => {
+        // Always poll metrics and charts
+        metricsPolling.startPartialPolling();
+        chartPolling.startPartialPolling();
+
+        // Poll real-time data if there are active jobs
+        if ((queueStatus?.total_jobs ?? 0) > 0) {
+            realtimePolling.startPartialPolling();
+        }
+
+        // Poll monitor status if there are pending monitors
+        if ((monitorStatus?.pending ?? 0) > 0) {
+            monitorStatusPolling.startPartialPolling();
+        }
+
+        return () => {
+            metricsPolling.stopPolling();
+            realtimePolling.stopPolling();
+            chartPolling.stopPolling();
+            monitorStatusPolling.stopPolling();
+        };
+    }, [queueStatus?.total_jobs, monitorStatus?.pending]);
+
+    // Waitlist dialog logic
+    useEffect(() => {
+        if (user.waitlist_joined_at) {
+            const joinedAt = new Date(user.waitlist_joined_at);
+            const now = new Date();
+            const timeDiff = now.getTime() - joinedAt.getTime();
+            const minutesDiff = timeDiff / (1000 * 60);
+
+            const dialogShown = localStorage.getItem(`waitlist-dialog-shown-${user.id}`);
+            if (minutesDiff <= 5 && !dialogShown) {
+                setShowWaitlistDialog(true);
+                localStorage.setItem(`waitlist-dialog-shown-${user.id}`, 'true');
+            }
+        }
+    }, [user]);
+
+
+    const handleCloseWaitlistDialog = (open: boolean) => {
+        setShowWaitlistDialog(open);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+            <div className="relative z-10 py-6">
+                <div className="px-6">
+                    <DashboardContent
+                        metrics={metrics}
+                        chartData={chartData}
+                        recentActivity={recentActivity}
+                        monitorStatus={monitorStatus}
+                        queueStatus={queueStatus}
+                        isPolling={metricsPolling.isPolling || realtimePolling.isPolling || chartPolling.isPolling}
+                    />
                 </div>
             </div>
+
+            {/* Waitlist Dialog */}
+            {user.waitlist_joined_at && (
+                <WaitlistDialog
+                    open={showWaitlistDialog}
+                    onOpenChange={handleCloseWaitlistDialog}
+                    user={{
+                        name: user.name,
+                        email: user.email,
+                        avatar: user.avatar,
+                        waitlist_joined_at: user.waitlist_joined_at,
+                    }}
+                />
+            )}
         </AppLayout>
     );
 }

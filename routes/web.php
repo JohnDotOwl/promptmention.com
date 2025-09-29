@@ -17,5 +17,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
+// Catch-all route for 404 handling
+Route::fallback(function () {
+    if (request()->expectsJson()) {
+        return response()->json(['message' => 'Page not found'], 404);
+    }
+
+    return Inertia::render('errors/404', [], 404);
+});
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

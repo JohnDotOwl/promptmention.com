@@ -49,51 +49,51 @@ export const dashboardItems: NavItem[] = [
   // },
 ]
 
-// Monitoring navigation items
+// Monitoring navigation items - Currently disabled until routes are implemented
 export const monitoringItems: NavItem[] = [
-  {
-    title: "Monitors",
-    href: "/monitors",
-    icon: Radar,
-  },
-  {
-    title: "Prompts",
-    href: "/prompts",
-    icon: SquareChevronRight,
-  },
-  {
-    title: "Responses",
-    href: "/responses",
-    icon: MessageCircleMore,
-  },
-  {
-    title: "Citations",
-    href: "/citations",
-    icon: PencilLine,
-  },
+  // {
+  //   title: "Monitors",
+  //   href: "/monitors",
+  //   icon: Radar,
+  // },
+  // {
+  //   title: "Prompts",
+  //   href: "/prompts",
+  //   icon: SquareChevronRight,
+  // },
+  // {
+  //   title: "Responses",
+  //   href: "/responses",
+  //   icon: MessageCircleMore,
+  // },
+  // {
+  //   title: "Citations",
+  //   href: "/citations",
+  //   icon: PencilLine,
+  // },
 ]
 
-// Analytics navigation items
+// Analytics navigation items - Currently disabled until routes are implemented
 export const analyticsItems: NavItem[] = [
-  {
-    title: "Analytics",
-    href: "/analytics",
-    icon: ChartArea,
-  },
-  {
-    title: "Crawlers",
-    href: "/crawlers",
-    icon: Bot,
-  },
+  // {
+  //   title: "Analytics",
+  //   href: "/analytics",
+  //   icon: ChartArea,
+  // },
+  // {
+  //   title: "Crawlers",
+  //   href: "/crawlers",
+  //   icon: Bot,
+  // },
 ]
 
-// Website navigation items
+// Website navigation items - Currently disabled until routes are implemented
 export const websiteItems: NavItem[] = [
-  {
-    title: "Sitemap",
-    href: "/sitemap",
-    icon: ListTree,
-  },
+  // {
+  //   title: "Sitemap",
+  //   href: "/sitemap",
+  //   icon: ListTree,
+  // },
 ]
 
 interface NavGroupProps {

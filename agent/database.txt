@@ -1,0 +1,224 @@
+DATABASE STRUCTURE - PostgreSQL
+
+=== DATABASE: promptmention ===
+--- TABLE: users ---
+COLUMNS:
+- id: bigint
+- email_verified_at: timestamp without time zone
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- waitlist_joined_at: timestamp without time zone
+- remember_token: character varying
+- google_id: character varying
+- name: character varying
+- email: character varying
+- avatar: character varying
+- password: character varying
+
+SAMPLE DATA FOR users (FIRST ROW):
+| id | email_verified_at | created_at | updated_at | waitlist_joined_at | remember_token | google_id | name | email | avatar | password |
+| 2 | test | contact@bistank.com | None | $2y$12$rHx.7RVYuuZaKUxUJ1nm1u5knRhrf8H09A/hObTTHWLMubQRsI9Oi | None | 2025-06-24 01:36:01 | 2025-06-24 01:36:01 | None | None | None |
+
+--- TABLE: password_reset_tokens ---
+COLUMNS:
+- created_at: timestamp without time zone
+- email: character varying
+- token: character varying
+
+Sample data unavailable
+
+--- TABLE: jobs ---
+COLUMNS:
+- attempts: smallint
+- available_at: integer
+- created_at: integer
+- id: bigint
+- reserved_at: integer
+- queue: character varying
+- payload: text
+
+Sample data unavailable
+
+--- TABLE: onboarding_progress ---
+COLUMNS:
+- id: bigint
+- user_id: bigint
+- current_step: integer
+- completed_at: timestamp without time zone
+- website_analysis: json
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- monitor_id: bigint
+- job_role: character varying
+- company_size: character varying
+- language: character varying
+- country: character varying
+- referral_source: character varying
+- company_description: text
+- industry: character varying
+- company_name: character varying
+- company_website: character varying
+- first_name: character varying
+- last_name: character varying
+
+SAMPLE DATA FOR onboarding_progress (FIRST ROW):
+| id | user_id | current_step | completed_at | website_analysis | created_at | updated_at | monitor_id | job_role | company_size | language | country | referral_source | company_description | industry | company_name | company_website | first_name | last_name |
+| 1 | 1 | 3 | 2025-06-24 02:41:30 | test | https://facebook.com | test | test | test | 2-10 | en-GB | DE | google | Log in to Facebook to start sharing and connecting with your friends, family and people you know. | HR Management Software | {'title': 'Facebook – log in or sign up', 'description': 'Log in to Facebook to start sharing and connecting with your friends, family and people you know.', 'industry': 'HR Management Software'} | 2025-06-24 02:40:21 | 2025-06-24 02:41:30 | None |
+
+--- TABLE: prompts ---
+COLUMNS:
+- id: uuid
+- monitor_id: bigint
+- prompt_generation_request_id: uuid
+- response_count: integer
+- visibility_percentage: numeric
+- is_active: boolean
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- generated_by_ai: boolean
+- text: text
+- type: character varying
+- intent: character varying
+- language_code: character varying
+- language_name: character varying
+- language_flag: character varying
+
+Sample data unavailable
+
+--- TABLE: monitors ---
+COLUMNS:
+- id: bigint
+- user_id: bigint
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- analysis_data: json
+- keywords: json
+- competitors: json
+- analyzed_at: timestamp without time zone
+- prompts_generated: integer
+- prompts_generated_at: timestamp without time zone
+- setup_error: text
+- name: character varying
+- website_name: character varying
+- website_url: character varying
+- status: character varying
+- description: text
+- industry: character varying
+- company_summary: text
+- setup_status: character varying
+
+Sample data unavailable
+
+--- TABLE: responses ---
+COLUMNS:
+- updated_at: timestamp without time zone
+- prompt_id: uuid
+- monitor_id: bigint
+- cost: numeric
+- created_at: timestamp without time zone
+- id: uuid
+- brand_mentioned: boolean
+- visibility_score: numeric
+- competitors_mentioned: json
+- citation_sources: json
+- tokens_used: integer
+- model_name: character varying
+- response_text: text
+- sentiment: character varying
+
+Sample data unavailable
+
+--- TABLE: domain_analysis ---
+COLUMNS:
+- updated_at: timestamp without time zone
+- user_id: bigint
+- keywords: json
+- competitors: json
+- website_info: json
+- processed_at: timestamp without time zone
+- created_at: timestamp without time zone
+- id: bigint
+- analysis_data: json
+- company_name: character varying
+- company_website: character varying
+- status: character varying
+- summary: text
+- industry: character varying
+- error_message: text
+
+Sample data unavailable
+
+--- TABLE: monitor_stats ---
+COLUMNS:
+- id: bigint
+- monitor_id: bigint
+- date: date
+- visibility_score: numeric
+- total_prompts: integer
+- total_responses: integer
+- mentions: integer
+- avg_citation_rank: numeric
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+
+Sample data unavailable
+
+--- TABLE: monitor_ai_models ---
+COLUMNS:
+- monitor_id: bigint
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- id: bigint
+- ai_model_name: character varying
+- ai_model_id: character varying
+- ai_model_icon: character varying
+
+Sample data unavailable
+
+--- TABLE: monitor_chart_data ---
+COLUMNS:
+- date: date
+- monitor_id: bigint
+- updated_at: timestamp without time zone
+- id: bigint
+- value: numeric
+- created_at: timestamp without time zone
+- chart_type: character varying
+
+Sample data unavailable
+
+--- TABLE: monitor_citations ---
+COLUMNS:
+- updated_at: timestamp without time zone
+- monitor_id: bigint
+- created_at: timestamp without time zone
+- id: bigint
+- count: integer
+- percentage: numeric
+- domain: character varying
+- favicon_url: character varying
+
+Sample data unavailable
+
+--- TABLE: prompt_generation_requests ---
+COLUMNS:
+- id: uuid
+- user_id: bigint
+- monitor_id: uuid
+- domain_analysis_id: uuid
+- keywords: json
+- competitors: json
+- prompts_generated: integer
+- processed_at: timestamp without time zone
+- created_at: timestamp without time zone
+- updated_at: timestamp without time zone
+- status: character varying
+- company_name: character varying
+- company_website: character varying
+- industry: character varying
+- ai_model: character varying
+- error_message: text
+- summary: text
+
+Sample data unavailable
+

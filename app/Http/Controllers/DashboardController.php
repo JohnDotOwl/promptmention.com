@@ -13,18 +13,18 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Base data that doesn't change often
         $baseData = [
             'user' => $user,
         ];
-        
+
         // Get partial data based on request
         if ($request->header('X-Inertia-Partial-Data')) {
             $partialKeys = explode(',', $request->header('X-Inertia-Partial-Data'));
             return $this->getPartialData($partialKeys, $user);
         }
-        
+
         // Full page load - include all data
         return Inertia::render('dashboard', array_merge($baseData, [
             'metrics' => $this->getMetricsData($user),
@@ -33,6 +33,24 @@ class DashboardController extends Controller
             'monitorStatus' => $this->getMonitorStatus($user),
             'queueStatus' => $this->getQueueStatus(),
         ]));
+    }
+
+    /**
+     * Clear dashboard cache for user when data changes
+     */
+    public function clearCache($userId)
+    {
+        $cacheKeys = [
+            "dashboard_metrics_{$userId}",
+            "dashboard_chart_{$userId}",
+            "monitor_status_{$userId}",
+        ];
+
+        foreach ($cacheKeys as $key) {
+            cache()->forget($key);
+        }
+
+        return response()->json(['message' => 'Cache cleared successfully']);
     }
     
     private function getPartialData(array $keys, $user): array
@@ -73,16 +91,24 @@ class DashboardController extends Controller
                 'mentionsThisWeek' => 0,
                 'responseRate' => 0.0,
             ];
-            
+
+            // Use cache for better performance on frequent dashboard loads
+            $cacheKey = "dashboard_metrics_{$user->id}";
+            $cachedMetrics = cache()->get($cacheKey);
+
+            if ($cachedMetrics) {
+                return $cachedMetrics;
+            }
+
             // Get actual data if monitors table exists
             if ($this->tableExists('monitors')) {
                 $monitors = DB::table('monitors')
                     ->where('user_id', $user->id)
                     ->get();
-                
+
                 $metrics['totalMonitors'] = $monitors->count();
-                
-                // Get aggregated stats if available
+
+                // Get aggregated stats if available - optimized query with index hints
                 if ($this->tableExists('monitor_stats')) {
                     $stats = DB::table('monitor_stats')
                         ->whereIn('monitor_id', $monitors->pluck('id'))
@@ -94,20 +120,23 @@ class DashboardController extends Controller
                             SUM(mentions) as total_mentions
                         ')
                         ->first();
-                    
+
                     if ($stats) {
                         $metrics['totalPrompts'] = (int) $stats->total_prompts;
                         $metrics['totalResponses'] = (int) $stats->total_responses;
                         $metrics['visibilityScore'] = round((float) $stats->avg_visibility, 2);
                         $metrics['mentionsThisWeek'] = (int) $stats->total_mentions;
-                        
+
                         if ($metrics['totalPrompts'] > 0) {
                             $metrics['responseRate'] = round(($metrics['totalResponses'] / $metrics['totalPrompts']) * 100, 1);
                         }
                     }
                 }
             }
-            
+
+            // Cache metrics for 5 minutes to reduce database load
+            cache()->put($cacheKey, $metrics, now()->addMinutes(5));
+
             return $metrics;
         } catch (\Exception $e) {
             \Log::error('Failed to get metrics data', ['error' => $e->getMessage()]);

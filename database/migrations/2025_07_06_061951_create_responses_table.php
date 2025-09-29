@@ -25,19 +25,19 @@ return new class extends Migration
             $table->integer('tokens_used')->nullable();
             $table->decimal('cost', 10, 4)->default(0.0000);
             $table->timestamps();
-
+            
             // Add indexes for performance
             $table->index(['prompt_id', 'created_at']);
             $table->index(['monitor_id', 'brand_mentioned']);
             $table->index(['model_name', 'created_at']);
             $table->index('created_at');
-
+            
             // Add foreign key constraints
             $table->foreign('prompt_id')
                   ->references('id')
                   ->on('prompts')
                   ->onDelete('cascade');
-
+                  
             $table->foreign('monitor_id')
                   ->references('id')
                   ->on('monitors')

@@ -13,18 +13,18 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-
+        
         // Base data that doesn't change often
         $baseData = [
             'user' => $user,
         ];
-
+        
         // Get partial data based on request
         if ($request->header('X-Inertia-Partial-Data')) {
             $partialKeys = explode(',', $request->header('X-Inertia-Partial-Data'));
             return $this->getPartialData($partialKeys, $user);
         }
-
+        
         // Full page load - include all data
         return Inertia::render('dashboard', array_merge($baseData, [
             'metrics' => $this->getMetricsData($user),
@@ -34,11 +34,11 @@ class DashboardController extends Controller
             'queueStatus' => $this->getQueueStatus(),
         ]));
     }
-
+    
     private function getPartialData(array $keys, $user): array
     {
         $data = [];
-
+        
         foreach ($keys as $key) {
             switch ($key) {
                 case 'metrics':
@@ -58,10 +58,10 @@ class DashboardController extends Controller
                     break;
             }
         }
-
+        
         return $data;
     }
-
+    
     private function getMetricsData($user): array
     {
         try {
@@ -73,15 +73,15 @@ class DashboardController extends Controller
                 'mentionsThisWeek' => 0,
                 'responseRate' => 0.0,
             ];
-
+            
             // Get actual data if monitors table exists
             if ($this->tableExists('monitors')) {
                 $monitors = DB::table('monitors')
                     ->where('user_id', $user->id)
                     ->get();
-
+                
                 $metrics['totalMonitors'] = $monitors->count();
-
+                
                 // Get aggregated stats if available
                 if ($this->tableExists('monitor_stats')) {
                     $stats = DB::table('monitor_stats')
@@ -94,20 +94,20 @@ class DashboardController extends Controller
                             SUM(mentions) as total_mentions
                         ')
                         ->first();
-
+                    
                     if ($stats) {
                         $metrics['totalPrompts'] = (int) $stats->total_prompts;
                         $metrics['totalResponses'] = (int) $stats->total_responses;
                         $metrics['visibilityScore'] = round((float) $stats->avg_visibility, 2);
                         $metrics['mentionsThisWeek'] = (int) $stats->total_mentions;
-
+                        
                         if ($metrics['totalPrompts'] > 0) {
                             $metrics['responseRate'] = round(($metrics['totalResponses'] / $metrics['totalPrompts']) * 100, 1);
                         }
                     }
                 }
             }
-
+            
             return $metrics;
         } catch (\Exception $e) {
             \Log::error('Failed to get metrics data', ['error' => $e->getMessage()]);
@@ -121,13 +121,13 @@ class DashboardController extends Controller
             ];
         }
     }
-
+    
     private function getChartData($user): array
     {
         try {
             // Mock data for now - replace with actual analytics
             $dates = collect(range(6, 0))->map(fn($days) => now()->subDays($days)->format('M j'));
-
+            
             return [
                 'timeline' => [
                     'labels' => $dates->toArray(),
@@ -167,7 +167,7 @@ class DashboardController extends Controller
             ];
         }
     }
-
+    
     private function getRecentActivity($user): array
     {
         try {
@@ -203,7 +203,7 @@ class DashboardController extends Controller
             return [];
         }
     }
-
+    
     private function getMonitorStatus($user): array
     {
         try {
@@ -213,7 +213,7 @@ class DashboardController extends Controller
                 'failed' => 0,
                 'total' => 0
             ];
-
+            
             if ($this->tableExists('monitors')) {
                 $monitors = DB::table('monitors')
                     ->where('user_id', $user->id)
@@ -222,20 +222,20 @@ class DashboardController extends Controller
                     ->get()
                     ->pluck('count', 'status')
                     ->toArray();
-
+                
                 $status['active'] = $monitors['active'] ?? 0;
                 $status['pending'] = $monitors['pending'] ?? 0;
                 $status['failed'] = $monitors['failed'] ?? 0;
                 $status['total'] = array_sum($monitors);
             }
-
+            
             return $status;
         } catch (\Exception $e) {
             \Log::error('Failed to get monitor status', ['error' => $e->getMessage()]);
             return ['active' => 0, 'pending' => 0, 'failed' => 0, 'total' => 0];
         }
     }
-
+    
     private function getQueueStatus(): array
     {
         try {
@@ -256,7 +256,7 @@ class DashboardController extends Controller
             ];
         }
     }
-
+    
     private function tableExists($tableName): bool
     {
         try {

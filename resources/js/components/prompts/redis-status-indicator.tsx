@@ -53,7 +53,7 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
   const [isLoading, setIsLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  const fetchQueueStatus = async () => {
+  const fetchQueueStatus = useCallback(async () => {
     try {
       const response = await fetch('/api/redis/queue-status')
       const data = await response.json()
@@ -61,9 +61,9 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     } catch (error) {
       console.error('Failed to fetch queue status:', error)
     }
-  }
+  }, [])
 
-  const fetchMonitorStatus = async (monitorId: number) => {
+  const fetchMonitorStatus = useCallback(async (monitorId: number) => {
     try {
       const response = await fetch(`/api/monitors/${monitorId}/status`)
       const data = await response.json()
@@ -74,24 +74,24 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     } catch (error) {
       console.error(`Failed to fetch status for monitor ${monitorId}:`, error)
     }
-  }
+  }, [])
 
-  const fetchAllStatuses = async () => {
+  const fetchAllStatuses = useCallback(async () => {
     setIsLoading(true)
     await fetchQueueStatus()
-    
+
     // Fetch status for monitors that might be processing
-    const pendingMonitors = monitors.filter(m => 
+    const pendingMonitors = monitors.filter(m =>
       m.setup_status === 'pending' || m.prompts_generated === 0
     )
-    
+
     await Promise.all(
       pendingMonitors.map(monitor => fetchMonitorStatus(monitor.id))
     )
-    
+
     setLastUpdated(new Date())
     setIsLoading(false)
-  }
+  }, [monitors, fetchQueueStatus, fetchMonitorStatus])
 
   // Smart polling for queue status updates
   const queuePolling = useSmartPolling({
@@ -143,7 +143,7 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     } else if (!hasPendingJobs && queuePolling.isPolling) {
       queuePolling.stopPolling();
     }
-  }, [queueStatus?.total_jobs, monitorStatuses, queuePolling.isPolling, fetchAllStatuses])
+  }, [queueStatus?.total_jobs, monitorStatuses, queuePolling.isPolling, queuePolling, fetchAllStatuses])
 
   const formatTime = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`

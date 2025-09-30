@@ -1,4 +1,4 @@
-import { useForm as useInertiaForm, InertiaFormProps } from '@inertiajs/react';
+import { useForm as useInertiaForm } from '@inertiajs/react';
 import { useCallback, useEffect, useRef } from 'react';
 
 interface PersistedFormOptions {
@@ -243,7 +243,7 @@ export function usePersistedForm<TForm extends Record<string, unknown>>(
 /**
  * Hook for form draft management with multiple drafts
  */
-export function useFormDrafts<TForm extends Record<string, any>>(
+export function useFormDrafts<TForm extends Record<string, unknown>>(
   baseKey: string,
   maxDrafts = 5
 ) {

@@ -199,7 +199,7 @@ const generateCitationOverTimeData = (period: string = '7d') => {
     }
     
     // Add data for top domains from mockCitationDomains
-    mockCitationDomains.forEach((domain, index) => {
+    mockCitationDomains.forEach((domain) => {
       let value = 0
       if (i <= 4) { // Recent activity
         // Give different values based on domain popularity
@@ -337,14 +337,14 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   // Filter prompts for this monitor
   const monitorPrompts = useMemo(() => {
     return mockPrompts.filter(prompt => prompt.monitor.id === id)
-  }, [mockPrompts, id])
+  }, [id])
 
   // Get responses for this monitor (for now, we'll use all mock responses)
   const monitorResponses = useMemo(() => {
     // In a real app, you'd filter by monitor ID
     // For now, we'll just return all responses as examples
     return mockResponses
-  }, [mockResponses, id])
+  }, [])
 
   // Handle sorting
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -513,9 +513,9 @@ export default function MonitorShow({ id, monitor }: PageProps) {
     })
   }, [sortedResponses, responseBrandSentiment, responseModel])
 
-  const visibilityData = useMemo(() => generateVisibilityData(), [generateVisibilityData])
-  const citationRankData = useMemo(() => generateCitationRankData(), [generateCitationRankData])
-  const heatmapData = useMemo(() => generateHeatmapData(), [generateHeatmapData])
+  const visibilityData = useMemo(() => generateVisibilityData(), [])
+  const citationRankData = useMemo(() => generateCitationRankData(), [])
+  const heatmapData = useMemo(() => generateHeatmapData(), [])
   
   // Citations data and handlers
   const citationOverTimeData = useMemo(() => generateCitationOverTimeData(citationsTimeFilter), [citationsTimeFilter])
@@ -529,7 +529,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   const monitorCitations = useMemo(() => {
     // In a real app, you'd filter by monitor ID
     return mockCitations
-  }, [id])
+  }, [])
   
   // Apply sorting to citations
   const sortedCitations = useMemo(() => {

@@ -231,7 +231,7 @@ export function usePersistedFilters(options: PersistedFiltersOptions) {
   }, [key, syncWithUrl, autoReload, reloadOnly, debounceDelay, onFiltersApplied]);
 
   // Set individual filter
-  const setFilter = useCallback((filterKey: string, value: any) => {
+  const setFilter = useCallback((filterKey: string, value: unknown) => {
     const newFilters = { ...filters, [filterKey]: value };
     applyFilters(newFilters);
   }, [filters, applyFilters]);

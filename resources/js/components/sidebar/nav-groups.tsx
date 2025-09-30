@@ -114,9 +114,14 @@ export function NavGroup({ label, items, className }: NavGroupProps) {
   )
 }
 
+interface PageProps {
+  url: string
+  [key: string]: unknown
+}
+
 interface NavItemProps {
   item: NavItem
-  page: any
+  page: PageProps
 }
 
 function NavItem({ item, page }: NavItemProps) {

@@ -39,9 +39,9 @@ export function AppSidebar({ monitors = [] }: AppSidebarProps) {
 
             <SidebarContent>
                 <DashboardNav />
-                {/* <MonitoringNav /> */}
-                {/* <AnalyticsNav /> */}
-                {/* <WebsiteNav /> */}
+                <MonitoringNav />
+                <AnalyticsNav />
+                <WebsiteNav />
                 <div className="mt-auto">
                     <WaitlistIndicator user={auth?.user as any} />
                 </div>

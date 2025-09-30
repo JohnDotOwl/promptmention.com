@@ -32,68 +32,68 @@ export const dashboardItems: NavItem[] = [
     href: "/dashboard",
     icon: ChartArea,
   },
-  // {
-  //   title: "Brand book",
-  //   href: "/brand-book",
-  //   icon: Eclipse,
-  // },
-  // {
-  //   title: "Competitors",
-  //   href: "/competitors",
-  //   icon: Swords,
-  // },
-  // {
-  //   title: "Personas",
-  //   href: "/personas",
-  //   icon: UserPen,
-  // },
+  {
+    title: "Brand book",
+    href: "/brand-book",
+    icon: Eclipse,
+  },
+  {
+    title: "Competitors",
+    href: "/competitors",
+    icon: Swords,
+  },
+  {
+    title: "Personas",
+    href: "/personas",
+    icon: UserPen,
+  },
 ]
 
-// Monitoring navigation items - Currently disabled until routes are implemented
+// Monitoring navigation items
 export const monitoringItems: NavItem[] = [
-  // {
-  //   title: "Monitors",
-  //   href: "/monitors",
-  //   icon: Radar,
-  // },
-  // {
-  //   title: "Prompts",
-  //   href: "/prompts",
-  //   icon: SquareChevronRight,
-  // },
-  // {
-  //   title: "Responses",
-  //   href: "/responses",
-  //   icon: MessageCircleMore,
-  // },
-  // {
-  //   title: "Citations",
-  //   href: "/citations",
-  //   icon: PencilLine,
-  // },
+  {
+    title: "Monitors",
+    href: "/monitors",
+    icon: Radar,
+  },
+  {
+    title: "Prompts",
+    href: "/prompts",
+    icon: SquareChevronRight,
+  },
+  {
+    title: "Responses",
+    href: "/responses",
+    icon: MessageCircleMore,
+  },
+  {
+    title: "Citations",
+    href: "/citations",
+    icon: PencilLine,
+  },
 ]
 
-// Analytics navigation items - Currently disabled until routes are implemented
+// Analytics navigation items
 export const analyticsItems: NavItem[] = [
-  // {
-  //   title: "Analytics",
-  //   href: "/analytics",
-  //   icon: ChartArea,
-  // },
-  // {
-  //   title: "Crawlers",
-  //   href: "/crawlers",
-  //   icon: Bot,
-  // },
+  {
+    title: "Analytics",
+    href: "/analytics",
+    icon: ChartArea,
+  },
+  {
+    title: "Crawlers",
+    href: "/crawlers",
+    icon: Bot,
+  },
 ]
 
-// Website navigation items - Currently disabled until routes are implemented
+// Website navigation items
 export const websiteItems: NavItem[] = [
-  // {
-  //   title: "Sitemap",
-  //   href: "/sitemap",
-  //   icon: ListTree,
-  // },
+  {
+    title: "Sitemap",
+    href: "/sitemap",
+    icon: ListTree,
+  },
 ]
 
 interface NavGroupProps {

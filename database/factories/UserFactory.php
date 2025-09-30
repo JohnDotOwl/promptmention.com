@@ -41,4 +41,18 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Indicate that the user has completed onboarding.
+     */
+    public function withOnboarding(): static
+    {
+        return $this->afterCreating(function ($user) {
+            $user->onboardingProgress()->create([
+                'user_id' => $user->id,
+                'current_step' => 3,
+                'completed_at' => now(),
+            ]);
+        });
+    }
 }

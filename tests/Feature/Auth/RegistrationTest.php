@@ -7,6 +7,8 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    $this->markTestSkipped('Traditional registration is disabled - Google OAuth only');
+
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',

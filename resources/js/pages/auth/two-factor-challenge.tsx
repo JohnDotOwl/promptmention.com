@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/input-otp';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
 import AuthLayout from '@/layouts/auth-layout';
-import { store } from '@/routes/two-factor/login.ts';
+import { useForm } from '@inertiajs/react';
 import { Form, Head } from '@inertiajs/react';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { useMemo, useState } from 'react';
@@ -16,6 +16,12 @@ import { useMemo, useState } from 'react';
 export default function TwoFactorChallenge() {
     const [showRecoveryInput, setShowRecoveryInput] = useState<boolean>(false);
     const [code, setCode] = useState<string>('');
+
+    // Local form state since 2FA is disabled
+    const store = useForm({
+        code: '',
+        recovery_code: '',
+    });
 
     const authConfigContent = useMemo<{
         title: string;

@@ -29,7 +29,7 @@ export function AppSidebar({ monitors = [] }: AppSidebarProps) {
     return (
         <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader className="p-0">
-                <div className="flex items-center gap-2 px-4 h-14 border-b border-border group-data-[collapsible=icon]:justify-center">
+                <div className="flex items-center gap-2 px-6 h-16 border-b border-sidebar-border/50 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4 group-data-[collapsible=icon]:justify-center">
                     <AppLogo />
                 </div>
                 <div className="px-4 pt-2 pb-2 border-b border-border">

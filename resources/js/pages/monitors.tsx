@@ -12,7 +12,6 @@ interface MonitorsPageProps {
 }
 
 export default function Monitors() {
-    const { auth } = usePage<SharedData>().props;
     const { monitors, error } = usePage<MonitorsPageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [

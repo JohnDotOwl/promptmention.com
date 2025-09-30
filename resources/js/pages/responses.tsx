@@ -23,7 +23,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ]
 
 // Custom shape for rounded bars
-const RoundedBar = (props: any) => {
+const RoundedBar = (props: { fill: string; x: number; y: number; width: number; height: number }) => {
   const { fill, x, y, width, height } = props
   const radius = 4
 

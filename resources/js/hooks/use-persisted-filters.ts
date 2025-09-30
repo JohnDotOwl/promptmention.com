@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { router } from '@inertiajs/react';
 
 interface FilterState {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface PersistentFilter {
-  value: any;
+  value: unknown;
   timestamp: number;
   url: string;
 }
@@ -254,8 +254,8 @@ export function usePersistedFilters(options: PersistedFiltersOptions) {
   }, [filters]);
 
   // Get filter value
-  const getFilter = useCallback(<T = any>(filterKey: string, defaultValue?: T): T => {
-    return hasFilter(filterKey) ? filters[filterKey] : (defaultValue as T);
+  const getFilter = useCallback(<T = unknown>(filterKey: string, defaultValue?: T): T => {
+    return hasFilter(filterKey) ? filters[filterKey] as T : (defaultValue as T);
   }, [filters, hasFilter]);
 
   // Apply multiple filters at once

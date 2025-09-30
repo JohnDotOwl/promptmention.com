@@ -118,24 +118,24 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
   useEffect(() => {
     // Initial fetch
     fetchAllStatuses()
-    
+
     // Start smart polling
     queuePolling.startPolling(async () => {
       await fetchAllStatuses();
     });
-    
+
     return () => {
       queuePolling.stopPolling();
     };
-  }, [monitors])
+  }, [monitors, fetchAllStatuses, queuePolling])
 
   // Restart polling when queue status changes
   useEffect(() => {
-    const hasPendingJobs = (queueStatus?.total_jobs ?? 0) > 0 || 
-      Object.values(monitorStatuses).some(status => 
+    const hasPendingJobs = (queueStatus?.total_jobs ?? 0) > 0 ||
+      Object.values(monitorStatuses).some(status =>
         status.status !== 'completed'
       );
-    
+
     if (hasPendingJobs && !queuePolling.isPolling) {
       queuePolling.startPolling(async () => {
         await fetchAllStatuses();
@@ -143,7 +143,7 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     } else if (!hasPendingJobs && queuePolling.isPolling) {
       queuePolling.stopPolling();
     }
-  }, [queueStatus?.total_jobs, monitorStatuses, queuePolling])
+  }, [queueStatus?.total_jobs, monitorStatuses, queuePolling.isPolling, fetchAllStatuses])
 
   const formatTime = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`

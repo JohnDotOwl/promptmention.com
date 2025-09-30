@@ -105,43 +105,52 @@ export function NavGroup({ label, items, className }: NavGroupProps) {
       {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => {
-            const isNavigating = useIsNavigatingTo(item.href);
-            const isActive = page.url.startsWith(item.href);
-            const hoverProps = useHoverPrefetch(item.href, {
-              priority: 'high', // Reduced from 100ms to 25ms for faster sidebar navigation
-              immediate: false,
-              smartHover: true // Enable smart hover for sidebar
-            });
-
-            return (
-              <SidebarMenuItem key={item.title} id={`${item.title.toLowerCase().replace(/\s+/g, '-')}-sidebar-menu-item`}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive}
-                  tooltip={{ children: item.title }}
-                  className={isNavigating ? 'opacity-70 pointer-events-none' : ''}
-                >
-                  <Link
-                    href={item.href}
-                    prefetch
-                    {...hoverProps}
-                  >
-                    {isNavigating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      item.icon && <item.icon />
-                    )}
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {items.map((item) => (
+            <NavItem key={item.title} item={item} page={page} />
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   )
+}
+
+interface NavItemProps {
+  item: NavItem
+  page: any
+}
+
+function NavItem({ item, page }: NavItemProps) {
+  const isNavigating = useIsNavigatingTo(item.href);
+  const isActive = page.url.startsWith(item.href);
+  const hoverProps = useHoverPrefetch(item.href, {
+    priority: 'high', // Reduced from 100ms to 25ms for faster sidebar navigation
+    immediate: false,
+    smartHover: true // Enable smart hover for sidebar
+  });
+
+  return (
+    <SidebarMenuItem id={`${item.title.toLowerCase().replace(/\s+/g, '-')}-sidebar-menu-item`}>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={{ children: item.title }}
+        className={isNavigating ? 'opacity-70 pointer-events-none' : ''}
+      >
+        <Link
+          href={item.href}
+          prefetch
+          {...hoverProps}
+        >
+          {isNavigating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            item.icon && <item.icon />
+          )}
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
 }
 
 // Convenience components for each navigation group

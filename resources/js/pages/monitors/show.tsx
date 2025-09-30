@@ -337,14 +337,14 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   // Filter prompts for this monitor
   const monitorPrompts = useMemo(() => {
     return mockPrompts.filter(prompt => prompt.monitor.id === id)
-  }, [id])
+  }, [mockPrompts, id])
 
   // Get responses for this monitor (for now, we'll use all mock responses)
   const monitorResponses = useMemo(() => {
     // In a real app, you'd filter by monitor ID
     // For now, we'll just return all responses as examples
     return mockResponses
-  }, [id])
+  }, [mockResponses, id])
 
   // Handle sorting
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
@@ -511,11 +511,11 @@ export default function MonitorShow({ id, monitor }: PageProps) {
 
       return true
     })
-  }, [sortedResponses, responseBrandSentiment, responseModel, responseType])
+  }, [sortedResponses, responseBrandSentiment, responseModel])
 
-  const visibilityData = useMemo(() => generateVisibilityData(), [])
-  const citationRankData = useMemo(() => generateCitationRankData(), [])
-  const heatmapData = useMemo(() => generateHeatmapData(), [])
+  const visibilityData = useMemo(() => generateVisibilityData(), [generateVisibilityData])
+  const citationRankData = useMemo(() => generateCitationRankData(), [generateCitationRankData])
+  const heatmapData = useMemo(() => generateHeatmapData(), [generateHeatmapData])
   
   // Citations data and handlers
   const citationOverTimeData = useMemo(() => generateCitationOverTimeData(citationsTimeFilter), [citationsTimeFilter])
@@ -589,7 +589,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
       // Add additional filters here as needed
       return true
     })
-  }, [sortedCitations, citationsModelFilter, citationsTypeFilter, citationsCompetitorFilter])
+  }, [sortedCitations, citationsModelFilter])
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

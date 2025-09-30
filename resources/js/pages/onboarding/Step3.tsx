@@ -28,13 +28,13 @@ interface Step3Props {
             competitors: string[];
             company_name: string;
             website: string;
-            analysis_data: any;
+            analysis_data: Record<string, unknown>;
             processed_at: string;
         };
     };
 }
 
-export default function Step3({ progress, currentStep, domainAnalysis }: Step3Props) {
+export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     const { post, processing } = useForm();
 
     // Smart polling for domain analysis updates

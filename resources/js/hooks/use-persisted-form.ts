@@ -33,19 +33,19 @@ interface PersistedFormOptions {
   /**
    * Custom validation before saving
    */
-  validateBeforeSave?: (data: any) => boolean;
+  validateBeforeSave?: (data: Record<string, unknown>) => boolean;
   /**
    * Callback when data is loaded from storage
    */
-  onDataLoaded?: (data: any) => void;
+  onDataLoaded?: (data: Record<string, unknown>) => void;
   /**
    * Callback when data is saved to storage
    */
-  onDataSaved?: (data: any) => void;
+  onDataSaved?: (data: Record<string, unknown>) => void;
 }
 
 interface SavedFormData {
-  data: any;
+  data: Record<string, unknown>;
   timestamp: number;
   url: string;
 }
@@ -61,7 +61,7 @@ function getStorageKey(key: string, url?: string): string {
 /**
  * Load form data from localStorage
  */
-function loadFormData(key: string, maxAge: number, url?: string): any | null {
+function loadFormData(key: string, maxAge: number, url?: string): Record<string, unknown> | null {
   try {
     const storageKey = getStorageKey(key, url);
     const stored = localStorage.getItem(storageKey);
@@ -87,7 +87,7 @@ function loadFormData(key: string, maxAge: number, url?: string): any | null {
 /**
  * Save form data to localStorage
  */
-function saveFormData(key: string, data: any, excludeFields: string[] = [], url?: string): void {
+function saveFormData(key: string, data: Record<string, unknown>, excludeFields: string[] = [], url?: string): void {
   try {
     const storageKey = getStorageKey(key, url);
     
@@ -124,7 +124,7 @@ function clearFormData(key: string, url?: string): void {
 /**
  * Hook that extends Inertia's useForm with persistence capabilities
  */
-export function usePersistedForm<TForm extends Record<string, any>>(
+export function usePersistedForm<TForm extends Record<string, unknown>>(
   initialData: TForm | (() => TForm),
   options: PersistedFormOptions
 ): ReturnType<typeof useInertiaForm<TForm>> & {

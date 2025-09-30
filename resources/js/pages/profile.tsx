@@ -23,7 +23,6 @@ interface ProfilePageProps {
 }
 
 export default function Profile() {
-    const { auth } = usePage<SharedData>().props;
     const { monitors = [] } = usePage<ProfilePageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [

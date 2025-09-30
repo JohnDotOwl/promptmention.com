@@ -28,7 +28,7 @@ interface SortableHeaderProps {
   tooltip?: string
 }
 
-function SortableHeader({ column, children, sortConfig, onSort, className = '', tooltip }: SortableHeaderProps) {
+function SortableHeader({ column, children, sortConfig, onSort, tooltip }: SortableHeaderProps) {
   const isActive = sortConfig?.column === column
   const direction = isActive ? sortConfig.direction : 'desc'
 

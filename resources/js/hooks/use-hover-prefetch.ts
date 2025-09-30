@@ -186,13 +186,13 @@ export interface HoverLinkProps {
     onlyKeys?: string[];
     headers?: Record<string, string>;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
- * Props for creating enhanced links with hover prefetching
+ * Hook for getting hover prefetch props
  */
-export function getHoverLinkProps(href: string, options: HoverPrefetchOptions = {}) {
+export function useHoverLinkProps(href: string, options: HoverPrefetchOptions = {}) {
   const { onMouseEnter, onMouseLeave, onFocus } = useHoverPrefetch(href, options);
 
   return {

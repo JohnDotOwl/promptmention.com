@@ -24,7 +24,6 @@ interface CompetitorsPageProps {
 }
 
 export default function Competitors() {
-    const { auth } = usePage<SharedData>().props;
     const { monitors = [] } = usePage<CompetitorsPageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [

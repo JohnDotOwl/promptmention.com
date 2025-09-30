@@ -6,7 +6,7 @@ export function useNavigationLoading() {
     const [loadingUrl, setLoadingUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        const startHandler = (event: any) => {
+        const startHandler = (event: { detail: { visit: { url: string } } }) => {
             setIsLoading(true);
             setLoadingUrl(event.detail.visit.url);
         };

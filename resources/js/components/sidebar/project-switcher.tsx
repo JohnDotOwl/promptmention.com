@@ -48,7 +48,6 @@ interface ProjectSwitcherProps {
 }
 
 export function ProjectSwitcher({ monitors = [] }: ProjectSwitcherProps) {
-  const page = usePage()
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
 
   // Get the first monitor as active, or null if no monitors

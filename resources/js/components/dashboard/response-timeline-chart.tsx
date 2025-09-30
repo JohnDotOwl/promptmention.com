@@ -16,7 +16,7 @@ const generateTimelineData = (): TimelineData[] => {
     const isActiveDay = i === 7 // June 22nd relative to today
 
     data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }),
+      date: date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' }),
       'gemini-2.0-flash': isActiveDay ? 10 : 0,
       'gpt-4o-search': isActiveDay ? 10 : 0,
       'mistral-small-latest': isActiveDay ? 10 : 0,

@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { DashboardContent } from '@/components/dashboard/dashboard-content';
 import { usePartialReloadPolling } from '@/hooks/use-smart-polling';
 import WaitlistDialog from '@/components/WaitlistDialog';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { SkeletonCard } from '@/components/ui/skeleton-card';
 
 interface DashboardMetrics {
     totalMonitors: number;
@@ -89,6 +91,16 @@ export default function Dashboard() {
     } = usePage<SharedData & DashboardProps>().props;
 
     const [showWaitlistDialog, setShowWaitlistDialog] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Simulate loading state for better UX
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     // Smart polling for different dashboard sections with different priorities
     const metricsPolling = usePartialReloadPolling(['metrics'], {
@@ -163,6 +175,35 @@ export default function Dashboard() {
     const handleCloseWaitlistDialog = (open: boolean) => {
         setShowWaitlistDialog(open);
     };
+
+    if (isLoading) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Dashboard" />
+                <div className="relative z-10 py-6">
+                    <div className="px-6">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h1 className="text-3xl font-bold">Dashboard</h1>
+                                <p className="text-muted-foreground">Loading your monitoring data...</p>
+                            </div>
+                            <LoadingSpinner text="Loading..." />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                            <SkeletonCard lines={2} />
+                            <SkeletonCard lines={2} />
+                            <SkeletonCard lines={2} />
+                            <SkeletonCard lines={2} />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <SkeletonCard lines={4} />
+                            <SkeletonCard lines={4} />
+                        </div>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

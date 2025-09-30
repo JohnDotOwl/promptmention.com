@@ -137,12 +137,12 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
           router.reload({
             only: partialReloadOptions.only,
             preserveState: partialReloadOptions.preserveState ?? true,
-            onFinish: (visit) => {
-              if (visit.completed) {
-                resolve(visit);
-              } else {
-                reject(new Error('Request failed'));
-              }
+            preserveScroll: partialReloadOptions.preserveScroll ?? true,
+            onSuccess: () => {
+              resolve(true);
+            },
+            onError: (errors) => {
+              reject(new Error('Partial reload failed'));
             }
           });
         });

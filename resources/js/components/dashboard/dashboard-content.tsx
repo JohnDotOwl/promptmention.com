@@ -4,8 +4,9 @@ import { ModelUsageChart } from "./model-usage-chart"
 import { CitedDomainsChart } from "./cited-domains-chart"
 import { BrandMentionsList } from "./brand-mentions-list"
 import { ResponseTimelineChart } from "./response-timeline-chart"
-import { Loader2 } from "lucide-react"
+import { Loader2, Radar, SquareChevronRight, MessageCircleMore, Megaphone } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { type DashboardMetric } from "@/types/dashboard"
 
 interface DashboardMetrics {
   totalMonitors: number;
@@ -67,6 +68,37 @@ interface DashboardContentProps {
   onStartTrial?: () => void;
 }
 
+function transformMetricsToArray(metrics?: DashboardMetrics): DashboardMetric[] {
+  if (!metrics) return [];
+
+  return [
+    {
+      title: "Active Monitors",
+      value: String(metrics.totalMonitors || 0),
+      description: `${metrics.totalMonitors || 0} total projects`,
+      icon: Radar,
+    },
+    {
+      title: "Active Prompts",
+      value: String(metrics.totalPrompts || 0),
+      description: `${metrics.totalPrompts || 0} total prompts`,
+      icon: SquareChevronRight,
+    },
+    {
+      title: "Total Responses",
+      value: String(metrics.totalResponses || 0),
+      description: "Total responses",
+      icon: MessageCircleMore,
+    },
+    {
+      title: "Organic Brand Mentions",
+      value: String(metrics.mentionsThisWeek || 0),
+      description: "Total organic brand mentions",
+      icon: Megaphone,
+    },
+  ];
+}
+
 export function DashboardContent({
   metrics,
   chartData,
@@ -99,13 +131,13 @@ export function DashboardContent({
         </p>
       </div>
 
-      <MetricsCards metrics={metrics as any} />
+      <MetricsCards metrics={transformMetricsToArray(metrics)} />
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <ModelUsageChart data={chartData?.modelUsage as any} />
         <CitedDomainsChart domains={chartData?.citedDomains as any} />
         <BrandMentionsList
-          mentions={recentActivity?.filter(activity => activity.type === 'mention') as any}
+          mentions={(recentActivity || []).filter(activity => activity.type === 'mention') as any}
         />
       </div>
 

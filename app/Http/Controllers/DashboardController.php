@@ -22,7 +22,8 @@ class DashboardController extends Controller
         // Get partial data based on request
         if ($request->header('X-Inertia-Partial-Data')) {
             $partialKeys = explode(',', $request->header('X-Inertia-Partial-Data'));
-            return $this->getPartialData($partialKeys, $user);
+            $partialData = $this->getPartialData($partialKeys, $user);
+            return Inertia::render('dashboard', array_merge($baseData, $partialData));
         }
 
         // Full page load - include all data
@@ -156,41 +157,32 @@ class DashboardController extends Controller
         try {
             // Mock data for now - replace with actual analytics
             $dates = collect(range(6, 0))->map(fn($days) => now()->subDays($days)->format('M j'));
-            
+
             return [
-                'timeline' => [
-                    'labels' => $dates->toArray(),
-                    'datasets' => [
-                        [
-                            'label' => 'Mentions',
-                            'data' => [2, 5, 3, 8, 6, 9, 12],
-                            'borderColor' => 'rgb(59, 130, 246)',
-                            'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                        ],
-                        [
-                            'label' => 'Visibility Score',
-                            'data' => [15, 25, 20, 35, 30, 42, 48],
-                            'borderColor' => 'rgb(16, 185, 129)',
-                            'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
-                        ]
-                    ]
-                ],
+                'timeline' => $dates->map(function($date, $index) {
+                    return [
+                        'date' => $date,
+                        'gemini-2.0-flash' => [0, 2, 1, 3, 2, 4, 5][$index] ?? 0,
+                        'gpt-4o-search' => [0, 3, 2, 5, 4, 5, 7][$index] ?? 0,
+                        'mistral-small-latest' => [0, 0, 0, 0, 0, 0, 0][$index] ?? 0,
+                    ];
+                })->values()->toArray(),
                 'modelUsage' => [
-                    ['name' => 'GPT-4', 'value' => 45, 'color' => '#3b82f6'],
-                    ['name' => 'Claude', 'value' => 30, 'color' => '#10b981'],
-                    ['name' => 'Gemini', 'value' => 25, 'color' => '#f59e0b'],
+                    ['name' => 'gemini-2.0-flash', 'value' => 10, 'fill' => '#3b82f6'],
+                    ['name' => 'gpt-4o-search', 'value' => 10, 'fill' => '#10b981'],
+                    ['name' => 'mistral-small-latest', 'value' => 10, 'fill' => '#8B5CF6'],
                 ],
                 'citedDomains' => [
-                    ['domain' => 'example.com', 'mentions' => 12, 'percentage' => 40],
-                    ['domain' => 'blog.company.com', 'mentions' => 8, 'percentage' => 27],
-                    ['domain' => 'docs.service.com', 'mentions' => 6, 'percentage' => 20],
-                    ['domain' => 'news.site.com', 'mentions' => 4, 'percentage' => 13],
+                    ['domain' => 'reddit.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=reddit.com&size=64', 'count' => 9, 'percentage' => 100],
+                    ['domain' => 'selecthub.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=selecthub.com&size=64', 'count' => 4, 'percentage' => 44.4444],
+                    ['domain' => 'wise.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=wise.com&size=64', 'count' => 2, 'percentage' => 22.2222],
+                    ['domain' => 'volopay.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=volopay.com&size=64', 'count' => 2, 'percentage' => 22.2222],
                 ]
             ];
         } catch (\Exception $e) {
             \Log::error('Failed to get chart data', ['error' => $e->getMessage()]);
             return [
-                'timeline' => ['labels' => [], 'datasets' => []],
+                'timeline' => [],
                 'modelUsage' => [],
                 'citedDomains' => []
             ];

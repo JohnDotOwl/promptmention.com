@@ -3,7 +3,7 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { DashboardContent } from '@/components/dashboard/dashboard-content';
-import { usePartialReloadPolling } from '@/hooks/use-smart-polling';
+// import { usePartialReloadPolling } from '@/hooks/use-smart-polling'; // Disabled - causing Inertia router issues
 import WaitlistDialog from '@/components/WaitlistDialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
@@ -102,7 +102,9 @@ export default function Dashboard() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Smart polling for different dashboard sections with different priorities
+    // Polling disabled - causing issues with Inertia router
+    // TODO: Re-enable and fix Inertia integration issues later
+    /*
     const metricsPolling = usePartialReloadPolling(['metrics'], {
         interval: 30000, // 30 seconds
         priority: 'medium',
@@ -130,30 +132,42 @@ export default function Dashboard() {
         pauseWhenHidden: true,
         shouldPoll: () => (monitorStatus?.pending ?? 0) > 0
     });
+    */
 
-    // Start polling based on conditions
+    // Polling startup disabled - causing Inertia router issues
+    /*
     useEffect(() => {
-        // Always poll metrics and charts
-        metricsPolling.startPartialPolling();
-        chartPolling.startPartialPolling();
+        // Prevent re-initialization of polling
+        if (pollingInitialized.current) return;
 
-        // Poll real-time data if there are active jobs
-        if ((queueStatus?.total_jobs ?? 0) > 0) {
-            realtimePolling.startPartialPolling();
-        }
+        // Wait for initial page load to complete before starting polling
+        const startPollingTimer = setTimeout(() => {
+            pollingInitialized.current = true;
 
-        // Poll monitor status if there are pending monitors
-        if ((monitorStatus?.pending ?? 0) > 0) {
-            monitorStatusPolling.startPartialPolling();
-        }
+            // Always poll metrics and charts
+            metricsPolling.startPartialPolling();
+            chartPolling.startPartialPolling();
+
+            // Poll real-time data if there are active jobs
+            if ((queueStatus?.total_jobs ?? 0) > 0) {
+                realtimePolling.startPartialPolling();
+            }
+
+            // Poll monitor status if there are pending monitors
+            if ((monitorStatus?.pending ?? 0) > 0) {
+                monitorStatusPolling.startPartialPolling();
+            }
+        }, 2000); // 2 second delay to ensure page is fully loaded
 
         return () => {
+            clearTimeout(startPollingTimer);
             metricsPolling.stopPolling();
             realtimePolling.stopPolling();
             chartPolling.stopPolling();
             monitorStatusPolling.stopPolling();
         };
-    }, [queueStatus?.total_jobs, monitorStatus?.pending]);
+    }, []); // Empty dependency array - only run once on mount
+    */
 
     // Waitlist dialog logic
     useEffect(() => {
@@ -216,7 +230,7 @@ export default function Dashboard() {
                         recentActivity={recentActivity}
                         monitorStatus={monitorStatus}
                         queueStatus={queueStatus}
-                        isPolling={metricsPolling.isPolling || realtimePolling.isPolling || chartPolling.isPolling}
+                        isPolling={false}
                     />
                 </div>
             </div>

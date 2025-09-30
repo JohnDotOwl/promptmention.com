@@ -163,9 +163,9 @@ export function useHoverPrefetch(href: string, options: HoverPrefetchOptions = {
 
   // Return event handlers and utility functions
   return {
-    onMouseEnter,
-    onMouseLeave,
-    onFocus,
+    onMouseEnter: handleMouseEnter,
+    onMouseLeave: handleMouseLeave,
+    onFocus: handleFocus,
     prefetch: prefetchPage,
     resetPrefetchState,
     isPrefetched: prefetchedRef.current

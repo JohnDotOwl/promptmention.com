@@ -43,7 +43,7 @@ export function AppSidebar({ monitors = [] }: AppSidebarProps) {
                 <AnalyticsNav />
                 <WebsiteNav />
                 <div className="mt-auto">
-                    <WaitlistIndicator user={auth?.user as any} />
+                    <WaitlistIndicator user={auth?.user} />
                 </div>
             </SidebarContent>
 

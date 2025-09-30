@@ -90,7 +90,7 @@ function DomainFavicon({ domain }: { domain: string }) {
   )
 }
 
-function MetricProgress({ value, max = 100, tooltip }: { value: number; max?: number; tooltip?: string }) {
+function MetricProgress({ value, max = 100 }: { value: number; max?: number }) {
   const percentage = (value / max) * 100
   
   let colorClass = 'stroke-red-500 dark:stroke-red-500'

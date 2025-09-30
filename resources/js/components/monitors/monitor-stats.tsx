@@ -7,7 +7,7 @@ interface MonitorStatsProps {
 }
 
 interface StatChartProps {
-  data: any[]
+  data: Array<{ value: number }>
   color: string
   dataKey?: string
 }

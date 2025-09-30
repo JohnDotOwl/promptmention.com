@@ -42,10 +42,10 @@ createInertiaApp({
                 // Use lazy loading for heavy components
                 const LazyComponent = lazy(() =>
                     resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx'))
-                        .then(module => ({ default: (module as any).default }))
+                        .then(module => ({ default: (module as { default: React.ComponentType }).default }))
                 );
 
-                const WrappedComponent = (props: any) => (
+                const WrappedComponent = (props: Record<string, unknown>) => (
                     <Suspense fallback={<LazyLoadingFallback />}>
                         <LazyComponent {...props} />
                     </Suspense>
@@ -56,12 +56,12 @@ createInertiaApp({
                 // Normal loading for lightweight components
                 return await resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx'));
             }
-        } catch (error) {
+        } catch {
             console.warn(`Component not found: ./pages/${name}.tsx, falling back to 404 page`);
             // Fallback to 404 component
-            const component = await resolvePageComponent(`./pages/errors/404.tsx`, import.meta.glob('./pages/**/*.tsx')) as { default: React.ComponentType<any> };
+            const component = await resolvePageComponent(`./pages/errors/404.tsx`, import.meta.glob('./pages/**/*.tsx')) as { default: React.ComponentType };
             // Inject the 404 status as a prop
-            const WrappedComponent = (props: any) => {
+            const WrappedComponent = (props: Record<string, unknown>) => {
                 const ErrorComponent = component.default;
                 return <ErrorComponent {...props} />;
             };

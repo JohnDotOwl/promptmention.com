@@ -4,12 +4,7 @@ import { MonitorStats } from './monitor-stats'
 import { type MonitorCardProps } from '@/types/monitor'
 import { RefreshCcw, Calendar, FileText, MessageSquareReply } from 'lucide-react'
 
-export function MonitorCard({ monitor, onClick }: MonitorCardProps) {
-  const handleClick = () => {
-    if (onClick) {
-      onClick(monitor)
-    }
-  }
+export function MonitorCard({ monitor }: MonitorCardProps) {
 
   return (
     <a className="block" href={`/monitors/${monitor.id}`}>

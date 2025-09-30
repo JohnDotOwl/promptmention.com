@@ -29,11 +29,6 @@ interface ScrollManagementOptions {
    */
   scrollDelay?: number;
   /**
-   * Maximum age for stored scroll positions (in minutes)
-   * @default 30
-   */
-  maxScrollAge?: number;
-  /**
    * Element to scroll (defaults to window)
    */
   scrollElement?: HTMLElement | null;
@@ -65,7 +60,7 @@ function getStoredScrollPositions(): Record<string, ScrollPosition> {
 
     // Filter out old positions
     const filtered: Record<string, ScrollPosition> = {};
-    Object.entries(positions).forEach(([key, pos]: [string, any]) => {
+    Object.entries(positions).forEach(([key, pos]: [string, ScrollPosition]) => {
       if (pos.timestamp && now - pos.timestamp < 30 * 60 * 1000) { // 30 minutes
         filtered[key] = pos;
       }
@@ -141,7 +136,6 @@ export function useScrollManagement(options: ScrollManagementOptions = {}) {
     restoreScrollPosition = true,
     scrollBehavior = 'smooth',
     scrollDelay = 100,
-    maxScrollAge = 30,
     scrollElement,
     excludeScrollToTop = [],
     excludeScrollRestore = []
@@ -200,9 +194,8 @@ export function useScrollManagement(options: ScrollManagementOptions = {}) {
 
   // Handle route changes
   useEffect(() => {
-    const handleStart = (event: any) => {
-      const newUrl = event.detail.visit.url;
-      const currentPage = window.location.pathname;
+    const handleStart = (event: CustomEvent) => {
+      const newUrl = (event.detail as { visit: { url: string } }).visit.url;
 
       // Save current scroll position before navigation
       if (restoreScrollPosition && currentUrl.current) {
@@ -218,8 +211,8 @@ export function useScrollManagement(options: ScrollManagementOptions = {}) {
       currentUrl.current = newUrl;
     };
 
-    const handleSuccess = (event: any) => {
-      const url = event.detail.visit.url;
+    const handleSuccess = (event: CustomEvent) => {
+      const url = (event.detail as { visit: { url: string } }).visit.url;
 
       // Clear any pending restore timeout
       if (restoreTimeoutRef.current) {
@@ -341,14 +334,14 @@ export function usePreserveScrollOnReload() {
 
   // Auto-preserve on partial reloads
   useEffect(() => {
-    const handleStart = (event: any) => {
+    const handleStart = (event: CustomEvent) => {
       // Only preserve scroll for partial reloads
-      if (event.detail.visit.preserveScroll) {
+      if ((event.detail as { visit: { preserveScroll: boolean } }).visit.preserveScroll) {
         preserveScroll();
       }
     };
 
-    const handleSuccess = (event: any) => {
+    const handleSuccess = (event: CustomEvent) => {
       // Restore scroll after partial reload
       if (event.detail.visit.preserveScroll && scrollPositionRef.current) {
         setTimeout(restoreScroll, 50); // Small delay for DOM updates

@@ -77,19 +77,11 @@ export default function CreateMonitor() {
         <div className="relative z-10 py-6">
           <div className="space-y-8 px-6">
             {/* Header */}
-            <div className="flex items-center space-x-4">
-              <Link href="/monitors">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Monitors
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-semibold">Create Brand Monitor</h1>
-                <p className="text-muted-foreground mt-1">
-                  Set up monitoring for your brand across AI platforms
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-semibold">Create Brand Monitor</h1>
+              <p className="text-muted-foreground mt-1">
+                Set up monitoring for your brand across AI platforms
+              </p>
             </div>
 
             {/* Form */}

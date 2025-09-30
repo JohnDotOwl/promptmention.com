@@ -6,12 +6,6 @@ interface TopDomainsCardProps {
   citations: Citation[]
 }
 
-interface DomainStats {
-  domain: string
-  count: number
-  percentage: number
-}
-
 export function TopDomainsCard({ citations }: TopDomainsCardProps) {
   const domainStats = useMemo(() => {
     // Group citations by domain and count them

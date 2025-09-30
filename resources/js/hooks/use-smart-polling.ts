@@ -34,7 +34,7 @@ interface SmartPollingOptions {
   /**
    * Callback fired on successful poll
    */
-  onSuccess?: (data?: any) => void;
+  onSuccess?: (data?: unknown) => void;
   /**
    * Callback fired on poll error
    */
@@ -121,7 +121,7 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
 
   // Execute polling function
   const poll = useCallback(async (
-    pollFunction: () => Promise<any> | void,
+    pollFunction: () => Promise<unknown> | void,
     partialReloadOptions?: PartialReloadOptions
   ) => {
     if (!isVisible && pauseWhenHidden) return;
@@ -141,7 +141,7 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
             onSuccess: () => {
               resolve(true);
             },
-            onError: (errors) => {
+            onError: () => {
               reject(new Error('Partial reload failed'));
             }
           });
@@ -176,7 +176,7 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
 
   // Start polling
   const startPolling = useCallback((
-    pollFunction?: () => Promise<any> | void,
+    pollFunction?: () => Promise<unknown> | void,
     partialReloadOptions?: PartialReloadOptions
   ) => {
     if (isPolling) return;

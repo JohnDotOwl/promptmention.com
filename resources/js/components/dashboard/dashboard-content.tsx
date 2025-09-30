@@ -103,10 +103,8 @@ export function DashboardContent({
   metrics,
   chartData,
   recentActivity,
-  monitorStatus,
   queueStatus,
-  isPolling,
-  onStartTrial
+  isPolling
 }: DashboardContentProps) {
   return (
     <div className="transition-all duration-300 animate-in fade-in">
@@ -134,15 +132,15 @@ export function DashboardContent({
       <MetricsCards metrics={transformMetricsToArray(metrics)} />
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <ModelUsageChart data={chartData?.modelUsage as any} />
-        <CitedDomainsChart domains={chartData?.citedDomains as any} />
+        <ModelUsageChart data={chartData?.modelUsage} />
+        <CitedDomainsChart domains={chartData?.citedDomains} />
         <BrandMentionsList
-          mentions={(recentActivity || []).filter(activity => activity.type === 'mention') as any}
+          mentions={(recentActivity || []).filter(activity => activity.type === 'mention')}
         />
       </div>
 
       <div className="mt-6">
-        <ResponseTimelineChart data={chartData?.timeline as any} />
+        <ResponseTimelineChart data={chartData?.timeline} />
       </div>
     </div>
   )

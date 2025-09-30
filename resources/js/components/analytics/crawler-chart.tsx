@@ -3,6 +3,16 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card } from '@/components/ui/card';
 import { CrawlerDataPoint, BOT_COLORS } from '@/types/crawler';
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    dataKey: string;
+    fill: string;
+  }>;
+  label?: string;
+}
+
 interface CrawlerChartProps {
   data: CrawlerDataPoint[];
 }
@@ -61,14 +71,14 @@ export function CrawlerChart({ data }: CrawlerChartProps) {
   );
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   return (
     <div className="bg-background border rounded-lg shadow-lg p-3">
       <p className="font-semibold mb-2">{label}</p>
       <div className="space-y-1">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div 
               className="w-3 h-3 rounded-sm" 
@@ -82,7 +92,7 @@ function CustomTooltip({ active, payload, label }: any) {
       <div className="mt-2 pt-2 border-t">
         <div className="flex justify-between text-sm font-semibold">
           <span>Total:</span>
-          <span>{payload.reduce((sum: number, entry: any) => sum + entry.value, 0)}</span>
+          <span>{payload.reduce((sum: number, entry) => sum + entry.value, 0)}</span>
         </div>
       </div>
     </div>

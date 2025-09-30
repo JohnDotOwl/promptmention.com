@@ -37,7 +37,29 @@ import { Copy, CircleHelp } from 'lucide-react'
 
 interface PageProps {
   id: string
-  monitor: any
+  monitor: {
+    id: string
+    name: string
+    website: {
+      name: string
+      url: string
+    }
+    status: string
+    stats: {
+      visibilityScore: number
+      mentions: number
+      avgCitationRank: number
+      totalPrompts: number
+      totalResponses: number
+    }
+    models: Array<{
+      id: string
+      name: string
+      icon: string
+    }>
+    lastUpdated: string
+    createdAt: string
+  }
 }
 
 // Heatmap data interface
@@ -62,8 +84,6 @@ const generateHeatmapData = (): HeatmapData[] => {
     { name: 'Gusto', isUs: false },
   ]
 
-  const models = ['mistral-small', 'chatgpt-search', 'gemini-2-flash']
-  
   // Mock visibility data based on the heatmap.md structure
   const visibilityData: { [key: string]: { [model: string]: number | null } } = {
     'Pay Boy (Us)': { 'mistral-small': 16.7, 'chatgpt-search': 20, 'gemini-2-flash': 16.7 },
@@ -171,7 +191,10 @@ const generateCitationOverTimeData = (period: string = '7d') => {
     date.setDate(date.getDate() - i)
     
     // Create mock data for different domains with some recent activity
-    const dataPoint: any = {
+    const dataPoint: {
+      date: string
+      [key: string]: number | string
+    } = {
       date: date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
     }
     

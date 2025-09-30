@@ -11,7 +11,7 @@ export function LazyLoadingFallback() {
 }
 
 // Wrapper function for lazy loading with automatic Suspense
-export function lazyWithSuspense<T extends React.ComponentType<any>>(
+export function lazyWithSuspense<T extends React.ComponentType>(
     importFn: () => Promise<{ default: T }>,
     fallback?: React.ReactNode
 ) {
@@ -25,6 +25,6 @@ export function lazyWithSuspense<T extends React.ComponentType<any>>(
 }
 
 // Preload function to start loading a component before it's needed
-export function preloadComponent(importFn: () => Promise<any>) {
+export function preloadComponent(importFn: () => Promise<unknown>) {
     return importFn();
 }

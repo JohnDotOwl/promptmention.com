@@ -1,6 +1,13 @@
 import { DeviceData } from '@/types/analytics'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
+interface LegendEntry {
+  payload?: {
+    device: string;
+    percentage: number;
+  };
+}
+
 interface DeviceBreakdownCardProps {
   data: DeviceData[]
 }
@@ -33,7 +40,7 @@ export function DeviceBreakdownCard({ data }: DeviceBreakdownCardProps) {
             <Legend 
               verticalAlign="bottom" 
               height={36}
-              formatter={(value: string, entry: any) => {
+              formatter={(value: string, entry: LegendEntry) => {
                 if (entry && entry.payload) {
                   return (
                     <span className="text-sm">

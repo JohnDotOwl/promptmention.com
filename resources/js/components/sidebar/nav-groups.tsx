@@ -33,8 +33,8 @@ export const dashboardItems: NavItem[] = [
     icon: ChartArea,
   },
   {
-    title: "Brand book",
-    href: "/brand-book",
+    title: "Profile",
+    href: "/profile",
     icon: Eclipse,
   },
   {
@@ -42,12 +42,7 @@ export const dashboardItems: NavItem[] = [
     href: "/competitors",
     icon: Swords,
   },
-  {
-    title: "Personas",
-    href: "/personas",
-    icon: UserPen,
-  },
-]
+  ]
 
 // Monitoring navigation items
 export const monitoringItems: NavItem[] = [

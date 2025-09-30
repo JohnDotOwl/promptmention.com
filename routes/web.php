@@ -22,16 +22,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Brand and Marketing
-    Route::get('brand-book', function () {
-        return Inertia::render('brand-book');
-    })->name('brand-book');
+    Route::get('profile', function () {
+        return Inertia::render('profile');
+    })->name('profile');
     
     Route::get('competitors', function () {
         return Inertia::render('competitors');
     })->name('competitors');
-    
+
     Route::get('personas', function () {
-        return Inertia::render('personas');
+        return Inertia::render('errors/404');
     })->name('personas');
 
     // Monitoring

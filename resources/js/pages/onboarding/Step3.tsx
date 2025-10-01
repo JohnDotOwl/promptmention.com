@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useForm, router } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { FormEvent, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { FormEvent, useEffect, useState } from 'react';
 import { usePartialReloadPolling } from '@/hooks/use-smart-polling';
 
 interface Step3Props {
@@ -19,7 +19,7 @@ interface Step3Props {
     };
     currentStep: number;
     domainAnalysis?: {
-        status: 'not_started' | 'pending' | 'processing' | 'completed' | 'failed';
+        status: 'not_started' | 'pending' | 'processing' | 'completed' | 'failed' | 'skipped';
         message: string;
         data?: {
             summary: string;
@@ -28,14 +28,16 @@ interface Step3Props {
             competitors: string[];
             company_name: string;
             website: string;
-            analysis_data: Record<string, unknown>;
+            analysis_data: any;
             processed_at: string;
         };
     };
 }
 
-export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
+export default function Step3({ progress, currentStep, domainAnalysis }: Step3Props) {
     const { post, processing } = useForm();
+    const [timeoutReached, setTimeoutReached] = useState(false);
+    const [skipProcessing, setSkipProcessing] = useState(false);
 
     // Smart polling for domain analysis updates
     const analysisPolling = usePartialReloadPolling(['domainAnalysis'], {
@@ -51,7 +53,7 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     // Start/stop polling based on analysis status
     useEffect(() => {
         const needsPolling = domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing';
-        
+
         if (needsPolling && !analysisPolling.isPolling) {
             analysisPolling.startPartialPolling();
         } else if (!needsPolling && analysisPolling.isPolling) {
@@ -63,6 +65,17 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
         };
     }, [domainAnalysis?.status, analysisPolling]);
 
+    // Set timeout detection - 2 minutes
+    useEffect(() => {
+        if (domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing') {
+            const timeoutTimer = setTimeout(() => {
+                setTimeoutReached(true);
+            }, 120000); // 2 minutes
+
+            return () => clearTimeout(timeoutTimer);
+        }
+    }, [domainAnalysis?.status]);
+
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         post('/onboarding/complete');
@@ -72,13 +85,43 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
         router.visit('/onboarding/step/2');
     };
 
+    const handleSkipAnalysis = async () => {
+        setSkipProcessing(true);
+        try {
+            const response = await fetch('/onboarding/skip-analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (response.ok) {
+                // Reload to show skipped analysis
+                window.location.reload();
+            } else {
+                console.error('Failed to skip analysis');
+                setSkipProcessing(false);
+            }
+        } catch (error) {
+            console.error('Error skipping analysis:', error);
+            setSkipProcessing(false);
+        }
+    };
+
     const getStatusIcon = () => {
+        if (timeoutReached && (domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing')) {
+            return <Clock className="h-4 w-4 text-orange-600" />;
+        }
+
         switch (domainAnalysis?.status) {
             case 'pending':
             case 'processing':
                 return <Loader2 className="h-4 w-4 animate-spin" />;
             case 'completed':
                 return <CheckCircle className="h-4 w-4 text-green-600" />;
+            case 'skipped':
+                return <CheckCircle className="h-4 w-4 text-blue-600" />;
             case 'failed':
                 return <AlertCircle className="h-4 w-4 text-red-600" />;
             default:
@@ -87,6 +130,10 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     };
 
     const getStatusBadge = () => {
+        if (timeoutReached && (domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing')) {
+            return <Badge variant="outline" className="border-orange-500 text-orange-600">Taking Longer Than Expected</Badge>;
+        }
+
         switch (domainAnalysis?.status) {
             case 'pending':
                 return <Badge variant="secondary">Analyzing...</Badge>;
@@ -94,11 +141,23 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
                 return <Badge variant="secondary">Processing...</Badge>;
             case 'completed':
                 return <Badge variant="default">Analysis Complete</Badge>;
+            case 'skipped':
+                return <Badge variant="outline" className="border-blue-500 text-blue-600">Analysis Skipped</Badge>;
             case 'failed':
                 return <Badge variant="destructive">Analysis Failed</Badge>;
             default:
                 return <Badge variant="secondary">Preparing...</Badge>;
         }
+    };
+
+    const getErrorMessage = (status: string, timeoutReached: boolean) => {
+        if (timeoutReached) {
+            return "Analysis is taking longer than expected. You can wait or skip to continue.";
+        }
+        if (status === 'failed') {
+            return "We couldn't analyze your website automatically. You can skip this step and add details manually later.";
+        }
+        return "Processing your company information...";
     };
 
     return (
@@ -212,33 +271,88 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
-                                    <h3 className="text-lg font-semibold mb-2">Analyzing Your Company</h3>
-                                    <p className="text-muted-foreground mb-4">
-                                        Our AI is analyzing your website and company information. This usually takes 30-60 seconds.
-                                    </p>
-                                    <div className="flex gap-2 justify-center">
-                                        <Button 
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => router.reload({ only: ['domainAnalysis'] })}
-                                        >
-                                            Refresh Status
-                                        </Button>
-                                        <Button 
-                                            type="button"
-                                            variant="default"
-                                            onClick={() => {
-                                                post('/onboarding/retry-analysis', {}, {
-                                                    onSuccess: () => {
+                                    {analysisPolling.isCircuitBroken ? (
+                                        <>
+                                            <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+                                            <h3 className="text-lg font-semibold mb-2">Connection Issues</h3>
+                                            <p className="text-muted-foreground mb-4">
+                                                We're having trouble connecting to our analysis service. This might be due to network issues or high server load.
+                                            </p>
+                                            <div className="space-y-3">
+                                                <Button
+                                                    type="button"
+                                                    variant="default"
+                                                    onClick={() => {
+                                                        analysisPolling.resetCircuitBreaker();
                                                         router.reload({ only: ['domainAnalysis'] });
-                                                    }
-                                                });
-                                            }}
-                                        >
-                                            Retry Analysis
-                                        </Button>
-                                    </div>
+                                                    }}
+                                                >
+                                                    Try Again
+                                                </Button>
+                                                <p className="text-sm text-muted-foreground">
+                                                    If the problem persists, please refresh the page or contact support.
+                                                </p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
+                                            <h3 className="text-lg font-semibold mb-2">Analyzing Your Company</h3>
+                                            <p className="text-muted-foreground mb-2">
+                                                Our AI is analyzing your website and company information. This usually takes 30-60 seconds.
+                                            </p>
+                                            <p className="text-sm text-muted-foreground mb-4">
+                                                Next check in {Math.round(analysisPolling.currentInterval / 1000)} seconds...
+                                            </p>
+                                            <div className="flex gap-2 justify-center flex-wrap">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => router.reload({ only: ['domainAnalysis'] })}
+                                                    disabled={analysisPolling.isPolling}
+                                                >
+                                                    {analysisPolling.isPolling ? 'Checking...' : 'Refresh Status'}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => analysisPolling.stopPolling()}
+                                                    disabled={!analysisPolling.isPolling}
+                                                >
+                                                    Pause Auto-refresh
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="default"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        post('/onboarding/retry-analysis', {}, {
+                                                            onSuccess: () => {
+                                                                router.reload({ only: ['domainAnalysis'] });
+                                                                analysisPolling.resetFailures();
+                                                            },
+                                                            onError: () => {
+                                                                console.error('Failed to retry analysis');
+                                                            }
+                                                        });
+                                                    }}
+                                                    disabled={processing}
+                                                >
+                                                    Retry Analysis
+                                                </Button>
+                                            </div>
+                                            {analysisPolling.failures > 0 && (
+                                                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                                                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                                                        {analysisPolling.failures} connection {analysisPolling.failures === 1 ? 'attempt' : 'attempts'} failed.
+                                                        Will keep trying...
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             )}
                         </div>

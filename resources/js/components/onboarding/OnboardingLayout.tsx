@@ -44,10 +44,20 @@ export default function OnboardingLayout({ children, currentStep, title, descrip
                     <div className="absolute h-full w-full scale-[0.9] bg-[radial-gradient(#e5e7eb_1px,transparent_2px)] dark:bg-[radial-gradient(#374151_1px,transparent_2px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#fff_90%,transparent_100%)] dark:[mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#1f2937_90%,transparent_100%)]"></div>
                     <div className="absolute inset-0 bg-gradient-to-b from-blue-100 via-blue-50 dark:from-gray-900 dark:via-gray-800"></div>
                     <main className="relative z-10">
-                        <div className="w-full max-w-lg mx-auto flex justify-center items-center flex-col py-12 gap-4">
-                            <a className="flex items-center gap-2 self-center text-3xl font-bold text-primary" href="/">
-                                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    Prompt Mention
+                        <div className="w-full max-w-lg mx-auto flex justify-center items-center flex-col py-16 gap-6">
+                            <a className="flex flex-col items-center gap-1 self-center group" href="/">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
+                                        Prompt Mention
+                                    </span>
+                                </div>
+                                <span className="text-sm text-muted-foreground font-medium">
+                                    AI-powered brand monitoring
                                 </span>
                             </a>
                             

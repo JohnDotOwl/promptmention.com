@@ -110,53 +110,16 @@ class OnboardingController extends Controller
             'company_website' => $validated['website']
         ]);
 
-        // Create temporary monitor for onboarding (new)
-        $monitorId = null;
-        if ($this->tableExists('monitors')) {
-            // Check if monitor already exists for this user/website
-            $existingMonitor = DB::table('monitors')
-                ->where('user_id', $user->id)
-                ->where('website_url', $validated['website'])
-                ->first();
-
-            if (!$existingMonitor) {
-                $monitorId = DB::table('monitors')->insertGetId([
-                    'user_id' => $user->id,
-                    'name' => $validated['companyName'] . ' Brand Monitor',
-                    'website_name' => $validated['companyName'],
-                    'website_url' => $validated['website'],
-                    'status' => 'active',
-                    'setup_status' => 'pending',
-                    'description' => 'Auto-generated monitor from onboarding for ' . $validated['companyName'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // Store monitor_id in progress for later use
-                $progress->update(['monitor_id' => $monitorId]);
-                
-                \Log::info('Temporary monitor created for onboarding', [
-                    'monitor_id' => $monitorId,
-                    'user_id' => $user->id
-                ]);
-            } else {
-                $monitorId = $existingMonitor->id;
-                $progress->update(['monitor_id' => $monitorId]);
-            }
-        }
-
-        // Create domain analysis record and queue for processing with monitor_id
+        // Queue domain analysis without monitor_id - monitor will be created at completion
         try {
-            $this->domainAnalysisService->createAndQueueAnalysisWithMonitor(
+            $this->domainAnalysisService->createAndQueueAnalysis(
                 $user->id,
                 $validated['companyName'],
-                $validated['website'],
-                $monitorId
+                $validated['website']
             );
-            \Log::info('Domain analysis queued successfully with monitor', [
+            \Log::info('Domain analysis queued successfully for onboarding', [
                 'user_id' => $user->id,
-                'company' => $validated['companyName'],
-                'monitor_id' => $monitorId
+                'company' => $validated['companyName']
             ]);
         } catch (\Exception $e) {
             \Log::error('Failed to queue domain analysis', [
@@ -210,45 +173,40 @@ class OnboardingController extends Controller
         $progress = $user->onboardingProgress;
 
         if ($progress && $progress->current_step >= 3) {
-            $progress->markCompleted();
-            
-            // Use existing monitor from Step 1 instead of creating new one
-            $monitorId = $progress->monitor_id;
-            
-            if ($monitorId) {
-                // Monitor is already active, just add missing components
-                
-                // Add default AI models if not already present
-                $this->addDefaultAiModels($monitorId);
-                
-                // Create initial stats entry
-                $this->createInitialStats($monitorId);
-                
-                \Log::info('Monitor setup completed from onboarding', [
-                    'user_id' => $user->id,
-                    'monitor_id' => $monitorId,
-                    'company_name' => $progress->company_name
-                ]);
-                
-                // Note: Domain analysis and prompt generation were already triggered in Step 1
-                // No need to queue monitor setup again
-            } else {
-                // Fallback: create monitor if not found (shouldn't happen in normal flow)
-                $monitorId = $this->createMonitorFromOnboarding($user, $progress);
-                
-                if ($monitorId) {
-                    $this->monitorSetupService->queueMonitorSetup(
-                        $monitorId,
-                        $progress->company_name,
-                        $progress->company_website
-                    );
-                    
-                    \Log::warning('Had to create monitor at completion - monitor_id was missing', [
+            // Create monitor atomically at completion
+            DB::transaction(function () use ($user, $progress) {
+                // Check if monitor already exists to prevent duplicates
+                $existingMonitor = DB::table('monitors')
+                    ->where('user_id', $user->id)
+                    ->where('website_url', $progress->company_website)
+                    ->first();
+
+                if (!$existingMonitor) {
+                    $monitorId = $this->createMonitorFromOnboarding($user, $progress);
+                    $progress->update(['monitor_id' => $monitorId]);
+
+                    \Log::info('Monitor created at onboarding completion', [
+                        'user_id' => $user->id,
+                        'monitor_id' => $monitorId,
+                        'company_name' => $progress->company_name
+                    ]);
+                } else {
+                    // Use existing monitor and ensure it's properly set up
+                    $monitorId = $existingMonitor->id;
+                    $progress->update(['monitor_id' => $monitorId]);
+
+                    // Ensure AI models and stats are set up
+                    $this->addDefaultAiModels($monitorId);
+                    $this->createInitialStats($monitorId);
+
+                    \Log::info('Using existing monitor for completion', [
                         'user_id' => $user->id,
                         'monitor_id' => $monitorId
                     ]);
                 }
-            }
+
+                $progress->markCompleted();
+            });
         }
 
         return redirect('/dashboard');
@@ -287,6 +245,60 @@ class OnboardingController extends Controller
                 'error' => $e->getMessage()
             ]);
             return response()->json(['error' => 'Failed to retry analysis'], 500);
+        }
+    }
+
+    /**
+     * Skip domain analysis for users stuck at step 3
+     */
+    public function skipAnalysis(Request $request)
+    {
+        $user = Auth::user();
+        $progress = $user->onboardingProgress;
+
+        if (!$progress || $progress->current_step < 3) {
+            return response()->json(['error' => 'Invalid onboarding state'], 400);
+        }
+
+        \Log::info('Skip analysis requested', [
+            'user_id' => $user->id,
+            'company_name' => $progress->company_name,
+            'company_website' => $progress->company_website
+        ]);
+
+        // Create default analysis data for skipped analysis
+        try {
+            DB::table('domain_analysis')->updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'company_website' => $progress->company_website,
+                ],
+                [
+                    'company_name' => $progress->company_name,
+                    'status' => 'skipped',
+                    'summary' => 'Analysis was skipped by user. You can retry analysis later from your dashboard.',
+                    'industry' => 'General Business',
+                    'keywords' => json_encode(['business', 'company', 'service']),
+                    'competitors' => json_encode([]),
+                    'processed_at' => now(),
+                    'error_message' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            \Log::info('Default analysis data created for skipped analysis', [
+                'user_id' => $user->id,
+                'company_name' => $progress->company_name
+            ]);
+
+            return response()->json(['message' => 'Analysis skipped successfully'], 200);
+        } catch (\Exception $e) {
+            \Log::error('Failed to skip analysis', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['error' => 'Failed to skip analysis'], 500);
         }
     }
 

@@ -39,7 +39,7 @@ export default function Step1({ progress, currentStep }: Step1Props) {
                             id="companyName"
                             type="text"
                             autoComplete="organization"
-                            placeholder="Acme Inc."
+                            placeholder="Cerebras"
                             value={data.companyName}
                             onChange={(e) => setData('companyName', e.target.value)}
                             required
@@ -54,7 +54,7 @@ export default function Step1({ progress, currentStep }: Step1Props) {
                         <Input
                             id="website"
                             type="url"
-                            placeholder="https://www.acme.com"
+                            placeholder="https://cerebras.ai"
                             value={data.website}
                             onChange={(e) => setData('website', e.target.value)}
                             required

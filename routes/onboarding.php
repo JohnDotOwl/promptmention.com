@@ -11,5 +11,6 @@ Route::middleware(['auth', 'verified'])->prefix('onboarding')->name('onboarding.
     Route::post('/step/2', [OnboardingController::class, 'storeStep2'])->name('step2.store');
     Route::post('/complete', [OnboardingController::class, 'completeOnboarding'])->name('complete');
     Route::post('/retry-analysis', [OnboardingController::class, 'retryAnalysis'])->name('retry-analysis');
+    Route::post('/skip-analysis', [OnboardingController::class, 'skipAnalysis'])->name('skip-analysis');
     Route::post('/retry-monitor', [OnboardingController::class, 'retryMonitorCreation'])->name('retry-monitor');
 });

@@ -1,12 +1,15 @@
-import { TrialAlert } from "./trial-alert"
-import { MetricsCards } from "./metrics-cards"
+import { AIPlatformCards } from "./ai-platform-cards"
+import { BrandVisibilityChart } from "./brand-visibility-chart"
+import { TopBrandsList } from "./top-brands-list"
 import { ModelUsageChart } from "./model-usage-chart"
 import { CitedDomainsChart } from "./cited-domains-chart"
 import { BrandMentionsList } from "./brand-mentions-list"
-import { ResponseTimelineChart } from "./response-timeline-chart"
-import { Loader2, Radar, SquareChevronRight, MessageCircleMore, Megaphone } from "lucide-react"
+import { ShareOfVoiceChart } from "./share-of-voice-chart"
+import { VisibilityScoreChart } from "./visibility-score-chart"
+import { DateRangeFilter } from "./date-range-filter"
+import { Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { type DashboardMetric } from "@/types/dashboard"
+import { type DashboardData, type DateRange } from "@/types/dashboard"
 
 interface DashboardMetrics {
   totalMonitors: number;
@@ -65,38 +68,8 @@ interface DashboardContentProps {
     total_jobs: number;
   };
   isPolling?: boolean;
-  onStartTrial?: () => void;
-}
-
-function transformMetricsToArray(metrics?: DashboardMetrics): DashboardMetric[] {
-  if (!metrics) return [];
-
-  return [
-    {
-      title: "Active Monitors",
-      value: String(metrics.totalMonitors || 0),
-      description: `${metrics.totalMonitors || 0} total projects`,
-      icon: Radar,
-    },
-    {
-      title: "Active Prompts",
-      value: String(metrics.totalPrompts || 0),
-      description: `${metrics.totalPrompts || 0} total prompts`,
-      icon: SquareChevronRight,
-    },
-    {
-      title: "Total Responses",
-      value: String(metrics.totalResponses || 0),
-      description: "Total responses",
-      icon: MessageCircleMore,
-    },
-    {
-      title: "Organic Brand Mentions",
-      value: String(metrics.mentionsThisWeek || 0),
-      description: "Total organic brand mentions",
-      icon: Megaphone,
-    },
-  ];
+  dashboardData?: Partial<DashboardData>;
+  projectName?: string;
 }
 
 export function DashboardContent({
@@ -104,13 +77,27 @@ export function DashboardContent({
   chartData,
   recentActivity,
   queueStatus,
-  isPolling
+  isPolling,
+  dashboardData,
+  projectName = "Your Project"
 }: DashboardContentProps) {
+  const handleDateRangeChange = (range: DateRange) => {
+    // TODO: Implement date range filtering
+    console.log("Date range changed:", range)
+  }
+
   return (
-    <div className="transition-all duration-300 animate-in fade-in">
-      <div className="flex flex-col gap-2 mb-6">
-        <div className="flex items-center gap-3">
+    <div className="transition-all duration-300 animate-in fade-in flex flex-col gap-6 h-full">
+      {/* Header Section */}
+      <div className="flex items-center border-b pt-6 pb-6 px-6 gap-4 bg-white mb-6">
+        <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="max-w-xl text-sm text-gray-500">
+            Overview of your project's performance and AI interactions for{" "}
+            <span className="font-semibold">{projectName}</span>.
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-3">
           {isPolling && (
             <Badge variant="secondary" className="text-xs">
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -122,25 +109,57 @@ export function DashboardContent({
               {queueStatus?.total_jobs} jobs processing
             </Badge>
           )}
+          <DateRangeFilter onChange={handleDateRangeChange} />
         </div>
-        <p className="max-w-xl text-sm text-gray-500">
-          Overview of your project's performance and AI interactions for{" "}
-          <span className="font-semibold">Pay Boy</span>.
-        </p>
       </div>
 
-      <MetricsCards metrics={transformMetricsToArray(metrics)} />
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <ModelUsageChart data={chartData?.modelUsage} />
-        <CitedDomainsChart domains={chartData?.citedDomains} />
-        <BrandMentionsList
-          mentions={(recentActivity || []).filter(activity => activity.type === 'mention')}
+      {/* AI Platform Visitor Cards */}
+      <div className="px-6">
+        <AIPlatformCards
+          platforms={dashboardData?.aiPlatformVisitors}
+          setupUrl="/analytics"
         />
       </div>
 
-      <div className="mt-6">
-        <ResponseTimelineChart data={chartData?.timeline} />
+      {/* Brand Visibility Chart + Top Brands */}
+      <div className="px-6">
+        <div className="grid grid-cols-12 gap-6">
+          <BrandVisibilityChart
+            data={dashboardData?.brandVisibility}
+          />
+          <TopBrandsList
+            brands={dashboardData?.topBrands}
+          />
+        </div>
+      </div>
+
+      {/* Three Column Section: Cited Domains + Organic Mentions + Model Usage */}
+      <div className="px-6">
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-4">
+            <CitedDomainsChart domains={chartData?.citedDomains} />
+          </div>
+          <div className="col-span-4">
+            <BrandMentionsList
+              mentions={(recentActivity || []).filter(activity => activity.type === 'mention')}
+            />
+          </div>
+          <div className="col-span-4">
+            <ModelUsageChart data={chartData?.modelUsage} />
+          </div>
+        </div>
+      </div>
+
+      {/* Share of Voice + Visibility Score */}
+      <div className="px-6">
+        <div className="grid grid-cols-12 gap-6">
+          <ShareOfVoiceChart
+            data={dashboardData?.shareOfVoice}
+          />
+          <VisibilityScoreChart
+            data={dashboardData?.visibilityScoreTimeline}
+          />
+        </div>
       </div>
     </div>
   )

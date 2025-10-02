@@ -71,6 +71,8 @@ interface DashboardProps {
         monitor_setup: { pending: number; processing: number };
         total_jobs: number;
     };
+    dashboardData?: any;
+    projectName?: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -87,7 +89,9 @@ export default function Dashboard() {
         chartData,
         recentActivity,
         monitorStatus,
-        queueStatus
+        queueStatus,
+        dashboardData,
+        projectName
     } = usePage<SharedData & DashboardProps>().props;
 
     const [showWaitlistDialog, setShowWaitlistDialog] = useState(false);
@@ -194,22 +198,24 @@ export default function Dashboard() {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
                 <Head title="Dashboard" />
-                <div className="relative z-10 py-6">
-                    <div className="px-6">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h1 className="text-3xl font-bold">Dashboard</h1>
-                                <p className="text-muted-foreground">Loading your monitoring data...</p>
-                            </div>
+                <div className="relative z-10 py-6 bg-gray-50 min-h-screen">
+                    <div className="flex items-center border-b pb-6 px-6 gap-1 bg-white mb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold">Dashboard</h1>
+                            <p className="text-muted-foreground">Loading your monitoring data...</p>
+                        </div>
+                        <div className="ml-auto">
                             <LoadingSpinner text="Loading..." />
                         </div>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                            <SkeletonCard lines={2} />
-                            <SkeletonCard lines={2} />
-                            <SkeletonCard lines={2} />
-                            <SkeletonCard lines={2} />
-                        </div>
+                    </div>
+                    <div className="px-6 space-y-6">
+                        <SkeletonCard lines={3} />
                         <div className="grid gap-4 md:grid-cols-2">
+                            <SkeletonCard lines={4} />
+                            <SkeletonCard lines={4} />
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <SkeletonCard lines={4} />
                             <SkeletonCard lines={4} />
                             <SkeletonCard lines={4} />
                         </div>
@@ -222,17 +228,17 @@ export default function Dashboard() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="relative z-10 py-6">
-                <div className="px-6">
-                    <DashboardContent
-                        metrics={metrics}
-                        chartData={chartData}
-                        recentActivity={recentActivity}
-                        monitorStatus={monitorStatus}
-                        queueStatus={queueStatus}
-                        isPolling={false}
-                    />
-                </div>
+            <div className="relative z-10 bg-gray-50 min-h-screen">
+                <DashboardContent
+                    metrics={metrics}
+                    chartData={chartData}
+                    recentActivity={recentActivity}
+                    monitorStatus={monitorStatus}
+                    queueStatus={queueStatus}
+                    isPolling={false}
+                    dashboardData={dashboardData}
+                    projectName={projectName}
+                />
             </div>
 
             {/* Waitlist Dialog */}

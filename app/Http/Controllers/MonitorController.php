@@ -16,7 +16,7 @@ class MonitorController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        
+
         // Check if monitors table exists (for production safety)
         if (!$this->tableExists('monitors')) {
             // Show onboarding fallback if no monitors table exists
@@ -24,7 +24,7 @@ class MonitorController extends Controller
                 'monitors' => $this->getOnboardingFallbackMonitors($userId)
             ]);
         }
-        
+
         // Get monitors directly (no caching)
         $monitors = DB::table('monitors')
                 ->select([

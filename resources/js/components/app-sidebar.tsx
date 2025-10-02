@@ -26,6 +26,10 @@ interface AppSidebarProps {
 export function AppSidebar({ monitors = [] }: AppSidebarProps) {
     const { auth } = usePage<SharedData>().props;
 
+    // Fallback: Get monitors from page props if not passed as prop
+    const pageMonitors = usePage<SharedData>().props.monitors || [];
+    const allMonitors = monitors.length > 0 ? monitors : pageMonitors;
+
     return (
         <Sidebar collapsible="icon" variant="sidebar">
             <SidebarHeader className="p-0">
@@ -33,7 +37,7 @@ export function AppSidebar({ monitors = [] }: AppSidebarProps) {
                     <AppLogo />
                 </div>
                 <div className="px-4 pt-2 pb-2 border-b border-border">
-                    <ProjectSwitcher monitors={monitors} />
+                    <ProjectSwitcher monitors={allMonitors} />
                 </div>
             </SidebarHeader>
 

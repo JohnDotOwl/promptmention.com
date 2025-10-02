@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -119,7 +119,9 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     // Initial fetch
     fetchAllStatuses()
 
-    // Start smart polling
+    // Polling disabled - causing spam requests
+    // Users can manually refresh using the button
+    /*
     queuePolling.startPolling(async () => {
       await fetchAllStatuses();
     });
@@ -127,9 +129,13 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     return () => {
       queuePolling.stopPolling();
     };
-  }, [monitors, fetchAllStatuses, queuePolling])
+    */
+  }, [monitors, fetchAllStatuses])
 
   // Restart polling when queue status changes
+  // Polling disabled - causing spam requests
+  // Users can manually refresh using the button
+  /*
   useEffect(() => {
     const hasPendingJobs = (queueStatus?.total_jobs ?? 0) > 0 ||
       Object.values(monitorStatuses).some(status =>
@@ -144,6 +150,7 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
       queuePolling.stopPolling();
     }
   }, [queueStatus?.total_jobs, monitorStatuses, queuePolling.isPolling, queuePolling, fetchAllStatuses])
+  */
 
   const formatTime = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`

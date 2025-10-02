@@ -37,10 +37,57 @@ export interface TimelineData {
   'mistral-small-latest': number
 }
 
+export interface AIPlatformVisitor {
+  platform: string
+  domain: string
+  favicon: string
+  count: number
+  changePercent: number
+  isPositive: boolean
+}
+
+export interface BrandVisibilityData {
+  date: string
+  [brandName: string]: number | string
+}
+
+export interface TopBrand {
+  name: string
+  domain: string
+  favicon?: string
+  visibilityScore: number
+  mentions: number
+  color: string
+}
+
+export interface ShareOfVoiceData {
+  ourBrand: number
+  otherBrands: number
+  trend: number
+  isPositive: boolean
+}
+
+export interface VisibilityScorePoint {
+  date: string
+  visibilityScore: number
+  responses: number
+}
+
+export interface DateRange {
+  label: string
+  value: string
+  days: number
+}
+
 export interface DashboardData {
   metrics: DashboardMetric[]
   modelUsage: ModelUsageData[]
   citedDomains: CitedDomain[]
   brandMentions: BrandMention[]
   timeline: TimelineData[]
+  aiPlatformVisitors?: AIPlatformVisitor[]
+  brandVisibility?: BrandVisibilityData[]
+  topBrands?: TopBrand[]
+  shareOfVoice?: ShareOfVoiceData
+  visibilityScoreTimeline?: VisibilityScorePoint[]
 }

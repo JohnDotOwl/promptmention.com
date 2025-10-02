@@ -54,7 +54,7 @@ export function CitedDomainsChart({ domains = defaultDomains }: CitedDomainsChar
   return (
     <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl shrink-0 ring-muted/60 border shadow-sm ring-3">
       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-5 pt-4 has-[data-slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-2">
-        <CardTitle className="leading-none font-semibold pt-2">Top Cited Domains</CardTitle>
+        <CardTitle className="leading-none font-semibold">Top Cited Domains</CardTitle>
         <CardDescription className="text-muted-foreground text-sm">
           The domains that are most frequently cited in your responses.
         </CardDescription>

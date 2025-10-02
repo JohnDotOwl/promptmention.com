@@ -78,3 +78,21 @@ export interface RecentActivity {
   location: string
   device: string
 }
+
+export interface ModelMention {
+  model: string
+  domain: string
+  favicon: string
+  count: number
+  changePercent: number
+  isPositive: boolean
+}
+
+export interface VisitorAnalytic {
+  platform: string
+  domain: string
+  favicon: string
+  count: number
+  changePercent: number
+  isPositive: boolean
+}

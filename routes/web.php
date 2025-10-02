@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\MonitorController;
@@ -50,9 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('citations');
 
     // Analytics
-    Route::get('analytics', function () {
-        return Inertia::render('analytics');
-    })->name('analytics');
+    Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics');
     
     Route::get('crawlers', function () {
         return Inertia::render('crawlers');

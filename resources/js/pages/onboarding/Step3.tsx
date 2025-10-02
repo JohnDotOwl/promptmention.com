@@ -41,6 +41,9 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     });
 
     // Start/stop polling based on analysis status
+    // Polling disabled - causing spam requests during onboarding
+    // Page will need to be manually refreshed if analysis completes
+    /*
     useEffect(() => {
         const needsPolling = domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing';
 
@@ -54,6 +57,7 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
             analysisPolling.stopPolling();
         };
     }, [domainAnalysis?.status, analysisPolling]);
+    */
 
     // Set timeout detection - 2 minutes
     useEffect(() => {

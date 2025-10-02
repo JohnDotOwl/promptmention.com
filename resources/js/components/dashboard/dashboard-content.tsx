@@ -1,4 +1,3 @@
-import { AIPlatformCards } from "./ai-platform-cards"
 import { BrandVisibilityChart } from "./brand-visibility-chart"
 import { TopBrandsList } from "./top-brands-list"
 import { ModelUsageChart } from "./model-usage-chart"
@@ -7,6 +6,7 @@ import { BrandMentionsList } from "./brand-mentions-list"
 import { ShareOfVoiceChart } from "./share-of-voice-chart"
 import { VisibilityScoreChart } from "./visibility-score-chart"
 import { DateRangeFilter } from "./date-range-filter"
+import { AIModelMentionCards } from "@/components/analytics/ai-model-mention-cards"
 import { Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { type DashboardData, type DateRange } from "@/types/dashboard"
@@ -70,6 +70,7 @@ interface DashboardContentProps {
   isPolling?: boolean;
   dashboardData?: Partial<DashboardData>;
   projectName?: string;
+  onboardingCompleted?: boolean;
 }
 
 export function DashboardContent({
@@ -79,7 +80,8 @@ export function DashboardContent({
   queueStatus,
   isPolling,
   dashboardData,
-  projectName = "Your Project"
+  projectName = "Your Project",
+  onboardingCompleted = false
 }: DashboardContentProps) {
   const handleDateRangeChange = (range: DateRange) => {
     // TODO: Implement date range filtering
@@ -113,11 +115,11 @@ export function DashboardContent({
         </div>
       </div>
 
-      {/* AI Platform Visitor Cards */}
+      {/* AI Model Mentions */}
       <div className="px-6">
-        <AIPlatformCards
-          platforms={dashboardData?.aiPlatformVisitors}
-          setupUrl="/analytics"
+        <AIModelMentionCards
+          mentions={dashboardData?.modelMentions || []}
+          onboardingCompleted={onboardingCompleted}
         />
       </div>
 
@@ -151,7 +153,7 @@ export function DashboardContent({
       </div>
 
       {/* Share of Voice + Visibility Score */}
-      <div className="px-6">
+      <div className="px-6 pb-6">
         <div className="grid grid-cols-12 gap-6">
           <ShareOfVoiceChart
             data={dashboardData?.shareOfVoice}

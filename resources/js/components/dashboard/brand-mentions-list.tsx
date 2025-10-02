@@ -62,7 +62,7 @@ export function BrandMentionsList({ mentions = defaultMentions }: BrandMentionsL
   return (
     <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl shrink-0 ring-muted/60 border shadow-sm ring-3">
       <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-5 pt-4 has-[data-slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-2">
-        <CardTitle className="leading-none font-semibold pt-2">Organic Brand Mentions</CardTitle>
+        <CardTitle className="leading-none font-semibold">Organic Brand Mentions</CardTitle>
         <CardDescription className="text-muted-foreground text-sm">
           Competitor mention frequency in organic responses.
         </CardDescription>

@@ -73,6 +73,7 @@ interface DashboardProps {
     };
     dashboardData?: any;
     projectName?: string;
+    onboardingCompleted: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -91,7 +92,8 @@ export default function Dashboard() {
         monitorStatus,
         queueStatus,
         dashboardData,
-        projectName
+        projectName,
+        onboardingCompleted
     } = usePage<SharedData & DashboardProps>().props;
 
     const [showWaitlistDialog, setShowWaitlistDialog] = useState(false);
@@ -238,6 +240,7 @@ export default function Dashboard() {
                     isPolling={false}
                     dashboardData={dashboardData}
                     projectName={projectName}
+                    onboardingCompleted={onboardingCompleted}
                 />
             </div>
 

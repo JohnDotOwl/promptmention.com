@@ -38,6 +38,11 @@ class OnboardingMiddleware
             return $next($request);
         }
 
+        // Skip middleware for home page (landing page)
+        if ($request->routeIs('home') || $request->is('/')) {
+            return $next($request);
+        }
+
         // Check if user has completed onboarding
         if (!$user->hasCompletedOnboarding()) {
             return redirect('/onboarding');

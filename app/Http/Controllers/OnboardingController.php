@@ -213,6 +213,33 @@ class OnboardingController extends Controller
     }
 
     /**
+     * Skip the entire onboarding process
+     */
+    public function skipOnboarding(Request $request)
+    {
+        $user = Auth::user();
+        $progress = $user->onboardingProgress;
+
+        // Create progress record if it doesn't exist
+        if (!$progress) {
+            $progress = OnboardingProgress::create([
+                'user_id' => $user->id,
+                'current_step' => 1,
+            ]);
+        }
+
+        \Log::info('User skipped onboarding', [
+            'user_id' => $user->id,
+            'user_email' => $user->email
+        ]);
+
+        // Mark onboarding as completed without creating monitor or running analysis
+        $progress->markCompleted();
+
+        return redirect('/dashboard');
+    }
+
+    /**
      * Retry domain analysis for users stuck at step 3
      */
     public function retryAnalysis(Request $request)

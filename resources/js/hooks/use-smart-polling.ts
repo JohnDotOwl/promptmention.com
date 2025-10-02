@@ -87,7 +87,6 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
     maxFailures = 3,
     exponentialBackoff = true,
     maxBackoffInterval = 60000,
-    requestTimeout = 15000,
     enableCircuitBreaker = true,
     shouldPoll,
     onSuccess,

@@ -8,15 +8,6 @@ import { FormEvent, useEffect, useState } from 'react';
 import { usePartialReloadPolling } from '@/hooks/use-smart-polling';
 
 interface Step3Props {
-    progress: {
-        company_description?: string;
-        industry?: string;
-        website_analysis?: {
-            title?: string;
-            description?: string;
-            industry?: string;
-        };
-    };
     currentStep: number;
     domainAnalysis?: {
         status: 'not_started' | 'pending' | 'processing' | 'completed' | 'failed' | 'skipped';
@@ -28,17 +19,16 @@ interface Step3Props {
             competitors: string[];
             company_name: string;
             website: string;
-            analysis_data: any;
+            analysis_data: Record<string, unknown>;
             processed_at: string;
         };
     };
 }
 
-export default function Step3({ progress, currentStep, domainAnalysis }: Step3Props) {
+export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     const { post, processing } = useForm();
     const [timeoutReached, setTimeoutReached] = useState(false);
-    const [skipProcessing, setSkipProcessing] = useState(false);
-
+    
     // Smart polling for domain analysis updates
     const analysisPolling = usePartialReloadPolling(['domainAnalysis'], {
         interval: 5000,
@@ -85,30 +75,7 @@ export default function Step3({ progress, currentStep, domainAnalysis }: Step3Pr
         router.visit('/onboarding/step/2');
     };
 
-    const handleSkipAnalysis = async () => {
-        setSkipProcessing(true);
-        try {
-            const response = await fetch('/onboarding/skip-analysis', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
-
-            if (response.ok) {
-                // Reload to show skipped analysis
-                window.location.reload();
-            } else {
-                console.error('Failed to skip analysis');
-                setSkipProcessing(false);
-            }
-        } catch (error) {
-            console.error('Error skipping analysis:', error);
-            setSkipProcessing(false);
-        }
-    };
-
+    
     const getStatusIcon = () => {
         if (timeoutReached && (domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing')) {
             return <Clock className="h-4 w-4 text-orange-600" />;
@@ -150,16 +117,7 @@ export default function Step3({ progress, currentStep, domainAnalysis }: Step3Pr
         }
     };
 
-    const getErrorMessage = (status: string, timeoutReached: boolean) => {
-        if (timeoutReached) {
-            return "Analysis is taking longer than expected. You can wait or skip to continue.";
-        }
-        if (status === 'failed') {
-            return "We couldn't analyze your website automatically. You can skip this step and add details manually later.";
-        }
-        return "Processing your company information...";
-    };
-
+    
     return (
         <OnboardingLayout 
             currentStep={currentStep}

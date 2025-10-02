@@ -25,6 +25,12 @@ export default function Step1({ progress, currentStep }: Step1Props) {
         post('/onboarding/step/1');
     };
 
+    const handleSkip = () => {
+        if (confirm('Are you sure you want to skip onboarding? You can always set up your brand monitoring later.')) {
+            post('/onboarding/skip');
+        }
+    };
+
     return (
         <OnboardingLayout 
             currentStep={currentStep}
@@ -66,12 +72,20 @@ export default function Step1({ progress, currentStep }: Step1Props) {
                 </fieldset>
                 
                 <div className="mt-2 flex flex-row-reverse justify-between sticky bottom-0 bg-white dark:bg-gray-800 z-30 border-t py-4 -mx-5 px-5 -mb-4 rounded-b-xl">
-                    <Button 
-                        type="submit" 
+                    <Button
+                        type="submit"
                         disabled={processing}
                         className="ml-auto"
                     >
                         Next <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleSkip}
+                        disabled={processing}
+                    >
+                        Skip for now
                     </Button>
                 </div>
             </form>

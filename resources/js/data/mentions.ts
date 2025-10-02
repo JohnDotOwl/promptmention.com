@@ -1,6 +1,6 @@
-import { type Citation, type CitationModel } from '@/types/citation'
+import { type Mention, type MentionModel } from '@/types/mention'
 
-const citationModels: CitationModel[] = [
+const mentionModels: MentionModel[] = [
   {
     id: 'chatgpt-search',
     name: 'ChatGPT Search',
@@ -174,7 +174,7 @@ const sampleTitles = [
   'Serverless Architecture: Benefits and Challenges'
 ]
 
-const generateCitationUrl = (domain: string): string => {
+const generateMentionUrl = (domain: string): string => {
   const paths = [
     '/articles/',
     '/blog/',
@@ -206,13 +206,13 @@ const generateCitationUrl = (domain: string): string => {
 }
 
 const generatePageTitle = (): string => {
-  // All citations will have titles for consistency
+  // All mentions will have titles for consistency
   return sampleTitles[Math.floor(Math.random() * sampleTitles.length)]
 }
 
-export const mockCitations: Citation[] = Array.from({ length: 129 }, (_, index) => {
+export const mockMentions: Mention[] = Array.from({ length: 129 }, (_, index) => {
   const domain = sampleDomains[Math.floor(Math.random() * sampleDomains.length)]
-  const model = citationModels[Math.floor(Math.random() * citationModels.length)]
+  const model = mentionModels[Math.floor(Math.random() * mentionModels.length)]
   
   // Generate realistic DR based on domain reputation
   let baseDR = 30
@@ -230,9 +230,9 @@ export const mockCitations: Citation[] = Array.from({ length: 129 }, (_, index) 
   const pageRank = Math.min(100, Math.max(0, domainRating + Math.floor(Math.random() * 20) - 10))
   
   return {
-    id: `citation-${index + 1}`,
+    id: `mention-${index + 1}`,
     domain,
-    url: generateCitationUrl(domain),
+    url: generateMentionUrl(domain),
     title: generatePageTitle(),
     domainRating,
     pageRank,
@@ -244,4 +244,4 @@ export const mockCitations: Citation[] = Array.from({ length: 129 }, (_, index) 
   }
 }).sort((a, b) => new Date(b.firstSeen).getTime() - new Date(a.firstSeen).getTime())
 
-export { citationModels }
+export { mentionModels }

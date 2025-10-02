@@ -13,7 +13,7 @@ class CacheService
     const TAG_MONITORS = 'monitors';
     const TAG_STATS = 'monitor_stats';
     const TAG_PROMPTS = 'prompts';
-    const TAG_CITATIONS = 'citations';
+    const TAG_MENTIONS = 'mentions';
     const TAG_USER = 'user';
 
     /**
@@ -50,13 +50,13 @@ class CacheService
     }
 
     /**
-     * Get or store citations data with caching
+     * Get or store mentions data with caching
      */
-    public static function rememberCitations($monitorId, $callback, $ttl = 1800)
+    public static function rememberMentions($monitorId, $callback, $ttl = 1800)
     {
-        $key = "monitor.{$monitorId}.citations";
-        
-        return Cache::tags([self::TAG_CITATIONS, "monitor.{$monitorId}"])
+        $key = "monitor.{$monitorId}.mentions";
+
+        return Cache::tags([self::TAG_MENTIONS, "monitor.{$monitorId}"])
             ->remember($key, $ttl, $callback);
     }
 
@@ -81,7 +81,7 @@ class CacheService
      */
     public static function clearAllMonitorCaches()
     {
-        Cache::tags([self::TAG_MONITORS, self::TAG_STATS, self::TAG_PROMPTS, self::TAG_CITATIONS])->flush();
+        Cache::tags([self::TAG_MONITORS, self::TAG_STATS, self::TAG_PROMPTS, self::TAG_MENTIONS])->flush();
     }
 
     /**

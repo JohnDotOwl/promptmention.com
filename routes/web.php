@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\CompetitorsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\MonitorController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromptsController;
 use App\Http\Controllers\ResponsesController;
 use App\Http\Controllers\Api\RedisStatusController;
@@ -23,13 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Brand and Marketing
-    Route::get('profile', function () {
-        return Inertia::render('profile');
-    })->name('profile');
-    
-    Route::get('competitors', function () {
-        return Inertia::render('competitors');
-    })->name('competitors');
+    Route::get('profile', [ProfileController::class, 'index'])->name('profile');
+    Route::get('competitors', [CompetitorsController::class, 'index'])->name('competitors');
 
     Route::get('personas', function () {
         return Inertia::render('errors/404');
@@ -46,9 +43,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('responses', [ResponsesController::class, 'index'])->name('responses');
     
-    Route::get('citations', function () {
-        return Inertia::render('citations');
-    })->name('citations');
+    Route::get('mentions', function () {
+        return Inertia::render('mentions');
+    })->name('mentions');
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics');

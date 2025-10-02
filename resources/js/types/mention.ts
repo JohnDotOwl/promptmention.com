@@ -1,11 +1,11 @@
-export interface CitationModel {
+export interface MentionModel {
   id: string
   name: string
   icon: string
   color: string
 }
 
-export interface Citation {
+export interface Mention {
   id: string
   domain: string
   url: string
@@ -14,23 +14,23 @@ export interface Citation {
   pageRank: number
   position: number
   estimatedTraffic: number | null
-  model: CitationModel
+  model: MentionModel
   firstSeen: string
   isExternal: boolean
 }
 
-export interface CitationTableProps {
-  citations: Citation[]
+export interface MentionTableProps {
+  mentions: Mention[]
   onSort?: (column: string, direction: 'asc' | 'desc') => void
 }
 
-export interface CitationSortConfig {
+export interface MentionSortConfig {
   column: string | null
   direction: 'asc' | 'desc'
 }
 
-export interface CitationStats {
-  totalCitations: number
+export interface MentionStats {
+  totalMentions: number
   averageDomainRating: number
   averagePosition: number
   topDomains: string[]

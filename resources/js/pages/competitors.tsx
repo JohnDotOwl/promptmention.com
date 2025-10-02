@@ -15,16 +15,18 @@ import {
   Plus,
   Monitor,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Building2,
+  Search,
+  ExternalLink,
+  Tag,
+  Clock,
+  Star
 } from 'lucide-react';
-import { type Monitor as MonitorType } from '@/types/monitor';
-
-interface CompetitorsPageProps {
-    monitors?: MonitorType[];
-}
+import { type CompetitorsPageProps } from '@/types/competitors';
 
 export default function Competitors() {
-    const { monitors = [] } = usePage<CompetitorsPageProps>().props;
+    const { user, competitors, stats, domainAnalysis, monitors, onboardingCompleted, hasData } = usePage<CompetitorsPageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -32,8 +34,6 @@ export default function Competitors() {
             href: '/competitors',
         },
     ];
-
-    const hasMonitors = monitors && monitors.length > 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -50,7 +50,7 @@ export default function Competitors() {
                             Track and analyze your competitors' performance across AI platforms
                         </p>
                     </div>
-                    {hasMonitors && (
+                    {hasData && (
                         <Button asChild>
                             <Link href="/monitors/create">
                                 <Plus className="h-4 w-4 mr-2" />
@@ -61,8 +61,47 @@ export default function Competitors() {
                 </div>
 
                 {/* Content */}
-                {hasMonitors ? (
+                {hasData ? (
                     <div className="space-y-6">
+                        {/* Company Information */}
+                        {user.company.name && (
+                            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Building2 className="h-5 w-5" />
+                                        Your Company
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Company Name</label>
+                                            <p className="text-lg font-bold">{user.company.name}</p>
+                                        </div>
+                                        {user.company.industry && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Industry</label>
+                                                <Badge variant="secondary" className="mt-1">
+                                                    {user.company.industry}
+                                                </Badge>
+                                            </div>
+                                        )}
+                                        {user.company.website && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Website</label>
+                                                <p className="text-sm font-semibold flex items-center gap-2 mt-1">
+                                                    <Globe className="h-4 w-4" />
+                                                    <Link href={user.company.website} target="_blank" className="text-blue-600 hover:text-blue-800">
+                                                        {user.company.website}
+                                                    </Link>
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Overview Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <Card>
@@ -73,7 +112,7 @@ export default function Competitors() {
                                     <Monitor className="h-4 w-4 text-muted-foreground" />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">{monitors.length}</div>
+                                    <div className="text-2xl font-bold">{stats.activeMonitors}</div>
                                     <p className="text-xs text-muted-foreground">
                                         Tracking brand presence
                                     </p>
@@ -83,106 +122,250 @@ export default function Competitors() {
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
-                                        Total Mentions
-                                    </CardTitle>
-                                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">
-                                        {monitors.reduce((sum, monitor) => sum + (monitor.stats?.mentions || 0), 0)}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Across all platforms
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        Visibility Score
-                                    </CardTitle>
-                                    <Eye className="h-4 w-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold">
-                                        {Math.round(monitors.reduce((sum, monitor) => sum + (monitor.stats?.visibilityScore || 0), 0) / monitors.length)}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Average visibility
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        Competitors
+                                        Total Competitors
                                     </CardTitle>
                                     <Swords className="h-4 w-4 text-muted-foreground" />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">0</div>
+                                    <div className="text-2xl font-bold">{stats.totalCompetitors}</div>
                                     <p className="text-xs text-muted-foreground">
-                                        Added for tracking
+                                        Identified for tracking
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Monitor Competitors
+                                    </CardTitle>
+                                    <Target className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{stats.totalMonitorCompetitors}</div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Across all monitors
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Analysis Status
+                                    </CardTitle>
+                                    <Search className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-lg font-bold flex items-center gap-2">
+                                        <Badge variant={domainAnalysis?.status === 'completed' ? 'default' : 'secondary'}>
+                                            {domainAnalysis?.status || 'Not Started'}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Domain analysis
                                     </p>
                                 </CardContent>
                             </Card>
                         </div>
 
-                        {/* Your Monitors */}
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Your Brand Monitors
-                            </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {monitors.slice(0, 4).map((monitor) => (
-                                    <Card key={monitor.id} className="hover:shadow-md transition-shadow">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base">
-                                                    {monitor.website.name}
-                                                </CardTitle>
-                                                <Badge variant={monitor.status === 'active' ? 'default' : 'secondary'}>
-                                                    {monitor.status}
-                                                </Badge>
+                        {/* Domain Analysis Summary */}
+                        {domainAnalysis && domainAnalysis.summary && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Search className="h-5 w-5" />
+                                        Domain Analysis Summary
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-gray-700 dark:text-gray-300">
+                                                {domainAnalysis.summary}
+                                            </p>
+                                        </div>
+                                        {domainAnalysis.keywords && domainAnalysis.keywords.length > 0 && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Key Keywords</label>
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {domainAnalysis.keywords.slice(0, 8).map((keyword, index) => (
+                                                        <Badge key={index} variant="outline">
+                                                            <Tag className="h-3 w-3 mr-1" />
+                                                            {keyword}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <CardDescription className="text-sm">
-                                                {monitor.website.url}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Mentions</span>
-                                                    <span className="font-medium">{monitor.stats?.mentions || 0}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Visibility</span>
-                                                    <span className="font-medium">{monitor.stats?.visibilityScore || 0}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Responses</span>
-                                                    <span className="font-medium">{monitor.stats?.totalResponses || 0}</span>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="w-full mt-3"
-                                                    asChild
-                                                >
-                                                    <Link href={`/monitors/${monitor.id}`}>
-                                                        Manage Monitor →
-                                                    </Link>
-                                                </Button>
+                                        )}
+                                        {domainAnalysis.processedAt && (
+                                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                                <Clock className="h-4 w-4 mr-1" />
+                                                Analysis completed {new Date(domainAnalysis.processedAt).toLocaleDateString()}
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
 
-                        {/* Competitor Features */}
+                        {/* Competitors List */}
+                        {competitors.length > 0 && (
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                        Identified Competitors
+                                    </h2>
+                                    <Badge variant="outline" className="text-sm">
+                                        {competitors.length} found
+                                    </Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {competitors.map((competitor, index) => (
+                                        <Card key={index} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
+                                            <CardHeader className="pb-4">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm group-hover:from-red-600 group-hover:to-orange-700 transition-colors">
+                                                            {competitor.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <CardTitle className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-600 transition-colors">
+                                                                {competitor.name}
+                                                            </CardTitle>
+                                                            {competitor.source && (
+                                                                <Badge variant="secondary" className="text-xs mt-1">
+                                                                    <Target className="h-3 w-3 mr-1" />
+                                                                    {competitor.source === 'domain_analysis' ? 'AI Identified' : 'Monitor Added'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {competitor.industry && (
+                                                    <Badge variant="outline" className="w-fit mt-2 border-blue-200 text-blue-700 bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/20">
+                                                        <Tag className="h-3 w-3 mr-1" />
+                                                        {competitor.industry}
+                                                    </Badge>
+                                                )}
+                                            </CardHeader>
+                                            <CardContent className="pt-0">
+                                                <div className="space-y-3">
+                                                    {competitor.description && (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                                                            {competitor.description}
+                                                        </p>
+                                                    )}
+
+                                                    {competitor.website && (
+                                                        <div className="flex items-center justify-between p-2 rounded-md bg-gray-50 dark:bg-gray-800/50 group-hover:bg-gray-100 dark:group-hover:bg-gray-800 transition-colors">
+                                                            <div className="flex items-center gap-2 text-sm">
+                                                                <Globe className="h-4 w-4 text-gray-500" />
+                                                                <span className="text-gray-600 dark:text-gray-400">
+                                                                    {competitor.website.replace(/^https?:\/\//, '').replace(/^www\./, '')}
+                                                                </span>
+                                                            </div>
+                                                            <Link
+                                                                href={competitor.website}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
+                                                                title="Visit website"
+                                                            >
+                                                                <ExternalLink className="h-4 w-4" />
+                                                            </Link>
+                                                        </div>
+                                                    )}
+
+                                                    {competitor.monitorName && (
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                                            <Monitor className="h-3 w-3" />
+                                                            From monitor: <span className="font-medium">{competitor.monitorName}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Action buttons */}
+                                                    <div className="flex gap-2 pt-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="flex-1 text-xs"
+                                                            asChild
+                                                        >
+                                                            <Link href={`/monitors/create?competitor=${encodeURIComponent(competitor.name)}`}>
+                                                                <Plus className="h-3 w-3 mr-1" />
+                                                                Track
+                                                            </Link>
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="flex-1 text-xs"
+                                                            asChild
+                                                        >
+                                                            <Link href={competitor.website} target="_blank">
+                                                                <Eye className="h-3 w-3 mr-1" />
+                                                                Analyze
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Your Monitors */}
+                        {monitors.length > 0 && (
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                    Your Brand Monitors
+                                </h2>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {monitors.slice(0, 4).map((monitor) => (
+                                        <Card key={monitor.id} className="hover:shadow-md transition-shadow">
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-base">
+                                                        {monitor.website.name}
+                                                    </CardTitle>
+                                                    <Badge variant={monitor.status === 'active' ? 'default' : 'secondary'}>
+                                                        {monitor.status}
+                                                    </Badge>
+                                                </div>
+                                                <CardDescription className="text-sm">
+                                                    {monitor.website.url}
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="space-y-2">
+                                                    {monitor.competitorCount > 0 && (
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-gray-600 dark:text-gray-400">Competitors</span>
+                                                            <span className="font-medium">{monitor.competitorCount}</span>
+                                                        </div>
+                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="w-full mt-3"
+                                                        asChild
+                                                    >
+                                                        <Link href={`/monitors/${monitor.id}`}>
+                                                            Manage Monitor →
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Competitor Analysis Tools */}
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                 Competitor Analysis Tools
@@ -237,18 +420,18 @@ export default function Competitors() {
                             <CardContent>
                                 <div className="space-y-3">
                                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                                        To start tracking competitors, you'll need to:
+                                        To enhance your competitor tracking, you can:
                                     </p>
                                     <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                        <li>Ensure you have active brand monitors</li>
-                                        <li>Add competitor websites to track</li>
-                                        <li>Set up comparison metrics</li>
-                                        <li>Review regular reports and insights</li>
+                                        <li>Create additional brand monitors for different products</li>
+                                        <li>Add competitor websites to your existing monitors</li>
+                                        <li>Set up regular competitor analysis reports</li>
+                                        <li>Track keyword performance against competitors</li>
                                     </ol>
                                     <Button className="mt-4" asChild>
                                         <Link href="/monitors/create">
                                             <Plus className="h-4 w-4 mr-2" />
-                                            Add Competitor Monitor
+                                            Create New Monitor
                                         </Link>
                                     </Button>
                                 </div>
@@ -256,7 +439,7 @@ export default function Competitors() {
                         </Card>
                     </div>
                 ) : (
-                    /* Empty State - No Monitors */
+                    /* Empty State - No Data */
                     <div className="flex flex-col items-center justify-center h-full py-12">
                         <div className="text-center max-w-2xl">
                             <div className="mx-auto h-24 w-24 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-6">
@@ -268,8 +451,8 @@ export default function Competitors() {
                             </h3>
 
                             <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
-                                To analyze competitors and track their performance, you need to create monitors first.
-                                Set up brand monitors to establish your baseline before tracking competitors.
+                                To analyze competitors and track their performance, you need to complete the onboarding process first.
+                                This will analyze your company and identify potential competitors in your industry.
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -312,14 +495,14 @@ export default function Competitors() {
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Button asChild size="lg">
-                                    <Link href="/monitors/create">
+                                    <Link href="/onboarding">
                                         <Plus className="h-4 w-4 mr-2" />
-                                        Create Your First Monitor
+                                        Start Onboarding
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="lg">
                                     <Link href="/profile">
-                                        Learn About Brand Profiles
+                                        View Profile
                                     </Link>
                                 </Button>
                             </div>

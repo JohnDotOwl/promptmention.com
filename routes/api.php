@@ -25,7 +25,7 @@ Route::prefix('monitors')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [MonitorApiController::class, 'index']);
     Route::get('/{monitor}', [MonitorApiController::class, 'show']);
     Route::post('/{monitor}/stats', [MonitorApiController::class, 'getStats']);
-    Route::post('/{monitor}/citations', [MonitorApiController::class, 'getCitations']);
+    Route::post('/{monitor}/mentions', [MonitorApiController::class, 'getMentions']);
 });
 
 // Redis status endpoint

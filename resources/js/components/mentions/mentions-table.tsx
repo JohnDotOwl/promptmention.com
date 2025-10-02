@@ -1,20 +1,20 @@
-import { type Citation, type CitationSortConfig } from '@/types/citation'
+import { type Mention, type MentionSortConfig } from '@/types/mention'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChevronUp, ChevronDown, ExternalLink, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
 
-interface CitationsTableProps {
-  citations: Citation[]
+interface MentionsTableProps {
+  mentions: Mention[]
   onSort?: (column: string, direction: 'asc' | 'desc') => void
-  sortConfig?: CitationSortConfig
+  sortConfig?: MentionSortConfig
 }
 
 interface SortableHeaderProps {
   column: string
   children: React.ReactNode
-  sortConfig?: CitationSortConfig
+  sortConfig?: MentionSortConfig
   onSort?: (column: string, direction: 'asc' | 'desc') => void
   className?: string
   tooltip?: string
@@ -141,16 +141,16 @@ function ModelBadge({ model }: { model: Citation['model'] }) {
   )
 }
 
-function CitationTitle({ citation }: { citation: Citation }) {
+function MentionTitle({ mention }: { mention: Mention }) {
   const maxLength = 80
-  const truncated = citation.title.length > maxLength ? `${citation.title.substring(0, maxLength)}...` : citation.title
+  const truncated = mention.title.length > maxLength ? `${mention.title.substring(0, maxLength)}...` : mention.title
   
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <a
-            href={citation.url}
+            href={mention.url}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline flex items-center space-x-1 cursor-pointer"
@@ -161,8 +161,8 @@ function CitationTitle({ citation }: { citation: Citation }) {
         </TooltipTrigger>
         <TooltipContent>
           <div className="max-w-xs">
-            <p className="font-medium">{citation.title}</p>
-            <p className="text-xs text-muted-foreground">{citation.url}</p>
+            <p className="font-medium">{mention.title}</p>
+            <p className="text-xs text-muted-foreground">{mention.url}</p>
           </div>
         </TooltipContent>
       </Tooltip>
@@ -170,7 +170,7 @@ function CitationTitle({ citation }: { citation: Citation }) {
   )
 }
 
-export function CitationsTable({ citations, onSort, sortConfig }: CitationsTableProps) {
+export function MentionsTable({ mentions, onSort, sortConfig }: MentionsTableProps) {
   return (
     <div className="rounded-md border">
       <div className="overflow-x-auto">
@@ -251,34 +251,34 @@ export function CitationsTable({ citations, onSort, sortConfig }: CitationsTable
             </tr>
           </thead>
           <tbody>
-            {citations.map((citation) => (
-              <tr key={citation.id} className="border-b hover:bg-muted/50 transition-colors">
+            {mentions.map((mention) => (
+              <tr key={mention.id} className="border-b hover:bg-muted/50 transition-colors">
                 <td className="px-3 py-3">
-                  <DomainFavicon domain={citation.domain} />
+                  <DomainFavicon domain={mention.domain} />
                 </td>
                 <td className="px-3 py-3 text-sm font-medium">
-                  {citation.domain}
+                  {mention.domain}
                 </td>
                 <td className="px-3 py-3">
-                  <MetricProgress value={citation.domainRating} />
+                  <MetricProgress value={mention.domainRating} />
                 </td>
                 <td className="px-3 py-3">
-                  <CitationTitle citation={citation} />
+                  <MentionTitle mention={mention} />
                 </td>
                 <td className="px-3 py-3">
-                  <ModelBadge model={citation.model} />
+                  <ModelBadge model={mention.model} />
                 </td>
                 <td className="px-3 py-3 text-sm text-muted-foreground">
-                  {citation.estimatedTraffic ? citation.estimatedTraffic.toLocaleString() : '—'}
+                  {mention.estimatedTraffic ? mention.estimatedTraffic.toLocaleString() : '—'}
                 </td>
                 <td className="px-3 py-3">
-                  <MetricProgress value={citation.pageRank} />
+                  <MetricProgress value={mention.pageRank} />
                 </td>
                 <td className="px-3 py-3 text-sm font-medium">
-                  {citation.position}
+                  {mention.position}
                 </td>
                 <td className="px-3 py-3 text-sm text-muted-foreground">
-                  {citation.firstSeen}
+                  {mention.firstSeen}
                 </td>
               </tr>
             ))}

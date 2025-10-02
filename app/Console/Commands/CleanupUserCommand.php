@@ -79,13 +79,13 @@ class CleanupUserCommand extends Command
             $counts['monitor_ai_models'] = DB::table('monitor_ai_models')->whereIn('monitor_id', $monitorIds)->count();
             $counts['monitor_stats'] = DB::table('monitor_stats')->whereIn('monitor_id', $monitorIds)->count();
             $counts['monitor_chart_data'] = DB::table('monitor_chart_data')->whereIn('monitor_id', $monitorIds)->count();
-            $counts['monitor_citations'] = DB::table('monitor_citations')->whereIn('monitor_id', $monitorIds)->count();
+            $counts['monitor_mentions'] = DB::table('monitor_mentions')->whereIn('monitor_id', $monitorIds)->count();
             $counts['prompts'] = DB::table('prompts')->whereIn('monitor_id', $monitorIds)->count();
         } else {
             $counts['monitor_ai_models'] = 0;
             $counts['monitor_stats'] = 0;
             $counts['monitor_chart_data'] = 0;
-            $counts['monitor_citations'] = 0;
+            $counts['monitor_mentions'] = 0;
             $counts['prompts'] = 0;
         }
         
@@ -219,8 +219,8 @@ class CleanupUserCommand extends Command
                 $deletedCounts['monitor_chart_data'] = DB::table('monitor_chart_data')->whereIn('monitor_id', $monitorIds)->delete();
                 $this->line("✓ Deleted {$deletedCounts['monitor_chart_data']} monitor chart data");
                 
-                $deletedCounts['monitor_citations'] = DB::table('monitor_citations')->whereIn('monitor_id', $monitorIds)->delete();
-                $this->line("✓ Deleted {$deletedCounts['monitor_citations']} monitor citations");
+                $deletedCounts['monitor_mentions'] = DB::table('monitor_mentions')->whereIn('monitor_id', $monitorIds)->delete();
+                $this->line("✓ Deleted {$deletedCounts['monitor_mentions']} monitor mentions");
             }
             
             // 3. Delete monitors

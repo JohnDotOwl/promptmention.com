@@ -1,12 +1,12 @@
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
 import { Head } from '@inertiajs/react'
-import { CitationsTableEnhanced } from '@/components/citations/citations-table-enhanced'
-import { TopDomainsCard } from '@/components/citations/top-domains-card'
-import { DomainRankDistributionCard } from '@/components/citations/domain-rank-distribution-card'
-import { mockCitations } from '@/data/citations'
+import { MentionsTableEnhanced } from '@/components/mentions/mentions-table-enhanced'
+import { TopDomainsCard } from '@/components/mentions/top-domains-card'
+import { DomainRankDistributionCard } from '@/components/mentions/domain-rank-distribution-card'
+import { mockMentions } from '@/data/mentions'
 import { useState } from 'react'
-import { type CitationSortConfig } from '@/types/citation'
+import { type MentionSortConfig } from '@/types/mention'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -14,13 +14,13 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: '/dashboard',
   },
   {
-    title: 'Citations',
-    href: '/citations',
+    title: 'Mentions',
+    href: '/mentions',
   },
 ]
 
-export default function Citations() {
-  const [sortConfig, setSortConfig] = useState<CitationSortConfig>({
+export default function Mentions() {
+  const [sortConfig, setSortConfig] = useState<MentionSortConfig>({
     column: null,
     direction: 'desc'
   })
@@ -29,7 +29,7 @@ export default function Citations() {
     setSortConfig({ column, direction })
   }
 
-  const sortedCitations = [...mockCitations].sort((a, b) => {
+  const sortedMentions = [...mockMentions].sort((a, b) => {
     if (!sortConfig.column) return 0
 
     let aValue: string | number | Date
@@ -79,15 +79,15 @@ export default function Citations() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Citations" />
+      <Head title="Mentions" />
       <div className="min-h-[100vh] flex-1 md:min-h-min">
         <div className="relative z-10 py-6">
           <div className="px-6">
             {/* Header */}
             <div>
-              <h1 className="text-3xl font-semibold">All Citations</h1>
+              <h1 className="text-3xl font-semibold">All Mentions</h1>
               <p className="text-muted-foreground mt-1">
-                View all your citations across all monitors
+                View all your mentions across all monitors
               </p>
             </div>
 
@@ -95,16 +95,16 @@ export default function Citations() {
             <div className="mt-6 grid gap-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="lg:col-span-1">
-                  <TopDomainsCard citations={sortedCitations} />
+                  <TopDomainsCard mentions={sortedMentions} />
                 </div>
                 <div className="lg:col-span-1">
-                  <DomainRankDistributionCard citations={sortedCitations} />
+                  <DomainRankDistributionCard mentions={sortedMentions} />
                 </div>
               </div>
 
-              {/* Citations Table */}
-              <CitationsTableEnhanced 
-                citations={sortedCitations}
+              {/* Mentions Table */}
+              <MentionsTableEnhanced 
+                mentions={sortedMentions}
                 onSort={handleSort}
                 sortConfig={sortConfig}
               />

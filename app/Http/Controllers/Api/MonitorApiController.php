@@ -146,9 +146,9 @@ class MonitorApiController extends Controller
     }
 
     /**
-     * Get monitor citations with filtering
+     * Get monitor mentions with filtering
      */
-    public function getCitations(Request $request, $id)
+    public function getMentions(Request $request, $id)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -165,7 +165,7 @@ class MonitorApiController extends Controller
 
             $monitor = Monitor::where('user_id', $request->user()->id)->findOrFail($id);
 
-            $query = $monitor->citations();
+            $query = $monitor->mentions();
 
             if ($request->has('date_from')) {
                 $query->where('created_at', '>=', $request->date_from);
@@ -183,21 +183,21 @@ class MonitorApiController extends Controller
                 $query->where('ai_model', $request->ai_model);
             }
 
-            $citations = $query->orderBy('created_at', 'desc')
-                             ->paginate($request->input('per_page', 50));
+            $mentions = $query->orderBy('created_at', 'desc')
+                            ->paginate($request->input('per_page', 50));
 
             return response()->json([
-                'data' => $citations->items(),
+                'data' => $mentions->items(),
                 'meta' => [
-                    'total' => $citations->total(),
-                    'per_page' => $citations->perPage(),
-                    'current_page' => $citations->currentPage(),
-                    'last_page' => $citations->lastPage(),
+                    'total' => $mentions->total(),
+                    'per_page' => $mentions->perPage(),
+                    'current_page' => $mentions->currentPage(),
+                    'last_page' => $mentions->lastPage(),
                 ]
             ]);
 
         } catch (\Exception $e) {
-            Log::error('API Error - Monitor citations', ['error' => $e->getMessage()]);
+            Log::error('API Error - Monitor mentions', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }

@@ -228,7 +228,7 @@ export function useRoutePreloader() {
       '/monitors',
       '/prompts',
       '/responses',
-      '/citations'
+      '/mentions'
     ]);
   }, []);
 

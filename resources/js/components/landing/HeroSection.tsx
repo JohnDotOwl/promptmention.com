@@ -58,28 +58,28 @@ export default function HeroSection() {
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Trusted by leading companies</p>
                         <div className="mt-6 flex flex-wrap justify-center items-center gap-8 transition-all duration-300">
                             <div className="flex flex-wrap justify-center items-center gap-8 grayscale opacity-60 hover:opacity-80 transition-opacity duration-300 dark:hidden">
-                                <img 
-                                    src="https://promptwatch.com/brands/crisp.svg" 
+                                <img
+                                    src="https://promptmention.com/brands/crisp.svg"
                                     alt="Crisp"
                                     className="h-8 w-auto max-w-[120px] object-contain"
                                 />
-                                <img 
-                                    src="https://promptwatch.com/_next/image?url=%2Fbrands%2Fsimpleanalytics.png&w=1080&q=100" 
+                                <img
+                                    src="https://promptmention.com/_next/image?url=%2Fbrands%2Fsimpleanalytics.png&w=1080&q=100"
                                     alt="Simple Analytics"
                                     className="h-8 w-auto max-w-[120px] object-contain"
                                 />
-                                <img 
-                                    src="https://promptwatch.com/brands/polymarket.svg" 
+                                <img
+                                    src="https://promptmention.com/brands/polymarket.svg"
                                     alt="Polymarket"
                                     className="h-8 w-auto max-w-[120px] object-contain"
                                 />
-                                <img 
-                                    src="https://promptwatch.com/_next/image?url=%2Fbrands%2Findepender.png&w=1920&q=100" 
+                                <img
+                                    src="https://promptmention.com/_next/image?url=%2Fbrands%2Findepender.png&w=1920&q=100"
                                     alt="Independer"
                                     className="h-8 w-auto max-w-[120px] object-contain"
                                 />
-                                <img 
-                                    src="https://promptwatch.com/_next/image?url=%2Fbrands%2Fadwise.png&w=256&q=75" 
+                                <img
+                                    src="https://promptmention.com/_next/image?url=%2Fbrands%2Fadwise.png&w=256&q=75"
                                     alt="Adwise"
                                     className="h-8 w-auto max-w-[120px] object-contain"
                                 />
@@ -87,36 +87,36 @@ export default function HeroSection() {
                             {/* Dark mode version with white background cards */}
                             <div className="hidden dark:flex flex-wrap justify-center items-center gap-6">
                                 <div className="bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <img 
-                                        src="https://promptwatch.com/brands/crisp.svg" 
+                                    <img
+                                        src="https://promptmention.com/brands/crisp.svg"
                                         alt="Crisp"
                                         className="h-6 w-auto max-w-[100px] object-contain"
                                     />
                                 </div>
                                 <div className="bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <img 
-                                        src="https://promptwatch.com/_next/image?url=%2Fbrands%2Fsimpleanalytics.png&w=1080&q=100" 
+                                    <img
+                                        src="https://promptmention.com/_next/image?url=%2Fbrands%2Fsimpleanalytics.png&w=1080&q=100"
                                         alt="Simple Analytics"
                                         className="h-6 w-auto max-w-[100px] object-contain"
                                     />
                                 </div>
                                 <div className="bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <img 
-                                        src="https://promptwatch.com/brands/polymarket.svg" 
+                                    <img
+                                        src="https://promptmention.com/brands/polymarket.svg"
                                         alt="Polymarket"
                                         className="h-6 w-auto max-w-[100px] object-contain"
                                     />
                                 </div>
                                 <div className="bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <img 
-                                        src="https://promptwatch.com/_next/image?url=%2Fbrands%2Findepender.png&w=1920&q=100" 
+                                    <img
+                                        src="https://promptmention.com/_next/image?url=%2Fbrands%2Findepender.png&w=1920&q=100"
                                         alt="Independer"
                                         className="h-6 w-auto max-w-[100px] object-contain"
                                     />
                                 </div>
                                 <div className="bg-white rounded-lg px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-300">
-                                    <img 
-                                        src="https://promptwatch.com/_next/image?url=%2Fbrands%2Fadwise.png&w=256&q=75" 
+                                    <img
+                                        src="https://promptmention.com/_next/image?url=%2Fbrands%2Fadwise.png&w=256&q=75"
                                         alt="Adwise"
                                         className="h-6 w-auto max-w-[100px] object-contain"
                                     />

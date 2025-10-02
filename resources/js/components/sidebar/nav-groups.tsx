@@ -62,8 +62,8 @@ export const monitoringItems: NavItem[] = [
     icon: MessageCircleMore,
   },
   {
-    title: "Citations",
-    href: "/citations",
+    title: "Mentions",
+    href: "/mentions",
     icon: PencilLine,
   },
 ]

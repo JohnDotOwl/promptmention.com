@@ -1,15 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { type Citation } from '@/types/citation'
+import { type Mention } from '@/types/mention'
 import { useMemo } from 'react'
 
 interface TopDomainsCardProps {
-  citations: Citation[]
+  mentions: Mention[]
 }
 
-export function TopDomainsCard({ citations }: TopDomainsCardProps) {
+export function TopDomainsCard({ mentions }: TopDomainsCardProps) {
   const domainStats = useMemo(() => {
-    // Group citations by domain and count them
-    const domainCounts = citations.reduce((acc, citation) => {
+    // Group mentions by domain and count them
+    const domainCounts = mentions.reduce((acc, citation) => {
       acc[citation.domain] = (acc[citation.domain] || 0) + 1
       return acc
     }, {} as Record<string, number>)
@@ -19,13 +19,13 @@ export function TopDomainsCard({ citations }: TopDomainsCardProps) {
       .map(([domain, count]) => ({
         domain,
         count,
-        percentage: (count / citations.length) * 100
+        percentage: (count / mentions.length) * 100
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10) // Top 10 domains
 
     return stats
-  }, [citations])
+  }, [mentions])
 
   const maxCount = Math.max(...domainStats.map(d => d.count))
 
@@ -79,7 +79,7 @@ export function TopDomainsCard({ citations }: TopDomainsCardProps) {
                   }`}
                 >
                   <p className="truncate whitespace-nowrap text-sm leading-none text-muted-foreground">
-                    {stat.count} citations
+                    {stat.count} mentions
                   </p>
                 </div>
               ))}

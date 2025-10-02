@@ -75,10 +75,12 @@ class HandleInertiaRequests extends Middleware
         // Only load monitors data for pages that need it
         $routesNeedingMonitors = [
             'dashboard*',
-            'monitors*', 
+            'profile*',
+            'competitors*',
+            'monitors*',
             'prompts*',
             'responses*',
-            'citations*',
+            'mentions*',
             'analytics*',
             'crawlers*',
             'sitemap*',

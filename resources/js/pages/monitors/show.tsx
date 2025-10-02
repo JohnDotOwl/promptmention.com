@@ -27,9 +27,9 @@ import { PromptsTable } from '@/components/prompts/prompts-table'
 import { mockResponses } from '@/data/responses'
 import { ResponsesTable } from '@/components/responses/responses-table'
 import type { Response, ResponseSortConfig } from '@/types/response'
-import { CitationsTable } from '@/components/citations/citations-table'
-import { mockCitations } from '@/data/citations'
-import type { Citation, CitationSortConfig } from '@/types/citation'
+import { MentionsTable } from '@/components/mentions/mentions-table'
+import { mockMentions } from '@/data/mentions'
+import type { Mention, MentionSortConfig } from '@/types/mention'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -48,7 +48,7 @@ interface PageProps {
     stats: {
       visibilityScore: number
       mentions: number
-      avgCitationRank: number
+      avgMentionRank: number
       totalPrompts: number
       totalResponses: number
     }
@@ -115,8 +115,8 @@ const getVisibilityColor = (value: number | null): string => {
   return 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600'
 }
 
-// Mock citation data for the middle section
-const mockCitationDomains = [
+// Mock mention data for the middle section
+const mockMentionDomains = [
   { domain: 'reddit.com', count: 9, percentage: 100, favicon: 'https://www.google.com/s2/favicons?domain=reddit.com&size=64' },
   { domain: 'selecthub.com', count: 4, percentage: 44.4, favicon: 'https://www.google.com/s2/favicons?domain=selecthub.com&size=64' },
   { domain: 'wise.com', count: 2, percentage: 22.2, favicon: 'https://www.google.com/s2/favicons?domain=wise.com&size=64' },
@@ -150,8 +150,8 @@ const generateVisibilityData = () => {
   return dates
 }
 
-// Generate citation rank performance data
-const generateCitationRankData = () => {
+// Generate mention rank performance data
+const generateMentionRankData = () => {
   const dates = []
   const today = new Date()
   
@@ -160,7 +160,7 @@ const generateCitationRankData = () => {
     date.setDate(date.getDate() - i)
     
     let position = 0
-    if (i <= 4) { // Recent citations
+    if (i <= 4) { // Recent mentions
       position = 5.0
     }
     
@@ -173,8 +173,8 @@ const generateCitationRankData = () => {
   return dates
 }
 
-// Generate citation data over time for multiple domains
-const generateCitationOverTimeData = (period: string = '7d') => {
+// Generate mention data over time for multiple domains
+const generateMentionOverTimeData = (period: string = '7d') => {
   const dates = []
   const today = new Date()
   let days = 7
@@ -198,8 +198,8 @@ const generateCitationOverTimeData = (period: string = '7d') => {
       date: date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
     }
     
-    // Add data for top domains from mockCitationDomains
-    mockCitationDomains.forEach((domain) => {
+    // Add data for top domains from mockMentionDomains
+    mockMentionDomains.forEach((domain) => {
       let value = 0
       if (i <= 4) { // Recent activity
         // Give different values based on domain popularity
@@ -223,7 +223,7 @@ function MonitorTabs({ activeTab, onTabChange }: { activeTab: string, onTabChang
     { id: 'overview', label: 'Overview' },
     { id: 'prompts', label: 'Prompts' },
     { id: 'responses', label: 'Responses' },
-    { id: 'citations', label: 'Citations' },
+    { id: 'mentions', label: 'Mentions' },
     { id: 'heatmap', label: 'Heatmap' },
     { id: 'answer-gap', label: 'Answer Gap' },
     { id: 'settings', label: 'Settings' },
@@ -311,15 +311,15 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   const [responseType, setResponseType] = useState('all-types')
   const [sentimentPopoverOpen, setSentimentPopoverOpen] = useState(false)
   
-  // Citations tab states
-  const [citationsTimeFilter, setCitationsTimeFilter] = useState('7d')
-  const [citationsSortConfig, setCitationsSortConfig] = useState<CitationSortConfig>({
+  // Mentions tab states
+  const [mentionsTimeFilter, setMentionsTimeFilter] = useState('7d')
+  const [mentionsSortConfig, setMentionsSortConfig] = useState<MentionSortConfig>({
     column: null,
     direction: 'desc'
   })
-  const [citationsModelFilter, setCitationsModelFilter] = useState('all-models')
-  const [citationsTypeFilter, setCitationsTypeFilter] = useState('all-types')
-  const [citationsCompetitorFilter, setCitationsCompetitorFilter] = useState('all-competitors')
+  const [mentionsModelFilter, setMentionsModelFilter] = useState('all-models')
+  const [mentionsTypeFilter, setMentionsTypeFilter] = useState('all-types')
+  const [mentionsCompetitorFilter, setMentionsCompetitorFilter] = useState('all-competitors')
   
   // Heatmap tab states
   const [heatmapTimeFilter, setHeatmapTimeFilter] = useState('7d')
@@ -514,32 +514,32 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   }, [sortedResponses, responseBrandSentiment, responseModel])
 
   const visibilityData = useMemo(() => generateVisibilityData(), [])
-  const citationRankData = useMemo(() => generateCitationRankData(), [])
+  const mentionRankData = useMemo(() => generateMentionRankData(), [])
   const heatmapData = useMemo(() => generateHeatmapData(), [])
   
-  // Citations data and handlers
-  const citationOverTimeData = useMemo(() => generateCitationOverTimeData(citationsTimeFilter), [citationsTimeFilter])
+  // Mentions data and handlers
+  const mentionOverTimeData = useMemo(() => generateMentionOverTimeData(mentionsTimeFilter), [mentionsTimeFilter])
   
-  // Handle citation sorting
-  const handleCitationSort = (column: string, direction: 'asc' | 'desc') => {
-    setCitationsSortConfig({ column, direction })
+  // Handle mention sorting
+  const handleMentionSort = (column: string, direction: 'asc' | 'desc') => {
+    setMentionsSortConfig({ column, direction })
   }
   
-  // Get citations for this monitor (using mock data for now)
-  const monitorCitations = useMemo(() => {
+  // Get mentions for this monitor (using mock data for now)
+  const monitorMentions = useMemo(() => {
     // In a real app, you'd filter by monitor ID
-    return mockCitations
+    return mockMentions
   }, [])
   
-  // Apply sorting to citations
-  const sortedCitations = useMemo(() => {
-    if (!citationsSortConfig.column) return monitorCitations
+  // Apply sorting to mentions
+  const sortedMentions = useMemo(() => {
+    if (!mentionsSortConfig.column) return monitorMentions
 
-    return [...monitorCitations].sort((a, b) => {
+    return [...monitorMentions].sort((a, b) => {
       let aValue: string | number | Date
       let bValue: string | number | Date
 
-      switch (citationsSortConfig.column) {
+      switch (mentionsSortConfig.column) {
         case 'domain':
           aValue = a.domain
           bValue = b.domain
@@ -569,27 +569,27 @@ export default function MonitorShow({ id, monitor }: PageProps) {
       }
 
       if (aValue < bValue) {
-        return citationsSortConfig.direction === 'asc' ? -1 : 1
+        return mentionsSortConfig.direction === 'asc' ? -1 : 1
       }
       if (aValue > bValue) {
-        return citationsSortConfig.direction === 'asc' ? 1 : -1
+        return mentionsSortConfig.direction === 'asc' ? 1 : -1
       }
       return 0
     })
-  }, [monitorCitations, citationsSortConfig])
+  }, [monitorMentions, mentionsSortConfig])
   
-  // Apply filters to citations
-  const filteredCitations = useMemo(() => {
-    return sortedCitations.filter(citation => {
+  // Apply filters to mentions
+  const filteredMentions = useMemo(() => {
+    return sortedMentions.filter(mention => {
       // Model filter
-      if (citationsModelFilter !== 'all-models' && citation.model.id !== citationsModelFilter) {
+      if (mentionsModelFilter !== 'all-models' && mention.model.id !== mentionsModelFilter) {
         return false
       }
       
       // Add additional filters here as needed
       return true
     })
-  }, [sortedCitations, citationsModelFilter])
+  }, [sortedMentions, mentionsModelFilter])
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -734,13 +734,13 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Citations */}
+                  {/* Mentions */}
                   <div className="col-span-1 py-6 border-x border-border px-6">
                     <div>
                       <div className="flex items-end gap-2">
                         <div>
                           <div className="flex items-center gap-1">
-                            <h2 className="text-sm text-muted-foreground leading-relaxed">Citations</h2>
+                            <h2 className="text-sm text-muted-foreground leading-relaxed">Mentions</h2>
                             <Button variant="ghost" size="sm" className="h-auto p-0">
                               <Info className="size-4 pl-1 text-muted-foreground" />
                             </Button>
@@ -753,7 +753,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                       <div className="mt-4.5 relative" style={{ height: '310px' }}>
                         <div className="flex justify-between space-x-6 relative h-full">
                           <div className="relative w-full space-y-1.5 z-0">
-                            {mockCitationDomains.map((domain) => (
+                            {mockMentionDomains.map((domain) => (
                               <div key={domain.domain} className="group w-full rounded-sm outline-offset-2 outline-0 focus-visible:outline-2 outline-blue-500 dark:outline-blue-500">
                                 <div 
                                   className="flex items-center rounded-sm transition-all h-8 bg-blue-200 dark:bg-blue-900"
@@ -780,7 +780,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                             ))}
                           </div>
                           <div>
-                            {mockCitationDomains.map((domain) => (
+                            {mockMentionDomains.map((domain) => (
                               <div key={domain.domain} className="flex items-center justify-end h-8 mb-1.5 last:mb-0">
                                 <p className="truncate whitespace-nowrap text-sm leading-none text-muted-foreground">
                                   {domain.count}
@@ -793,26 +793,26 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Citation Rank Performance */}
+                  {/* Mention Rank Performance */}
                   <div className="col-span-1 py-6">
                     <div>
                       <div className="flex items-end gap-2">
                         <div>
                           <div className="flex items-center gap-1">
-                            <h2 className="text-sm text-muted-foreground leading-relaxed">Citation Rank Performance</h2>
+                            <h2 className="text-sm text-muted-foreground leading-relaxed">Mention Rank Performance</h2>
                             <Button variant="ghost" size="sm" className="h-auto p-0">
                               <Info className="size-4 pl-1 text-muted-foreground" />
                             </Button>
                           </div>
                           <strong className="text-xl font-semibold leading-relaxed">
-                            5.0<span className="font-normal text-muted-foreground"> Avg. Citation Rank</span>
+                            5.0<span className="font-normal text-muted-foreground"> Avg. Mention Rank</span>
                           </strong>
                         </div>
                       </div>
                       <div className="mt-4.5 relative" style={{ height: '310px' }}>
                         <div className="relative h-full w-full">
                           <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={citationRankData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <AreaChart data={mentionRankData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                               <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
                               <XAxis 
                                 dataKey="date" 
@@ -827,7 +827,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                                 domain={[0, 6]}
                               />
                               <defs>
-                                <linearGradient id="citationGradient" x1="0" y1="0" x2="0" y2="1">
+                                <linearGradient id="mentionGradient" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="rgb(168 85 247)" stopOpacity="0.3" />
                                   <stop offset="95%" stopColor="rgb(168 85 247)" stopOpacity="0" />
                                 </linearGradient>
@@ -837,7 +837,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                                 dataKey="Position"
                                 stroke="rgb(168 85 247)"
                                 strokeWidth={2}
-                                fill="url(#citationGradient)"
+                                fill="url(#mentionGradient)"
                               />
                             </AreaChart>
                           </ResponsiveContainer>
@@ -1114,13 +1114,13 @@ export default function MonitorShow({ id, monitor }: PageProps) {
             </div>
           )}
 
-          {/* Citations Tab */}
-          {activeTab === 'citations' && (
+          {/* Mentions Tab */}
+          {activeTab === 'mentions' && (
             <div className="py-6">
               <div className="transition-all duration-300 animate-in fade-in">
                 {/* Filters */}
                 <div className="flex items-center justify-between gap-2 pb-6 px-6">
-                  <Tabs value={citationsTimeFilter} onValueChange={setCitationsTimeFilter} className="flex flex-col gap-2">
+                  <Tabs value={mentionsTimeFilter} onValueChange={setMentionsTimeFilter} className="flex flex-col gap-2">
                     <TabsList className="bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]">
                       <TabsTrigger value="7d" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Last 7 days</TabsTrigger>
                       <TabsTrigger value="14d" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Last 14 days</TabsTrigger>
@@ -1130,7 +1130,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                   </Tabs>
                   
                   <div className="flex items-center gap-2">
-                    <Select value={citationsCompetitorFilter} onValueChange={setCitationsCompetitorFilter}>
+                    <Select value={mentionsCompetitorFilter} onValueChange={setMentionsCompetitorFilter}>
                       <SelectTrigger className="w-[214px]">
                         <SelectValue>All competitors</SelectValue>
                       </SelectTrigger>
@@ -1142,7 +1142,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                       </SelectContent>
                     </Select>
                     
-                    <Select value={citationsModelFilter} onValueChange={setCitationsModelFilter}>
+                    <Select value={mentionsModelFilter} onValueChange={setMentionsModelFilter}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue>
                           <div className="flex items-center gap-2">
@@ -1159,7 +1159,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                       </SelectContent>
                     </Select>
                     
-                    <Select value={citationsTypeFilter} onValueChange={setCitationsTypeFilter}>
+                    <Select value={mentionsTypeFilter} onValueChange={setMentionsTypeFilter}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue>All Types</SelectValue>
                       </SelectTrigger>
@@ -1187,7 +1187,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                         <div className="mt-4.5 relative" style={{ height: '310px' }}>
                           <div className="w-full h-full">
                             <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={citationOverTimeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                              <LineChart data={mentionOverTimeData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-800" />
                                 <XAxis 
                                   dataKey="date" 
@@ -1204,7 +1204,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                                   wrapperStyle={{ paddingTop: '10px' }}
                                   iconType="line"
                                 />
-                                {mockCitationDomains.slice(0, 7).map((domain, index) => {
+                                {mockMentionDomains.slice(0, 7).map((domain, index) => {
                                   const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#06b6d4', '#ec4899', '#84cc16']
                                   return (
                                     <Line
@@ -1236,7 +1236,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                         <div className="mt-4.5 relative" style={{ height: '310px' }}>
                           <div className="flex justify-between space-x-6 relative h-full">
                             <div className="relative w-full space-y-1.5 z-0">
-                              {mockCitationDomains.map((domain) => (
+                              {mockMentionDomains.map((domain) => (
                                 <div key={domain.domain} className="group w-full rounded-sm outline-offset-2 outline-0 focus-visible:outline-2 outline-blue-500 dark:outline-blue-500">
                                   <div 
                                     className="flex items-center rounded-sm transition-all h-8 bg-blue-200 dark:bg-blue-900"
@@ -1263,7 +1263,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                               ))}
                             </div>
                             <div>
-                              {mockCitationDomains.map((domain) => (
+                              {mockMentionDomains.map((domain) => (
                                 <div key={domain.domain} className="flex items-center justify-end h-8 mb-1.5 last:mb-0">
                                   <p className="truncate whitespace-nowrap text-sm leading-none text-muted-foreground">
                                     {domain.count}
@@ -1278,20 +1278,20 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                   </div>
                 </div>
 
-                {/* Citations Table */}
+                {/* Mentions Table */}
                 <div className="p-6">
                   <div className="animate-in fade-in space-y-4 duration-300">
-                    <CitationsTable 
-                      citations={filteredCitations}
-                      onSort={handleCitationSort}
-                      sortConfig={citationsSortConfig}
+                    <MentionsTable 
+                      mentions={filteredMentions}
+                      onSort={handleMentionSort}
+                      sortConfig={mentionsSortConfig}
                     />
 
                     {/* Pagination */}
                     <div className="flex items-center justify-between gap-8">
                       <div className="text-muted-foreground flex grow justify-end text-sm whitespace-nowrap">
                         <p className="text-muted-foreground text-sm whitespace-nowrap">
-                          <span className="text-foreground">1-{Math.min(25, filteredCitations.length)}</span> of <span className="text-foreground">{filteredCitations.length}</span>
+                          <span className="text-foreground">1-{Math.min(25, filteredMentions.length)}</span> of <span className="text-foreground">{filteredMentions.length}</span>
                         </p>
                       </div>
                       <div>
@@ -1668,7 +1668,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
           )}
 
           {/* Other tabs content */}
-          {activeTab !== 'overview' && activeTab !== 'prompts' && activeTab !== 'responses' && activeTab !== 'citations' && activeTab !== 'heatmap' && activeTab !== 'settings' && (
+          {activeTab !== 'overview' && activeTab !== 'prompts' && activeTab !== 'responses' && activeTab !== 'mentions' && activeTab !== 'heatmap' && activeTab !== 'settings' && (
             <div className="px-6">
               <div className="text-center py-12">
                 <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>

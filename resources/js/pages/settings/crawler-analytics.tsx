@@ -18,9 +18,18 @@ const mockDomain = 'payboy.sg';
 
 const analyticsScript = `<script>
 (function() {
+  // Check if script already exists to avoid duplicates
+  if (document.querySelector('script[data-pm-project-id]')) {
+    return;
+  }
+
   var script = document.createElement('script');
-  script.setAttribute('data-project-id', '${mockProjectId}');
-  script.src = 'https://ingest.promptwatch.com/js/client.min.js';
+  script.setAttribute('data-pm-project-id', '${mockProjectId}');
+  script.src = 'https://ingest.promptmention.com/js/promptmention-tracker.js';
+  script.async = true;
+  script.onerror = function() {
+    console.error('Failed to load PromptMention analytics script');
+  };
   document.head.appendChild(script);
 })();
 </script>`;
@@ -43,7 +52,7 @@ export default function CrawlerAnalytics() {
                                     <div className="space-y-6">
                                         <div>
                                             <h2 className="text-xl font-semibold leading-relaxed">Getting started</h2>
-                                            <p className="text-sm">Let Promptwatch analyze traffic on your website, to gain insights into AI traffic and usage.</p>
+                                            <p className="text-sm">Let PromptMention analyze traffic on your website, to gain insights into AI traffic and usage.</p>
                                         </div>
                                         <ol className="list-decimal list-inside space-y-6">
                                             <li className="space-y-2 flex items-start gap-3">

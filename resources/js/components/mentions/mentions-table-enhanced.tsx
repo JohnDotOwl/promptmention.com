@@ -1,21 +1,21 @@
-import { type Citation, type CitationSortConfig } from '@/types/citation'
+import { type Mention, type MentionSortConfig } from '@/types/mention'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChevronUp, ChevronDown, HelpCircle, ChevronFirst, ChevronLeft, ChevronRight, ChevronLast } from 'lucide-react'
 import { useState } from 'react'
 
-interface CitationsTableEnhancedProps {
-  citations: Citation[]
+interface MentionsTableEnhancedProps {
+  mentions: Mention[]
   onSort?: (column: string, direction: 'asc' | 'desc') => void
-  sortConfig?: CitationSortConfig
+  sortConfig?: MentionSortConfig
   itemsPerPage?: number
 }
 
 interface SortableHeaderProps {
   column: string
   children: React.ReactNode
-  sortConfig?: CitationSortConfig
+  sortConfig?: MentionSortConfig
   onSort?: (column: string, direction: 'asc' | 'desc') => void
   className?: string
   tooltip?: string
@@ -148,18 +148,18 @@ function ModelBadge({ model }: { model: Citation['model'] }) {
   )
 }
 
-export function CitationsTableEnhanced({ 
-  citations, 
-  onSort, 
+export function MentionsTableEnhanced({
+  mentions,
+  onSort,
   sortConfig,
   itemsPerPage = 25 
-}: CitationsTableEnhancedProps) {
+}: MentionsTableEnhancedProps) {
   const [currentPage, setCurrentPage] = useState(1)
   
-  const totalPages = Math.ceil(citations.length / itemsPerPage)
+  const totalPages = Math.ceil(mentions.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
-  const paginatedCitations = citations.slice(startIndex, endIndex)
+  const paginatedMentions = mentions.slice(startIndex, endIndex)
 
   const goToFirstPage = () => setCurrentPage(1)
   const goToLastPage = () => setCurrentPage(totalPages)
@@ -261,47 +261,47 @@ export function CitationsTableEnhanced({
               </tr>
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
-              {paginatedCitations.map((citation) => (
+              {paginatedMentions.map((mention) => (
                 <tr 
-                  key={citation.id} 
+                  key={mention.id} 
                   className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors cursor-pointer"
                 >
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <DomainFavicon domain={citation.domain} />
+                    <DomainFavicon domain={mention.domain} />
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <div className="truncate">{citation.domain}</div>
+                    <div className="truncate">{mention.domain}</div>
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <MetricProgress value={citation.domainRating} />
+                    <MetricProgress value={mention.domainRating} />
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
                     <a
-                      href={citation.url}
+                      href={mention.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline truncate block"
-                      title={citation.url}
+                      title={mention.url}
                     >
-                      {citation.title}
+                      {mention.title}
                     </a>
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
                     <div className="flex items-center gap-2">
-                      <ModelBadge model={citation.model} />
+                      <ModelBadge model={mention.model} />
                     </div>
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <div>{citation.estimatedTraffic ? citation.estimatedTraffic.toLocaleString() : '-'}</div>
+                    <div>{mention.estimatedTraffic ? mention.estimatedTraffic.toLocaleString() : '-'}</div>
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <MetricProgress value={citation.pageRank || 0} />
+                    <MetricProgress value={mention.pageRank || 0} />
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    {citation.position}
+                    {mention.position}
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    {new Date(citation.firstSeen).toLocaleDateString('en-US', { 
+                    {new Date(mention.firstSeen).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric', 
                       year: 'numeric' 
@@ -316,8 +316,8 @@ export function CitationsTableEnhanced({
       
       <div className="flex items-center justify-between gap-8 pt-2">
         <div className="text-muted-foreground flex-1 text-sm">
-          Showing <span className="text-foreground font-medium">{startIndex + 1} - {Math.min(endIndex, citations.length)}</span> of{' '}
-          <span className="text-foreground font-medium">{citations.length}</span> citations
+          Showing <span className="text-foreground font-medium">{startIndex + 1} - {Math.min(endIndex, mentions.length)}</span> of{' '}
+          <span className="text-foreground font-medium">{mentions.length}</span> mentions
         </div>
         <div className="flex items-center space-x-2">
           <nav aria-label="pagination" className="mx-auto flex w-full justify-center">

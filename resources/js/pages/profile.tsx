@@ -14,16 +14,19 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Globe
+  Globe,
+  Building2,
+  Mail,
+  Briefcase,
+  Flag,
+  MapPin,
+  Search,
+  Star
 } from 'lucide-react';
-import { type Monitor as MonitorType } from '@/types/monitor';
-
-interface ProfilePageProps {
-    monitors?: MonitorType[];
-}
+import { type ProfilePageProps } from '@/types/profile';
 
 export default function Profile() {
-    const { monitors = [] } = usePage<ProfilePageProps>().props;
+    const { user, company, domainAnalysis, monitors, onboardingCompleted, hasData } = usePage<ProfilePageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -31,8 +34,6 @@ export default function Profile() {
             href: '/profile',
         },
     ];
-
-    const hasMonitors = monitors && monitors.length > 0;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -49,7 +50,7 @@ export default function Profile() {
                             Manage your brand identity and monitoring settings
                         </p>
                     </div>
-                    {hasMonitors && (
+                    {hasData && (
                         <Button asChild variant="outline">
                             <Link href="/monitors/create">
                                 <Plus className="h-4 w-4 mr-2" />
@@ -60,55 +61,207 @@ export default function Profile() {
                 </div>
 
                 {/* Content */}
-                {hasMonitors ? (
+                {hasData ? (
                     <div className="space-y-6">
-                        {/* Active Monitors */}
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                Active Monitors
-                            </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {monitors.slice(0, 4).map((monitor) => (
-                                    <Card key={monitor.id} className="hover:shadow-md transition-shadow">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base">
-                                                    {monitor.website.name}
-                                                </CardTitle>
-                                                <Badge variant={monitor.status === 'active' ? 'default' : 'secondary'}>
-                                                    {monitor.status}
-                                                </Badge>
+                        {/* User Information */}
+                        {(user.firstName || user.lastName || user.jobRole) && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Users className="h-5 w-5" />
+                                        Personal Information
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {user.firstName && user.lastName && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Full Name</label>
+                                                <p className="text-lg font-semibold">{user.firstName} {user.lastName}</p>
                                             </div>
-                                            <CardDescription className="text-sm">
-                                                {monitor.website.url}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Visibility Score</span>
-                                                    <span className="font-medium">{monitor.stats?.visibilityScore || 0}</span>
+                                        )}
+                                        {user.jobRole && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Job Role</label>
+                                                <p className="text-lg font-semibold flex items-center gap-2">
+                                                    <Briefcase className="h-4 w-4" />
+                                                    {user.jobRole}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {user.companySize && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Company Size</label>
+                                                <p className="text-lg font-semibold">{user.companySize}</p>
+                                            </div>
+                                        )}
+                                        {user.language && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Language</label>
+                                                <p className="text-lg font-semibold flex items-center gap-2">
+                                                    <Flag className="h-4 w-4" />
+                                                    {user.language}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {user.country && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Country</label>
+                                                <p className="text-lg font-semibold flex items-center gap-2">
+                                                    <MapPin className="h-4 w-4" />
+                                                    {user.country}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {user.email && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
+                                                <p className="text-lg font-semibold flex items-center gap-2">
+                                                    <Mail className="h-4 w-4" />
+                                                    {user.email}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Company Information */}
+                        {company.name && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Building2 className="h-5 w-5" />
+                                        Company Information
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Company Name</label>
+                                                <p className="text-xl font-bold">{company.name}</p>
+                                            </div>
+                                            {company.industry && (
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Industry</label>
+                                                    <Badge variant="secondary" className="mt-1">
+                                                        {company.industry}
+                                                    </Badge>
                                                 </div>
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600 dark:text-gray-400">Total Mentions</span>
-                                                    <span className="font-medium">{monitor.stats?.mentions || 0}</span>
+                                            )}
+                                        </div>
+                                        {company.website && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Website</label>
+                                                <p className="text-lg font-semibold flex items-center gap-2">
+                                                    <Globe className="h-4 w-4" />
+                                                    <Link href={company.website} target="_blank" className="text-blue-600 hover:text-blue-800">
+                                                        {company.website}
+                                                    </Link>
+                                                </p>
+                                            </div>
+                                        )}
+                                        {company.description && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Description</label>
+                                                <p className="text-gray-700 dark:text-gray-300 mt-1">
+                                                    {company.description}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Domain Analysis */}
+                        {domainAnalysis && domainAnalysis.summary && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Search className="h-5 w-5" />
+                                        Domain Analysis
+                                        <Badge variant={domainAnalysis.status === 'completed' ? 'default' : 'secondary'}>
+                                            {domainAnalysis.status}
+                                        </Badge>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Summary</label>
+                                            <p className="text-gray-700 dark:text-gray-300 mt-1">
+                                                {domainAnalysis.summary}
+                                            </p>
+                                        </div>
+                                        {domainAnalysis.keywords && domainAnalysis.keywords.length > 0 && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Keywords</label>
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {domainAnalysis.keywords.slice(0, 10).map((keyword, index) => (
+                                                        <Badge key={index} variant="outline">
+                                                            {keyword}
+                                                        </Badge>
+                                                    ))}
                                                 </div>
+                                            </div>
+                                        )}
+                                        {domainAnalysis.competitors && domainAnalysis.competitors.length > 0 && (
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Identified Competitors</label>
+                                                <div className="mt-2">
+                                                    <Link href="/competitors" className="text-blue-600 hover:text-blue-800">
+                                                        View {domainAnalysis.competitors.length} competitors →
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Active Monitors */}
+                        {monitors.length > 0 && (
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                    Active Monitors
+                                </h2>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {monitors.slice(0, 4).map((monitor) => (
+                                        <Card key={monitor.id} className="hover:shadow-md transition-shadow">
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-base">
+                                                        {monitor.website.name}
+                                                    </CardTitle>
+                                                    <Badge variant={monitor.status === 'active' ? 'default' : 'secondary'}>
+                                                        {monitor.status}
+                                                    </Badge>
+                                                </div>
+                                                <CardDescription className="text-sm">
+                                                    {monitor.website.url}
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="w-full mt-3"
+                                                    className="w-full"
                                                     asChild
                                                 >
                                                     <Link href={`/monitors/${monitor.id}`}>
                                                         View Details →
                                                     </Link>
                                                 </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Profile Features */}
                         <div>
@@ -167,7 +320,7 @@ export default function Profile() {
                         </div>
                     </div>
                 ) : (
-                    /* Empty State - No Monitors */
+                    /* Empty State - No Data */
                     <div className="flex flex-col items-center justify-center h-full py-12">
                         <div className="text-center max-w-2xl">
                             <div className="mx-auto h-24 w-24 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center mb-6">
@@ -175,62 +328,62 @@ export default function Profile() {
                             </div>
 
                             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                                Set Up Your First Monitor
+                                Set Up Your Brand Profile
                             </h3>
 
                             <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
-                                To access your brand profile and manage your brand identity, you need to create a monitor first.
-                                Monitors track your brand's presence across AI platforms and provide the data needed for profile management.
+                                To access your brand profile and manage your brand identity, you need to complete the onboarding process first.
+                                This will collect information about your company and set up monitoring for your brand.
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                                 <div className="text-center">
                                     <div className="mx-auto h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-3">
-                                        <Globe className="h-6 w-6 text-green-600" />
+                                        <Building2 className="h-6 w-6 text-green-600" />
                                     </div>
                                     <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                        Monitor Your Brand
+                                        Company Info
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Track mentions across AI platforms
+                                        Add your company details
                                     </p>
                                 </div>
 
                                 <div className="text-center">
                                     <div className="mx-auto h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center mb-3">
-                                        <TrendingUp className="h-6 w-6 text-purple-600" />
+                                        <Search className="h-6 w-6 text-purple-600" />
                                     </div>
                                     <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                        Gain Insights
+                                        Domain Analysis
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Analyze your brand performance
+                                        AI-powered website analysis
                                     </p>
                                 </div>
 
                                 <div className="text-center">
                                     <div className="mx-auto h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mb-3">
-                                        <Users className="h-6 w-6 text-orange-600" />
+                                        <Star className="h-6 w-6 text-orange-600" />
                                     </div>
                                     <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                                        Build Profile
+                                        Brand Profile
                                     </h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Create comprehensive brand profiles
+                                        Complete brand management
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Button asChild size="lg">
-                                    <Link href="/monitors/create">
+                                    <Link href="/onboarding">
                                         <Plus className="h-4 w-4 mr-2" />
-                                        Create Your First Monitor
+                                        Start Onboarding
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="lg">
                                     <Link href="/monitors">
-                                        View All Monitors
+                                        View Monitors
                                     </Link>
                                 </Button>
                             </div>

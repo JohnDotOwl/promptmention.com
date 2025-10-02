@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from 'recharts'
-import { type Citation } from '@/types/citation'
+import { type Mention } from '@/types/mention'
 import { useMemo } from 'react'
 
 interface DomainRankDistributionCardProps {
-  citations: Citation[]
+  mentions: Mention[]
 }
 
 interface RankBin {
@@ -13,7 +13,7 @@ interface RankBin {
   count: number
 }
 
-export function DomainRankDistributionCard({ citations }: DomainRankDistributionCardProps) {
+export function DomainRankDistributionCard({ mentions }: DomainRankDistributionCardProps) {
   const chartData = useMemo(() => {
     // Create bins for domain ratings (0-10, 10-20, etc.)
     const bins: RankBin[] = []
@@ -28,27 +28,27 @@ export function DomainRankDistributionCard({ citations }: DomainRankDistribution
       })
     }
 
-    // Count citations in each bin
-    citations.forEach(citation => {
+    // Count mentions in each bin
+    mentions.forEach(citation => {
       const binIndex = Math.min(Math.floor(citation.domainRating / binSize), 9)
       bins[binIndex].count++
     })
 
     return bins
-  }, [citations])
+  }, [mentions])
 
   const stats = useMemo(() => {
-    const uniqueDomains = new Set(citations.map(c => c.domain)).size
-    const avgRank = citations.reduce((sum, c) => sum + c.domainRating, 0) / citations.length || 0
+    const uniqueDomains = new Set(mentions.map(c => c.domain)).size
+    const avgRank = mentions.reduce((sum, c) => sum + c.domainRating, 0) / mentions.length || 0
     return {
       uniqueDomains,
       avgRank: avgRank.toFixed(2)
     }
-  }, [citations])
+  }, [mentions])
 
   const chartConfig = {
     count: {
-      label: 'Citations',
+      label: 'Mentions',
       color: 'hsl(var(--primary))'
     }
   }

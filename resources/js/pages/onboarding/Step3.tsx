@@ -41,9 +41,6 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
     });
 
     // Start/stop polling based on analysis status
-    // Polling disabled - causing spam requests during onboarding
-    // Page will need to be manually refreshed if analysis completes
-    /*
     useEffect(() => {
         const needsPolling = domainAnalysis?.status === 'pending' || domainAnalysis?.status === 'processing';
 
@@ -57,7 +54,6 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
             analysisPolling.stopPolling();
         };
     }, [domainAnalysis?.status, analysisPolling]);
-    */
 
     // Set timeout detection - 2 minutes
     useEffect(() => {
@@ -107,17 +103,17 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
 
         switch (domainAnalysis?.status) {
             case 'pending':
-                return <Badge variant="secondary">Analyzing...</Badge>;
+                return <Badge variant="secondary">AI Analysis Started</Badge>;
             case 'processing':
-                return <Badge variant="secondary">Processing...</Badge>;
+                return <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-200">Processing Company Data</Badge>;
             case 'completed':
-                return <Badge variant="default">Analysis Complete</Badge>;
+                return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Analysis Complete</Badge>;
             case 'skipped':
                 return <Badge variant="outline" className="border-blue-500 text-blue-600">Analysis Skipped</Badge>;
             case 'failed':
                 return <Badge variant="destructive">Analysis Failed</Badge>;
             default:
-                return <Badge variant="secondary">Preparing...</Badge>;
+                return <Badge variant="secondary">Preparing Analysis...</Badge>;
         }
     };
 
@@ -261,10 +257,10 @@ export default function Step3({ currentStep, domainAnalysis }: Step3Props) {
                                             <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
                                             <h3 className="text-lg font-semibold mb-2">Analyzing Your Company</h3>
                                             <p className="text-muted-foreground mb-2">
-                                                Our AI is analyzing your website and company information. This usually takes 30-60 seconds.
+                                                Our AI is analyzing {domainAnalysis?.data?.company_name || 'your company'} website and industry information.
                                             </p>
                                             <p className="text-sm text-muted-foreground mb-4">
-                                                Next check in {Math.round(analysisPolling.currentInterval / 1000)} seconds...
+                                                This usually takes 30-60 seconds. {analysisPolling.isPolling && `Next automatic check in ${Math.round(analysisPolling.currentInterval / 1000)} seconds...`}
                                             </p>
                                             <div className="flex gap-2 justify-center flex-wrap">
                                                 <Button

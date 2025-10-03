@@ -14,9 +14,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const mockProjectId = 'bedba439-53b3-4c5f-bbdc-42d2fccb800c';
-const mockDomain = 'payboy.sg';
 
-const analyticsScript = `<script>
+interface Monitor {
+  name: string;
+  website_name: string;
+  website_url: string;
+}
+
+interface CrawlerAnalyticsPageProps {
+  monitors?: Monitor[];
+}
+
+export default function CrawlerAnalytics({ monitors = [] }: CrawlerAnalyticsPageProps) {
+  // Get the first monitor's website name, or fallback to a default
+  const currentMonitorName = monitors.length > 0
+    ? monitors[0].website_name
+    : 'your website';
+
+  const analyticsScript = `<script>
 (function() {
   // Check if script already exists to avoid duplicates
   if (document.querySelector('script[data-pm-project-id]')) {
@@ -33,8 +48,6 @@ const analyticsScript = `<script>
   document.head.appendChild(script);
 })();
 </script>`;
-
-export default function CrawlerAnalytics() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Crawler Analytics" />
@@ -59,7 +72,7 @@ export default function CrawlerAnalytics() {
                                                 <div className="w-6 h-6 rounded-full tabular-nums text-xs bg-primary text-white flex items-center justify-center shrink-0">1</div>
                                                 <div className="space-y-2 flex-1 overflow-hidden">
                                                     <div className="flex items-center justify-between">
-                                                        <p className="text-sm">Paste this code into the head of <strong className="font-semibold">{mockDomain}</strong>:</p>
+                                                        <p className="text-sm">Paste this code into the head of <strong className="font-semibold">{currentMonitorName}</strong>:</p>
                                                     </div>
                                                     <pre className="px-4 py-2 bg-muted rounded-lg w-full overflow-x-scroll text-sm">{analyticsScript}</pre>
                                                     <div className="flex items-center gap-2">

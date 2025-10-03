@@ -29,11 +29,12 @@ export interface Monitor {
   id: string
   name: string
   website: Website
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'error' | 'pending'
   lastUpdated: string
   createdAt: string
   stats: MonitorStats
   models: MonitorModel[]
+  isPending?: boolean
 }
 
 export interface MonitorCardProps {

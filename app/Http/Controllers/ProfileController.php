@@ -103,6 +103,72 @@ class ProfileController extends Controller
     }
 
     /**
+     * Update the user's profile information.
+     */
+    public function update(Request $request)
+    {
+        $userId = Auth::id();
+
+        // Validate the request
+        $validated = $request->validate([
+            'firstName' => 'nullable|string|max:255',
+            'lastName' => 'nullable|string|max:255',
+            'jobRole' => 'nullable|string|max:255',
+            'companySize' => 'nullable|string|max:255',
+            'language' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'companyName' => 'nullable|string|max:255',
+            'companyWebsite' => 'nullable|url|max:255',
+            'companyDescription' => 'nullable|string',
+            'industry' => 'nullable|string|max:255',
+            'domainSummary' => 'nullable|string',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:100',
+        ]);
+
+        // Update onboarding_progress table
+        if ($this->tableExists('onboarding_progress')) {
+            $onboardingData = [];
+
+            if (isset($validated['firstName'])) $onboardingData['first_name'] = $validated['firstName'];
+            if (isset($validated['lastName'])) $onboardingData['last_name'] = $validated['lastName'];
+            if (isset($validated['jobRole'])) $onboardingData['job_role'] = $validated['jobRole'];
+            if (isset($validated['companySize'])) $onboardingData['company_size'] = $validated['companySize'];
+            if (isset($validated['language'])) $onboardingData['language'] = $validated['language'];
+            if (isset($validated['country'])) $onboardingData['country'] = $validated['country'];
+            if (isset($validated['companyName'])) $onboardingData['company_name'] = $validated['companyName'];
+            if (isset($validated['companyWebsite'])) $onboardingData['company_website'] = $validated['companyWebsite'];
+            if (isset($validated['companyDescription'])) $onboardingData['company_description'] = $validated['companyDescription'];
+            if (isset($validated['industry'])) $onboardingData['industry'] = $validated['industry'];
+
+            if (!empty($onboardingData)) {
+                DB::table('onboarding_progress')
+                    ->where('user_id', $userId)
+                    ->update($onboardingData);
+            }
+        }
+
+        // Update domain_analysis table if domain fields are provided
+        if ($this->tableExists('domain_analysis') && (isset($validated['domainSummary']) || isset($validated['keywords']))) {
+            $domainData = [];
+
+            if (isset($validated['domainSummary'])) $domainData['summary'] = $validated['domainSummary'];
+            if (isset($validated['keywords'])) $domainData['keywords'] = json_encode($validated['keywords']);
+            if (isset($validated['industry'])) $domainData['industry'] = $validated['industry'];
+
+            if (!empty($domainData)) {
+                DB::table('domain_analysis')
+                    ->where('user_id', $userId)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(1)
+                    ->update($domainData);
+            }
+        }
+
+        return redirect()->route('profile')->with('success', 'Profile updated successfully');
+    }
+
+    /**
      * Check if a database table exists
      */
     private function tableExists($tableName)

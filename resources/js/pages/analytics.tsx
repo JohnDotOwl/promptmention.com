@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2 } from 'lucide-react'
 import type { BreadcrumbItem } from '@/types'
 import type { AnalyticsDataPoint, TimePeriod, AIDomain } from '@/types/analytics'
+import type { PageProps } from '@/types'
 import { getAnalyticsData, chartConfig, getLocationData, getPageData, getDeviceData, getTrafficSourceData, getRecentActivity } from '@/data/analytics'
 import { AnalyticsChart } from '@/components/analytics/analytics-chart'
 import { TopLocationsCard } from '@/components/analytics/top-locations-card'
@@ -13,13 +14,25 @@ import { TopPagesCard } from '@/components/analytics/top-pages-card'
 import { DeviceBreakdownCard } from '@/components/analytics/device-breakdown-card'
 import { TrafficSourcesCard } from '@/components/analytics/traffic-sources-card'
 import { RecentActivityCard } from '@/components/analytics/recent-activity-card'
+import { ShareOfVoiceCard } from '@/components/analytics/share-of-voice-card'
+
+interface AnalyticsPageProps extends PageProps {
+  shareOfVoiceData?: {
+    ourBrand: number
+    otherBrands: number
+    trend: number
+    isPositive: boolean
+    ourBrandMentions: number
+    totalMentions: number
+  }
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Analytics', href: '/analytics' }
 ]
 
-export default function Analytics() {
+export default function Analytics({ shareOfVoiceData }: AnalyticsPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview')
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d')
   const [activeDomains, setActiveDomains] = useState<AIDomain[]>(['google', 'chatgpt', 'claude', 'perplexity'])
@@ -81,7 +94,11 @@ export default function Analytics() {
           <div className="px-6 pb-5">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Analytics</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">Analytics</h1>
+                <Badge variant="secondary" className="text-xs">Demo</Badge>
+                <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 dark:text-blue-400">Coming Soon</Badge>
+              </div>
               <div className="flex items-center gap-2"></div>
             </div>
           </div>
@@ -197,17 +214,14 @@ export default function Analytics() {
                 <DeviceBreakdownCard data={deviceData} />
                 <TrafficSourcesCard data={trafficSourceData} />
                 <RecentActivityCard data={recentActivityData} />
-                <div className="h-[495px] space-y-4 border-r border-b p-8">
-                  <div>
-                    <h2 className="text-base font-semibold leading-none">Conversion Rate</h2>
-                  </div>
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold">3.2%</div>
-                      <div className="text-sm text-muted-foreground mt-2">+0.5% from last period</div>
-                    </div>
-                  </div>
-                </div>
+                <ShareOfVoiceCard data={shareOfVoiceData || {
+                  ourBrand: 0,
+                  otherBrands: 100,
+                  trend: 0,
+                  isPositive: false,
+                  ourBrandMentions: 0,
+                  totalMentions: 0
+                }} />
               </div>
             </div>
           ) : (

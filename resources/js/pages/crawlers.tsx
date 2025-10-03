@@ -10,12 +10,22 @@ import { CrawlerSettings } from '@/components/analytics/crawler-settings'
 
 type TimePeriod = '1d' | '7d' | '30d' | '90d'
 
+interface Monitor {
+  name: string
+  website_name: string
+  website_url: string
+}
+
+interface CrawlersPageProps {
+  monitors?: Monitor[]
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
   { title: 'Crawler Analytics', href: '/crawlers' }
 ]
 
-export default function Crawlers() {
+export default function Crawlers({ monitors = [] }: CrawlersPageProps) {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d');
   const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview');
 
@@ -40,7 +50,11 @@ export default function Crawlers() {
           <div>
             <div className="px-6 pb-6">
               <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">Crawler Analytics</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold">Crawler Analytics</h1>
+                  <Badge variant="secondary" className="text-xs">Demo</Badge>
+                  <Badge variant="outline" className="text-xs border-blue-500 text-blue-600 dark:text-blue-400">Coming Soon</Badge>
+                </div>
                 <div className="flex items-center gap-2"></div>
               </div>
             </div>
@@ -119,7 +133,7 @@ export default function Crawlers() {
                   </div>
                 </div>
               ) : (
-                <CrawlerSettings />
+                <CrawlerSettings monitors={monitors} />
               )}
             </div>
           </div>

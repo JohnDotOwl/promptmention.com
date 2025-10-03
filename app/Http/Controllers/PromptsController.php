@@ -9,6 +9,36 @@ use Inertia\Inertia;
 
 class PromptsController extends Controller
 {
+    /**
+     * Safely format a date value to ISO string
+     */
+    private function safeFormatDate($dateValue): string
+    {
+        if (empty($dateValue)) {
+            return now()->toISOString();
+        }
+
+        // If it's already a string, try to parse it
+        if (is_string($dateValue)) {
+            try {
+                return \Carbon\Carbon::parse($dateValue)->toISOString();
+            } catch (\Exception $e) {
+                return now()->toISOString();
+            }
+        }
+
+        // If it's an object with format method (like Carbon instance)
+        if (is_object($dateValue) && method_exists($dateValue, 'toISOString')) {
+            try {
+                return $dateValue->toISOString();
+            } catch (\Exception $e) {
+                return now()->toISOString();
+            }
+        }
+
+        // Fallback to current time
+        return now()->toISOString();
+    }
     public function index()
     {
         $user = Auth::user();
@@ -25,7 +55,7 @@ class PromptsController extends Controller
             ->orderBy('prompts.created_at', 'desc')
             ->get()
             ->map(function ($prompt) {
-                // Get responses for this prompt
+                // Get responses for this prompt with model status
                 $responses = DB::table('responses')
                     ->where('prompt_id', $prompt->id)
                     ->select('id', 'model_name', 'response_text', 'brand_mentioned', 'sentiment', 'visibility_score', 'competitors_mentioned', 'citation_sources', 'created_at')
@@ -78,6 +108,20 @@ class PromptsController extends Controller
                         ];
                     });
                 
+                // Create model status summary
+                $modelStatus = [];
+                $expectedModels = ['gemini-2.5-flash', 'gpt-oss-120b', 'llama-4-scout-17b-16e-instruct'];
+
+                foreach ($expectedModels as $model) {
+                    $modelResponses = $responses->where('model_name', $model);
+                    $firstResponse = $modelResponses->first();
+                    $modelStatus[$model] = [
+                        'has_response' => $modelResponses->count() > 0,
+                        'response_count' => $modelResponses->count(),
+                        'last_response' => $firstResponse['created_at'] ?? null
+                    ];
+                }
+
                 return [
                     'id' => $prompt->id ?? 'N/A',
                     'text' => $prompt->text ?? 'Untitled Prompt',
@@ -95,7 +139,8 @@ class PromptsController extends Controller
                         'name' => $prompt->monitor_name ?? 'Unknown Monitor'
                     ],
                     'responses' => $responses,
-                    'created' => $prompt->created_at ?? now()->toISOString()
+                    'modelStatus' => $modelStatus,
+                    'created' => $this->safeFormatDate($prompt->created_at ?? null)
                 ];
             });
 
@@ -224,8 +269,8 @@ class PromptsController extends Controller
                 ]
             ],
             'responses' => $responses->toArray(),
-            'created' => $prompt->created_at ?? now()->toISOString(),
-            'updated' => $prompt->updated_at ?? now()->toISOString()
+            'created' => $this->safeFormatDate($prompt->created_at ?? null),
+            'updated' => $this->safeFormatDate($prompt->updated_at ?? null)
         ];
 
         return Inertia::render('prompts/show-new', [

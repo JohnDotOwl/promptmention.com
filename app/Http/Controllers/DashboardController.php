@@ -182,28 +182,72 @@ class DashboardController extends Controller
                         'mistral-small-latest' => [0, 0, 0, 0, 0, 0, 0][$index] ?? 0,
                     ];
                 })->values()->toArray(),
-                'modelUsage' => [
-                    ['name' => 'gemini-2.0-flash', 'value' => 10, 'fill' => '#3b82f6'],
-                    ['name' => 'gpt-4o-search', 'value' => 10, 'fill' => '#10b981'],
-                    ['name' => 'mistral-small-latest', 'value' => 10, 'fill' => '#8B5CF6'],
-                ],
-                'citedDomains' => [
-                    ['domain' => 'reddit.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=reddit.com&size=64', 'count' => 9, 'percentage' => 100],
-                    ['domain' => 'selecthub.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=selecthub.com&size=64', 'count' => 4, 'percentage' => 44.4444],
-                    ['domain' => 'wise.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=wise.com&size=64', 'count' => 2, 'percentage' => 22.2222],
-                    ['domain' => 'volopay.com', 'favicon' => 'https://www.google.com/s2/favicons?domain=volopay.com&size=64', 'count' => 2, 'percentage' => 22.2222],
-                ]
+                'modelUsage' => $this->getModelUsageData($user),
+                'mentionedDomains' => $this->getTopCitedSources($user)
             ];
         } catch (\Exception $e) {
             \Log::error('Failed to get chart data', ['error' => $e->getMessage()]);
             return [
                 'timeline' => [],
                 'modelUsage' => [],
-                'citedDomains' => []
+                'mentionedDomains' => []
             ];
         }
     }
-    
+
+    private function getModelUsageData($user): array
+    {
+        try {
+            // Default model colors
+            $modelColors = [
+                'gemini-2.5-flash' => '#3b82f6',
+                'gemini-2.5-flash-preview-09-2025' => '#3b82f6',
+                'gpt-oss-120b' => '#10b981',
+                'llama-4-scout-17b-16e-instruct' => '#8B5CF6',
+            ];
+
+            $modelUsage = [];
+
+            if ($this->tableExists('responses')) {
+                // Get user's active monitor
+                $monitor = DB::table('monitors')
+                    ->where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($monitor) {
+                    // Get model usage from last 30 days
+                    $usageData = DB::table('responses')
+                        ->where('monitor_id', $monitor->id)
+                        ->where('created_at', '>=', now()->subDays(30))
+                        ->selectRaw('model_name, COUNT(*) as usage_count')
+                        ->groupBy('model_name')
+                        ->orderBy('usage_count', 'desc')
+                        ->get();
+
+                    foreach ($usageData as $usage) {
+                        $modelUsage[] = [
+                            'name' => $usage->model_name,
+                            'value' => (int) $usage->usage_count,
+                            'fill' => $modelColors[$usage->model_name] ?? '#6B7280',
+                        ];
+                    }
+                }
+            }
+
+            // If no real data, return empty array (the component will handle this)
+            if (empty($modelUsage)) {
+                return [];
+            }
+
+            return $modelUsage;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to get model usage data', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
     private function getRecentActivity($user): array
     {
         try {
@@ -478,77 +522,293 @@ class DashboardController extends Controller
 
     private function getBrandVisibilityData($user): array
     {
-        // Mock data showing brand visibility trends
-        return [
-            [
-                'date' => '30 Sep',
-                'Wix' => 80.8,
-                'Squarespace' => 76.2,
-                'Pay Boy' => 63.8,
-                'Shopify' => 61.5,
-                'Webflow' => 59.4,
-                'Weebly' => 56.1,
-                'WordPress.org' => 58.6,
-            ],
-        ];
+        try {
+            // Get real brands from database
+            $brandNames = [];
+
+            if ($this->tableExists('brands')) {
+                $dbBrands = DB::table('brands')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                foreach ($dbBrands as $index => $brand) {
+                    $brandNames[] = $brand->name;
+                }
+            }
+
+            // If no brands found, return empty data
+            if (empty($brandNames)) {
+                return [];
+            }
+
+            // Create mock data with real brand names and fake visibility scores
+            $data = [
+                [
+                    'date' => now()->subDays(6)->format('M j'),
+                ],
+                [
+                    'date' => now()->subDays(5)->format('M j'),
+                ],
+                [
+                    'date' => now()->subDays(4)->format('M j'),
+                ],
+                [
+                    'date' => now()->subDays(3)->format('M j'),
+                ],
+                [
+                    'date' => now()->subDays(2)->format('M j'),
+                ],
+                [
+                    'date' => now()->subDays(1)->format('M j'),
+                ],
+                [
+                    'date' => now()->format('M j'),
+                ],
+            ];
+
+            // Generate fake visibility data for each brand across the timeline
+            foreach ($brandNames as $brandIndex => $brandName) {
+                $baseScore = max(20, 85 - ($brandIndex * 10));
+
+                foreach ($data as $dateIndex => &$dateData) {
+                    // Add some variation to make it look realistic
+                    $variation = rand(-5, 5);
+                    $score = max(10, min(95, $baseScore + $variation));
+                    $dateData[$brandName] = round($score, 1);
+                }
+            }
+
+            return $data;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to get brand visibility data', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     private function getTopBrands($user): array
     {
-        // Mock data showing top brands by visibility
-        return [
-            [
-                'name' => 'Wix',
-                'domain' => 'wix.com',
-                'favicon' => 'https://www.google.com/s2/favicons?domain=wix.com&sz=256',
-                'visibilityScore' => 80.8,
-                'mentions' => 44,
-                'color' => 'bg-lime-500',
-            ],
-            [
-                'name' => 'Squarespace',
-                'domain' => 'squarespace.com',
-                'favicon' => 'https://www.google.com/s2/favicons?domain=squarespace.com&sz=256',
-                'visibilityScore' => 76.2,
-                'mentions' => 45,
-                'color' => 'bg-gray-500',
-            ],
-            [
-                'name' => 'Pay Boy',
-                'domain' => 'payboy.sg',
-                'favicon' => null,
-                'visibilityScore' => 63.8,
-                'mentions' => 33,
-                'color' => 'bg-blue-500',
-            ],
-            [
-                'name' => 'Shopify',
-                'domain' => 'shopify.com',
-                'favicon' => 'https://www.google.com/s2/favicons?domain=shopify.com&sz=256',
-                'visibilityScore' => 61.5,
-                'mentions' => 28,
-                'color' => 'bg-amber-500',
-            ],
-            [
-                'name' => 'Webflow',
-                'domain' => 'webflow.com',
-                'favicon' => 'https://www.google.com/s2/favicons?domain=webflow.com&sz=256',
-                'visibilityScore' => 59.4,
-                'mentions' => 26,
-                'color' => 'bg-cyan-500',
-            ],
-        ];
+        try {
+            // Get real brands from database
+            $brands = [];
+
+            if ($this->tableExists('brands')) {
+                $dbBrands = DB::table('brands')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                // Define colors for brands
+                $colors = ['bg-lime-500', 'bg-gray-500', 'bg-blue-500', 'bg-amber-500', 'bg-cyan-500', 'bg-pink-500', 'bg-red-500', 'bg-green-500', 'bg-purple-500'];
+
+                foreach ($dbBrands as $index => $brand) {
+                    $domain = null;
+                    $favicon = null;
+
+                    // Extract domain from website URL or use brand name
+                    if (!empty($brand->website)) {
+                        $website = $brand->website;
+
+                        // Handle specific brand domains
+                        $brandDomains = [
+                            'NVIDIA' => 'nvidia.com',
+                            'Graphcore' => 'graphcore.ai',
+                            'Groq' => 'groq.com'
+                        ];
+
+                        if (isset($brandDomains[$brand->name])) {
+                            $domain = $brandDomains[$brand->name];
+                            $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
+                        } else {
+                            // Add https:// if missing for proper parsing
+                            if (!preg_match('/^https?:\/\//', $website)) {
+                                $website = 'https://' . $website;
+                            }
+
+                            $url = parse_url($website);
+                            if (isset($url['host'])) {
+                                $domain = $url['host'];
+                                // Remove www. prefix if present
+                                $domain = preg_replace('/^www\./', '', $domain);
+                                $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
+                            }
+                        }
+                    }
+
+                    // Generate fake visibility score for now (decreasing order)
+                    $visibilityScore = max(20, 85 - ($index * 10));
+
+                    $brands[] = [
+                        'name' => $brand->name,
+                        'domain' => $domain ?: 'unknown.com',
+                        'favicon' => $favicon,
+                        'visibilityScore' => $visibilityScore,
+                        'mentions' => 0, // No data collection yet
+                        'color' => $colors[$index % count($colors)],
+                    ];
+                }
+            }
+
+            // If no brands found, return empty array
+            if (empty($brands)) {
+                return [];
+            }
+
+            return $brands;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to get top brands', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     private function getShareOfVoice($user): array
     {
-        // Mock data showing share of voice
-        return [
-            'ourBrand' => 48,
-            'otherBrands' => 52,
-            'trend' => 48,
-            'isPositive' => true,
-        ];
+        try {
+            // Get user's monitors
+            $monitorIds = [];
+            if ($this->tableExists('monitors')) {
+                $monitorIds = DB::table('monitors')
+                    ->where('user_id', $user->id)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            if (empty($monitorIds)) {
+                return [
+                    'ourBrand' => 0,
+                    'otherBrands' => 100,
+                    'trend' => 0,
+                    'isPositive' => false,
+                    'ourBrandMentions' => 0,
+                    'totalMentions' => 0,
+                ];
+            }
+
+            // Define time periods
+            $currentPeriodStart = now()->subDays(7);
+            $previousPeriodStart = now()->subDays(14);
+            $previousPeriodEnd = now()->subDays(7);
+
+            // Current period calculations
+            $currentBrandMentions = 0;
+            $currentCompetitorMentions = 0;
+
+            if ($this->tableExists('responses')) {
+                // Get brand mentions from current period - use brand_mentioned flag when count is 0
+                $currentStats = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->where('created_at', '>=', $currentPeriodStart)
+                    ->selectRaw('
+                        SUM(CASE
+                            WHEN COALESCE(brand_mention_count, 0) > 0 THEN brand_mention_count
+                            WHEN brand_mentioned = true THEN 1
+                            ELSE 0
+                        END) as total_brand_mentions,
+                        COUNT(*) as total_responses
+                    ')
+                    ->first();
+
+                $currentBrandMentions = (int) ($currentStats->total_brand_mentions ?? 0);
+
+                // Get competitor mentions from JSON field
+                $responsesWithCompetitors = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->where('created_at', '>=', $currentPeriodStart)
+                    ->whereNotNull('competitors_mentioned')
+                    ->whereRaw("competitors_mentioned::text != 'null'")
+                    ->pluck('competitors_mentioned');
+
+                foreach ($responsesWithCompetitors as $competitorsJson) {
+                    $competitors = json_decode($competitorsJson, true);
+                    if (is_array($competitors)) {
+                        $currentCompetitorMentions += count($competitors);
+                    }
+                }
+            }
+
+            // Previous period calculations for trend
+            $previousBrandMentions = 0;
+            $previousCompetitorMentions = 0;
+
+            if ($this->tableExists('responses')) {
+                $previousStats = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
+                    ->selectRaw('
+                        SUM(CASE
+                            WHEN COALESCE(brand_mention_count, 0) > 0 THEN brand_mention_count
+                            WHEN brand_mentioned = true THEN 1
+                            ELSE 0
+                        END) as total_brand_mentions,
+                        COUNT(*) as total_responses
+                    ')
+                    ->first();
+
+                $previousBrandMentions = (int) ($previousStats->total_brand_mentions ?? 0);
+
+                // Get competitor mentions from previous period
+                $previousResponsesWithCompetitors = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
+                    ->whereNotNull('competitors_mentioned')
+                    ->whereRaw("competitors_mentioned::text != 'null'")
+                    ->pluck('competitors_mentioned');
+
+                foreach ($previousResponsesWithCompetitors as $competitorsJson) {
+                    $competitors = json_decode($competitorsJson, true);
+                    if (is_array($competitors)) {
+                        $previousCompetitorMentions += count($competitors);
+                    }
+                }
+            }
+
+            // Calculate totals
+            $currentTotalMentions = $currentBrandMentions + $currentCompetitorMentions;
+            $previousTotalMentions = $previousBrandMentions + $previousCompetitorMentions;
+
+            // Calculate share of voice percentages
+            $ourBrandShare = 0;
+            $otherBrandsShare = 100;
+
+            if ($currentTotalMentions > 0) {
+                $ourBrandShare = round(($currentBrandMentions / $currentTotalMentions) * 100, 1);
+                $otherBrandsShare = round(100 - $ourBrandShare, 1);
+            }
+
+            // Calculate trend
+            $trend = 0;
+            $isPositive = false;
+
+            if ($previousTotalMentions > 0) {
+                $previousShare = ($previousBrandMentions / $previousTotalMentions) * 100;
+                $trend = round($ourBrandShare - $previousShare, 1);
+                $isPositive = $trend > 0;
+            }
+
+            return [
+                'ourBrand' => $ourBrandShare,
+                'otherBrands' => $otherBrandsShare,
+                'trend' => abs($trend),
+                'isPositive' => $isPositive,
+                'ourBrandMentions' => $currentBrandMentions,
+                'totalMentions' => $currentTotalMentions,
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to calculate Share of Voice', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'ourBrand' => 0,
+                'otherBrands' => 100,
+                'trend' => 0,
+                'isPositive' => false,
+                'ourBrandMentions' => 0,
+                'totalMentions' => 0,
+            ];
+        }
     }
 
     private function getVisibilityScoreTimeline($user): array
@@ -614,34 +874,55 @@ class DashboardController extends Controller
             return $this->getEmptyModelMentions();
         }
 
-        // Define the target models we want to track
-        $targetModels = [
-            'Google AI Overview',
-            'Llama 4 Scout',
-            'OpenAI GPT OSS',
-            'Qwen 3 235B Thinking',
+        // Model display name mapping (friendly name => model ID)
+        $modelDisplayNames = [
+            'Gemini 2.5 Flash' => 'gemini-2.5-flash-preview-09-2025',
+            'GPT-OSS 120B' => 'gpt-oss-120b',
+            'Llama 4 Scout' => 'llama-4-scout-17b-16e-instruct',
         ];
 
         $mentions = [];
 
-        if ($this->tableExists('mentions')) {
+        if ($this->tableExists('responses')) {
             // Get mentions from last 7 days for comparison
             $currentPeriodStart = now()->subDays(7);
             $previousPeriodStart = now()->subDays(14);
             $previousPeriodEnd = now()->subDays(7);
 
-            foreach ($targetModels as $modelName) {
+            // Always show all configured models, regardless of response count
+            $configuredModels = array_values($modelDisplayNames);
+
+            // Get actual models from database (to see which ones have responses)
+            $actualModels = DB::table('responses')
+                ->where('monitor_id', $monitor->id)
+                ->where('created_at', '>=', $currentPeriodStart)
+                ->distinct()
+                ->pluck('model_name')
+                ->toArray();
+
+            // Combine configured models with actual ones (to show all configured models + any unexpected ones)
+            // But prioritize configured models order
+            $allModels = $configuredModels;
+
+            // Add any actual models that aren't in the configured list
+            foreach ($actualModels as $actualModel) {
+                if (!in_array($actualModel, $configuredModels)) {
+                    $allModels[] = $actualModel;
+                }
+            }
+
+            foreach ($allModels as $modelId) {
                 // Current period count
-                $currentCount = DB::table('mentions')
+                $currentCount = DB::table('responses')
                     ->where('monitor_id', $monitor->id)
-                    ->where('model_name', 'LIKE', "%{$modelName}%")
+                    ->where('model_name', $modelId)
                     ->where('created_at', '>=', $currentPeriodStart)
                     ->count();
 
                 // Previous period count for trend calculation
-                $previousCount = DB::table('mentions')
+                $previousCount = DB::table('responses')
                     ->where('monitor_id', $monitor->id)
-                    ->where('model_name', 'LIKE', "%{$modelName}%")
+                    ->where('model_name', $modelId)
                     ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
                     ->count();
 
@@ -653,10 +934,14 @@ class DashboardController extends Controller
                     $isPositive = $changePercent > 0;
                 }
 
+                // Find the friendly name for this model ID
+                $friendlyName = array_search($modelId, $modelDisplayNames) ?: $modelId;
+
                 $mentions[] = [
-                    'model' => $modelName,
-                    'domain' => $this->getModelDomain($modelName),
-                    'favicon' => $this->getModelFavicon($modelName),
+                    'model' => $friendlyName, // Display friendly name
+                    'modelId' => $modelId, // Store model ID for hover
+                    'domain' => $this->getModelDomain($modelId),
+                    'favicon' => $this->getModelFavicon($modelId),
                     'count' => $currentCount,
                     'changePercent' => abs($changePercent),
                     'isPositive' => $isPositive,
@@ -671,19 +956,20 @@ class DashboardController extends Controller
 
     private function getEmptyModelMentions(): array
     {
-        $targetModels = [
-            'Google AI Overview',
-            'Llama 4 Scout',
-            'OpenAI GPT OSS',
-            'Qwen 3 235B Thinking',
+        // Use the same model display mapping as getModelMentions
+        $modelDisplayNames = [
+            'Gemini 2.5 Flash' => 'gemini-2.5-flash-preview-09-2025',
+            'GPT-OSS 120B' => 'gpt-oss-120b',
+            'Llama 4 Scout' => 'llama-4-scout-17b-16e-instruct',
         ];
 
         $mentions = [];
-        foreach ($targetModels as $modelName) {
+        foreach ($modelDisplayNames as $friendlyName => $modelId) {
             $mentions[] = [
-                'model' => $modelName,
-                'domain' => $this->getModelDomain($modelName),
-                'favicon' => $this->getModelFavicon($modelName),
+                'model' => $friendlyName, // Display friendly name
+                'modelId' => $modelId, // Store model ID for hover
+                'domain' => $this->getModelDomain($modelId),
+                'favicon' => $this->getModelFavicon($modelId),
                 'count' => 0,
                 'changePercent' => 0,
                 'isPositive' => false,
@@ -696,10 +982,9 @@ class DashboardController extends Controller
     private function getModelDomain($modelName): string
     {
         $domains = [
-            'Google AI Overview' => 'google.com',
-            'Llama 4 Scout' => 'meta.ai',
-            'OpenAI GPT OSS' => 'openai.com',
-            'Qwen 3 235B Thinking' => 'qwenlm.ai',
+            'gemini-2.5-flash-preview-09-2025' => 'google.com',
+            'gpt-oss-120b' => 'openai.com',
+            'llama-4-scout-17b-16e-instruct' => 'meta.ai',
         ];
 
         return $domains[$modelName] ?? 'unknown.com';
@@ -709,5 +994,109 @@ class DashboardController extends Controller
     {
         $domain = $this->getModelDomain($modelName);
         return "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
+    }
+
+    private function getTopCitedSources($user): array
+    {
+        try {
+            if (!$this->tableExists('responses')) {
+                return [];
+            }
+
+            // Get responses with citation data for the user
+            $responses = DB::table('responses')
+                ->join('prompts', 'responses.prompt_id', '=', 'prompts.id')
+                ->join('monitors', 'prompts.monitor_id', '=', 'monitors.id')
+                ->where('monitors.user_id', $user->id)
+                ->whereNotNull('responses.citation_sources')
+                ->whereRaw("responses.citation_sources::text != 'null'")
+                ->select('responses.citation_sources')
+                ->get();
+
+            if ($responses->isEmpty()) {
+                return [];
+            }
+
+            $domainCounts = [];
+            $totalCitations = 0;
+
+            // Process each response and extract domains from citation sources
+            foreach ($responses as $response) {
+                $citationData = json_decode($response->citation_sources, true);
+
+                // Handle both direct array and nested structure
+                $sources = [];
+                if (isset($citationData['sources']) && is_array($citationData['sources'])) {
+                    $sources = $citationData['sources'];
+                } elseif (is_array($citationData) && !isset($citationData['sources'])) {
+                    // Direct array structure (as in our case)
+                    $sources = $citationData;
+                }
+
+                foreach ($sources as $source) {
+                    $domain = null;
+
+                    if (isset($source['url'])) {
+                        $url = $source['url'];
+
+                        // Check if this is a Vertex AI redirect URL
+                        if (strpos($url, 'vertexaisearch.cloud.google.com') !== false) {
+                            // Use the title as the domain for Vertex AI citations
+                            if (isset($source['title']) && !empty($source['title'])) {
+                                $domain = $source['title'];
+                            }
+                        } else {
+                            // Extract domain from regular URL
+                            $domain = parse_url($url, PHP_URL_HOST);
+                        }
+                    }
+
+                    if ($domain && !empty($domain)) {
+                        // Remove 'www.' prefix if present and not a title-based domain
+                        if (strpos($domain, '.') !== false && !filter_var($domain, FILTER_VALIDATE_URL)) {
+                            $domain = preg_replace('/^www\./', '', $domain);
+                        }
+
+                        $domainCounts[$domain] = ($domainCounts[$domain] ?? 0) + 1;
+                        $totalCitations++;
+                    }
+                }
+            }
+
+            if (empty($domainCounts) || $totalCitations === 0) {
+                return [];
+            }
+
+            // Sort by count and take top 7
+            arsort($domainCounts);
+            $topDomains = array_slice($domainCounts, 0, 7, true);
+
+            // Calculate percentages and format results
+            $results = [];
+            foreach ($topDomains as $domain => $count) {
+                $percentage = round(($count / $totalCitations) * 100, 1);
+
+                $results[] = [
+                    'domain' => $domain,
+                    'favicon' => "https://www.google.com/s2/favicons?domain={$domain}&size=64",
+                    'count' => $count,
+                    'percentage' => $percentage
+                ];
+            }
+
+            // Sort results by count (descending) for final display
+            usort($results, function($a, $b) {
+                return $b['count'] - $a['count'];
+            });
+
+            return array_values($results);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to get top cited sources', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
     }
 }

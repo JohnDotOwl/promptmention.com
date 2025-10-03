@@ -63,9 +63,26 @@ class ResponsesController extends Controller
                 // Map model names to display information
                 $modelInfo = $this->getModelInfo($response->model_name);
                 
+                // Parse citation data if available
+                $citations = null;
+                if ($response->citation_sources) {
+                    $sources = json_decode($response->citation_sources, true) ?: [];
+                    $mapping = json_decode($response->citation_mapping, true) ?: [];
+                    $positions = json_decode($response->citation_positions, true) ?: [];
+
+                    $citations = [
+                        'sources' => $sources,
+                        'mapping' => $mapping,
+                        'positions' => $positions,
+                        'count' => (int) ($response->citation_sources_count ?? count($sources)),
+                        'fingerprint' => json_decode($response->citation_fingerprint, true)
+                    ];
+                }
+
                 return [
                     'id' => $response->id,
                     'text' => $response->response_text ?? '',
+                    'textWithCitations' => $response->response_text_with_citations ?? '',
                     'model' => $modelInfo,
                     'visibility' => (int) ($response->visibility_score ?? 0),
                     'brandMentions' => $brandMentions,
@@ -73,7 +90,8 @@ class ResponsesController extends Controller
                     'answered' => $response->created_at,
                     'promptId' => $response->prompt_id,
                     'tokens' => (int) ($response->tokens_used ?? 0),
-                    'cost' => (float) ($response->cost ?? 0.0)
+                    'cost' => (float) ($response->cost ?? 0.0),
+                    'citations' => $citations
                 ];
             });
         

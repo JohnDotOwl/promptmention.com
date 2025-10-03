@@ -10,7 +10,8 @@ import {
   PencilLine,
   Bot,
   ListTree,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react"
 import {
   SidebarGroup,
@@ -31,6 +32,11 @@ export const dashboardItems: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: ChartArea,
+  },
+  {
+    title: "Amplify",
+    href: "/amplify",
+    icon: Sparkles,
   },
   {
     title: "Profile",

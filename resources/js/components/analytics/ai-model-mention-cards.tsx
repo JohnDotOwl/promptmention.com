@@ -46,18 +46,19 @@ export function AIModelMentionCards({
           )}
 
           {/* Model mention cards grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 px-4">
             {mentions.map((mention, index) => (
               <div
                 key={mention.model}
-                className={`w-full px-6 py-6 h-36 flex flex-col justify-between ${
-                  index !== mentions.length - 1
-                    ? 'border-b sm:border-b-0 sm:border-r lg:last:border-r-0'
-                    : ''
+                className={`w-full px-4 py-6 h-36 flex flex-col justify-between border rounded-lg bg-white shadow-sm ${
+                  index === mentions.length - 1 ? 'lg:border-r' : ''
                 }`}
               >
                 {/* Model header with favicon */}
-                <h3 className="flex items-center gap-2 font-semibold">
+                <h3
+                  className="flex items-center gap-2 font-semibold group cursor-help"
+                  title={`Model ID: ${mention.modelId}`}
+                >
                   <div className="bg-white rounded-sm overflow-hidden flex items-center justify-center border shrink-0 size-6">
                     <img
                       alt={mention.domain}
@@ -69,7 +70,7 @@ export function AIModelMentionCards({
                       src={mention.favicon}
                     />
                   </div>
-                  <span className="truncate text-sm">{mention.model}</span>
+                  <span className="truncate text-sm leading-tight">{mention.model}</span>
                 </h3>
 
                 {/* Metrics */}

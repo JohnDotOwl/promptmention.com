@@ -20,7 +20,37 @@ Route::middleware('auth')->group(function () {
     })->name('appearance');
 
     Route::get('settings/crawler-analytics', function () {
-        return Inertia::render('settings/crawler-analytics');
+        $user = Auth::user();
+        $monitors = [];
+
+        // Get monitors data similar to DashboardController
+        if (app('db')->getSchemaBuilder()->hasTable('monitors')) {
+            $monitors = app('db')->table('monitors')
+                ->select(['name', 'website_name', 'website_url'])
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->toArray();
+        }
+
+        // Get fallback from onboarding if no monitors exist
+        if (empty($monitors)) {
+            $onboardingProgress = \App\Models\OnboardingProgress::where('user_id', $user->id)
+                ->whereNotNull('completed_at')
+                ->first();
+
+            if ($onboardingProgress && $onboardingProgress->company_name) {
+                $monitors = [[
+                    'name' => $onboardingProgress->company_name,
+                    'website_name' => $onboardingProgress->company_name,
+                    'website_url' => $onboardingProgress->company_website ?? ''
+                ]];
+            }
+        }
+
+        return Inertia::render('settings/crawler-analytics', [
+            'monitors' => $monitors
+        ]);
     })->name('crawler-analytics');
 
     Route::get('settings/billing', function () {

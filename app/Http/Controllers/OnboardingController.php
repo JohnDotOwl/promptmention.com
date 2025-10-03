@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OnboardingProgress;
 use App\Services\DomainAnalysisService;
 use App\Services\MonitorSetupService;
+use App\Services\PromptGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,13 +17,16 @@ class OnboardingController extends Controller
 {
     protected DomainAnalysisService $domainAnalysisService;
     protected MonitorSetupService $monitorSetupService;
+    protected PromptGenerationService $promptGenerationService;
 
     public function __construct(
         DomainAnalysisService $domainAnalysisService,
-        MonitorSetupService $monitorSetupService
+        MonitorSetupService $monitorSetupService,
+        PromptGenerationService $promptGenerationService
     ) {
         $this->domainAnalysisService = $domainAnalysisService;
         $this->monitorSetupService = $monitorSetupService;
+        $this->promptGenerationService = $promptGenerationService;
     }
 
     public function index()
@@ -391,6 +395,16 @@ class OnboardingController extends Controller
                     'ai_model_id' => 'gemini-2.5-flash',
                     'ai_model_name' => 'Gemini 2.5 Flash',
                     'ai_model_icon' => '/llm-icons/google.svg'
+                ],
+                [
+                    'ai_model_id' => 'gpt-oss-120b',
+                    'ai_model_name' => 'GPT-OSS 120B',
+                    'ai_model_icon' => '/llm-icons/openai.svg'
+                ],
+                [
+                    'ai_model_id' => 'llama-4-scout-17b-16e-instruct',
+                    'ai_model_name' => 'Llama 4 Scout',
+                    'ai_model_icon' => '/llm-icons/meta.svg'
                 ]
             ];
 
@@ -421,7 +435,87 @@ class OnboardingController extends Controller
             ]);
         }
 
+        // Trigger prompt generation using domain analysis data
+        $this->triggerPromptGeneration($user->id, $monitorId, $progress);
+
         return $monitorId;
+    }
+
+    /**
+     * Trigger prompt generation using domain analysis data
+     */
+    private function triggerPromptGeneration(int $userId, int $monitorId, OnboardingProgress $progress): void
+    {
+        try {
+            // Get the latest completed domain analysis for this user
+            $domainAnalysis = DB::table('domain_analysis')
+                ->where('user_id', $userId)
+                ->where('status', 'completed')
+                ->where('company_name', $progress->company_name)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if (!$domainAnalysis) {
+                \Log::warning('No completed domain analysis found for prompt generation', [
+                    'user_id' => $userId,
+                    'monitor_id' => $monitorId,
+                    'company_name' => $progress->company_name
+                ]);
+                return;
+            }
+
+            // Prepare analysis data
+            $analysisData = [
+                'industry' => $domainAnalysis->industry,
+                'keywords' => json_decode($domainAnalysis->keywords ?? '[]', true),
+                'competitors' => json_decode($domainAnalysis->competitors ?? '[]', true),
+                'summary' => $domainAnalysis->summary,
+            ];
+
+            // Create prompt generation request
+            $requestId = $this->promptGenerationService->createRequest(
+                $userId,
+                $progress->company_name,
+                $progress->company_website,
+                $analysisData
+            );
+
+            if ($requestId) {
+                // Queue the prompt generation job
+                $this->promptGenerationService->queuePromptGeneration([
+                    'user_id' => $userId,
+                    'monitor_id' => $monitorId,
+                    'company_name' => $progress->company_name,
+                    'company_website' => $progress->company_website,
+                    'industry' => $domainAnalysis->industry,
+                    'keywords' => json_decode($domainAnalysis->keywords ?? '[]', true),
+                    'competitors' => json_decode($domainAnalysis->competitors ?? '[]', true),
+                    'summary' => $domainAnalysis->summary,
+                ]);
+
+                \Log::info('Prompt generation triggered successfully', [
+                    'user_id' => $userId,
+                    'monitor_id' => $monitorId,
+                    'company_name' => $progress->company_name,
+                    'request_id' => $requestId
+                ]);
+            } else {
+                \Log::error('Failed to create prompt generation request', [
+                    'user_id' => $userId,
+                    'monitor_id' => $monitorId,
+                    'company_name' => $progress->company_name
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error triggering prompt generation', [
+                'user_id' => $userId,
+                'monitor_id' => $monitorId,
+                'company_name' => $progress->company_name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**
@@ -447,6 +541,16 @@ class OnboardingController extends Controller
                 'ai_model_id' => 'gemini-2.5-flash',
                 'ai_model_name' => 'Gemini 2.5 Flash',
                 'ai_model_icon' => '/llm-icons/google.svg'
+            ],
+            [
+                'ai_model_id' => 'gpt-oss-120b',
+                'ai_model_name' => 'GPT-OSS 120B',
+                'ai_model_icon' => '/llm-icons/openai.svg'
+            ],
+            [
+                'ai_model_id' => 'llama-4-scout-17b-16e-instruct',
+                'ai_model_name' => 'Llama 4 Scout',
+                'ai_model_icon' => '/llm-icons/meta.svg'
             ]
         ];
 

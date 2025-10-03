@@ -43,6 +43,22 @@ interface PromptsPageProps {
   monitors: Monitor[]
 }
 
+/**
+ * Safely format a date value with fallback for sorting
+ */
+function safeDateForSort(dateValue: string | undefined | null): Date {
+  if (!dateValue) {
+    return new Date()
+  }
+
+  try {
+    const date = new Date(dateValue)
+    return isNaN(date.getTime()) ? new Date() : date
+  } catch (error) {
+    return new Date()
+  }
+}
+
 export default function Prompts({ prompts = [], monitors = [] }: PromptsPageProps) {
   const [sortConfig, setSortConfig] = useState<PromptSortConfig>({
     column: null,
@@ -93,8 +109,8 @@ export default function Prompts({ prompts = [], monitors = [] }: PromptsPageProp
         bValue = b.visibility
         break
       case 'created':
-        aValue = new Date(a.created)
-        bValue = new Date(b.created)
+        aValue = safeDateForSort(a.created)
+        bValue = safeDateForSort(b.created)
         break
       default:
         return 0

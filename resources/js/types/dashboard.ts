@@ -15,7 +15,14 @@ export interface ModelUsageData {
   fill: string
 }
 
-export interface CitedDomain {
+export interface MentionedDomain {
+  domain: string
+  favicon: string
+  count: number
+  percentage: number
+}
+
+export interface CitedSource {
   domain: string
   favicon: string
   count: number
@@ -82,7 +89,8 @@ export interface DateRange {
 export interface DashboardData {
   metrics: DashboardMetric[]
   modelUsage: ModelUsageData[]
-  citedDomains: CitedDomain[]
+  mentionedDomains: MentionedDomain[]
+  citedSources: CitedSource[]
   brandMentions: BrandMention[]
   timeline: TimelineData[]
   aiPlatformVisitors?: AIPlatformVisitor[]
@@ -90,4 +98,12 @@ export interface DashboardData {
   topBrands?: TopBrand[]
   shareOfVoice?: ShareOfVoiceData
   visibilityScoreTimeline?: VisibilityScorePoint[]
+  modelMentions?: Array<{
+    model: string
+    domain: string
+    favicon: string
+    count: number
+    changePercent: number
+    isPositive: boolean
+  }>
 }

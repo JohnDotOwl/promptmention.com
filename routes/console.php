@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schedule;
 // Schedule commands
 Schedule::command('monitors:cleanup-orphaned --hours=24')->daily();
 Schedule::command('brand:count-mentions')->everyMinute()->withoutOverlapping()->runInBackground()->appendOutputTo(storage_path('logs/brand-mention-counter.log'));
+Schedule::command('brands:import-competitors --auto')->everyMinute()->withoutOverlapping()->appendOutputTo(storage_path('logs/brands-import.log'));
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

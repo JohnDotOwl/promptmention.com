@@ -29,6 +29,24 @@ interface ModelUsageChartProps {
 }
 
 export function ModelUsageChart({ data = defaultData }: ModelUsageChartProps) {
+  // If no data provided, show empty state
+  if (!data || data.length === 0) {
+    return (
+      <Card className="bg-card text-card-foreground flex flex-col gap-6 rounded-xl shrink-0 ring-muted/60 border shadow-sm ring-3">
+        <CardHeader className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-5 pt-4 has-[data-slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-2">
+          <CardTitle className="leading-none font-semibold">Model Usage</CardTitle>
+          <CardDescription className="text-muted-foreground text-sm">Last 30 days</CardDescription>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 min-h-[280px] h-full flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">No model usage data available</p>
+            <p className="text-xs mt-1">Data will appear once your monitors start collecting responses</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const total = data.reduce((sum, item) => sum + item.value, 0)
 
   return (

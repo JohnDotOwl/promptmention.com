@@ -1,5 +1,8 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +32,25 @@ import { type Prompt, type Response } from '@/types/prompt';
 
 interface PageProps {
   prompt: Prompt;
+}
+
+/**
+ * Safely format a date value with fallback
+ */
+function safeFormatDate(dateValue: string | undefined | null, formatString: string = 'PPp'): string {
+  if (!dateValue) {
+    return 'Invalid Date'
+  }
+
+  try {
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date'
+    }
+    return format(date, formatString)
+  } catch (error) {
+    return 'Invalid Date'
+  }
 }
 
 export default function Show({ prompt }: PageProps) {
@@ -118,7 +140,7 @@ export default function Show({ prompt }: PageProps) {
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <CalendarIcon className="h-4 w-4" />
-                  <span>Created {format(new Date(prompt.created), 'PPp')}</span>
+                  <span>Created {safeFormatDate(prompt.created)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <GlobeIcon className="h-4 w-4" />
@@ -219,7 +241,7 @@ export default function Show({ prompt }: PageProps) {
                         </div>
                         
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{format(new Date(response.created_at), 'MMM d, yyyy HH:mm')}</span>
+                          <span>{safeFormatDate(response.created_at, 'MMM d, yyyy HH:mm')}</span>
                           {Number(response.tokens_used) > 0 && (
                             <span>{Number(response.tokens_used).toLocaleString()} tokens</span>
                           )}
@@ -238,10 +260,65 @@ export default function Show({ prompt }: PageProps) {
                     </div>
 
                     {/* Response Text */}
-                    <div className="bg-gray-50 rounded-md p-4">
-                      <p className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap">
-                        {response.response_text}
-                      </p>
+                    <div className="bg-gray-50 rounded-md p-4 prose prose-sm max-w-none text-gray-900 leading-relaxed">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        components={{
+                          table: ({children, ...props}) => (
+                            <div className="overflow-x-auto my-4">
+                              <table className="min-w-full divide-y divide-gray-200 border border-gray-300 rounded-md" {...props}>
+                                {children}
+                              </table>
+                            </div>
+                          ),
+                          th: ({node, ...props}) => (
+                            <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-900 uppercase tracking-wider border-b border-gray-200" {...props} />
+                          ),
+                          td: ({node, ...props}) => (
+                            <td className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100" {...props} />
+                          ),
+                          h1: ({node, ...props}) => (
+                            <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200" {...props} />
+                          ),
+                          h2: ({node, ...props}) => (
+                            <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-3" {...props} />
+                          ),
+                          h3: ({node, ...props}) => (
+                            <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2" {...props} />
+                          ),
+                          p: ({node, ...props}) => (
+                            <p className="mb-4 text-gray-900 leading-relaxed" {...props} />
+                          ),
+                          code: ({node, inline, ...props}) => {
+                            if (inline) {
+                              return <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />;
+                            }
+                            return (
+                              <div className="bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto my-4">
+                                <code className="text-sm font-mono" {...props} />
+                              </div>
+                            );
+                          },
+                          blockquote: ({node, ...props}) => (
+                            <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50 italic text-gray-700" {...props} />
+                          ),
+                          ul: ({node, ...props}) => (
+                            <ul className="list-disc pl-6 mb-4 text-gray-900 space-y-1" {...props} />
+                          ),
+                          ol: ({node, ...props}) => (
+                            <ol className="list-decimal pl-6 mb-4 text-gray-900 space-y-1" {...props} />
+                          ),
+                          li: ({node, ...props}) => (
+                            <li className="text-gray-900" {...props} />
+                          ),
+                          hr: ({node, ...props}) => (
+                            <hr className="my-6 border-gray-300" {...props} />
+                          ),
+                        }}
+                      >
+                        {response.response_text || 'No response text available'}
+                      </ReactMarkdown>
                     </div>
 
                     {/* Additional Response Data */}
@@ -357,9 +434,9 @@ export default function Show({ prompt }: PageProps) {
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Timestamps</h4>
                   <div className="space-y-1 text-xs text-muted-foreground">
-                    <div>Created: {format(new Date(prompt.created), 'PPp')}</div>
+                    <div>Created: {safeFormatDate(prompt.created)}</div>
                     {prompt.updated && (
-                      <div>Updated: {format(new Date(prompt.updated), 'PPp')}</div>
+                      <div>Updated: {safeFormatDate(prompt.updated)}</div>
                     )}
                   </div>
                 </div>

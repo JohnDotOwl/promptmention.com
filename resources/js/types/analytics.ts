@@ -81,6 +81,7 @@ export interface RecentActivity {
 
 export interface ModelMention {
   model: string
+  modelId: string
   domain: string
   favicon: string
   count: number

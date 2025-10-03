@@ -32,7 +32,7 @@ interface DashboardChartData {
         value: number;
         color: string;
     }>;
-    citedDomains: Array<{
+    mentionedDomains: Array<{
         domain: string;
         mentions: number;
         percentage: number;

@@ -16,6 +16,7 @@ import {
 } from '@/components/sidebar/nav-groups';
 import AppLogo from '@/components/app-logo';
 import WaitlistIndicator from '@/components/WaitlistIndicator';
+import CerebrasBadge from '@/components/CerebrasBadge';
 import { usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 
@@ -47,6 +48,7 @@ export function AppSidebar({ monitors = [] }: AppSidebarProps) {
                 <AnalyticsNav />
                 <WebsiteNav />
                 <div className="mt-auto">
+                    <CerebrasBadge />
                     <WaitlistIndicator user={auth?.user} />
                 </div>
             </SidebarContent>

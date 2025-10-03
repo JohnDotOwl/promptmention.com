@@ -32,6 +32,12 @@ export interface Response {
   created_at: string
 }
 
+export interface ModelStatus {
+  has_response: boolean
+  response_count: number
+  last_response: string | null
+}
+
 export interface Prompt {
   id: string
   text: string
@@ -46,6 +52,7 @@ export interface Prompt {
   }
   monitor: Monitor
   responses: Response[]
+  modelStatus: Record<string, ModelStatus>
   created: string
   updated?: string
 }

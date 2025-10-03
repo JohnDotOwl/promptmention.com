@@ -1,7 +1,7 @@
 import { BrandVisibilityChart } from "./brand-visibility-chart"
 import { TopBrandsList } from "./top-brands-list"
 import { ModelUsageChart } from "./model-usage-chart"
-import { CitedDomainsChart } from "./cited-domains-chart"
+import { MentionedDomainsChart } from "./mentioned-domains-chart"
 import { BrandMentionsList } from "./brand-mentions-list"
 import { ShareOfVoiceChart } from "./share-of-voice-chart"
 import { VisibilityScoreChart } from "./visibility-score-chart"
@@ -35,7 +35,7 @@ interface DashboardChartData {
     value: number;
     color: string;
   }>;
-  citedDomains: Array<{
+  mentionedDomains: Array<{
     domain: string;
     mentions: number;
     percentage: number;
@@ -128,6 +128,7 @@ export function DashboardContent({
         <div className="grid grid-cols-12 gap-6">
           <BrandVisibilityChart
             data={dashboardData?.brandVisibility}
+            brands={dashboardData?.topBrands?.map((brand: any) => brand.name) || []}
           />
           <TopBrandsList
             brands={dashboardData?.topBrands}
@@ -135,11 +136,11 @@ export function DashboardContent({
         </div>
       </div>
 
-      {/* Three Column Section: Cited Domains + Organic Mentions + Model Usage */}
+      {/* Three Column Section: Mentioned Domains + Organic Mentions + Model Usage */}
       <div className="px-6">
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-4">
-            <CitedDomainsChart domains={chartData?.citedDomains} />
+            <MentionedDomainsChart domains={chartData?.mentionedDomains} />
           </div>
           <div className="col-span-4">
             <BrandMentionsList

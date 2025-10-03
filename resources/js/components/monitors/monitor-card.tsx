@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { MonitorStats } from './monitor-stats'
 import { type MonitorCardProps } from '@/types/monitor'
-import { RefreshCcw, Calendar, FileText, MessageSquareReply, TrendingUp, Eye, MessageCircle, BarChart3 } from 'lucide-react'
+import { RefreshCcw, Calendar, FileText, MessageSquareReply, TrendingUp, Eye, MessageCircle, BarChart3, ArrowUp, ArrowDown, ChevronRight } from 'lucide-react'
+import { Link } from '@inertiajs/react'
 
 export function MonitorCard({ monitor }: MonitorCardProps) {
   const getStatusBadge = (status: string) => {
@@ -34,31 +35,42 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
 
   const statusConfig = getStatusBadge(monitor.status)
 
+  // Helper function to get trend indicator
+  const getTrendIndicator = (data: Array<{ value: number }>) => {
+    if (data.length < 2) return null
+    const recent = data.slice(-2)
+    const trend = recent[1].value - recent[0].value
+    return trend > 0 ? 'up' : trend < 0 ? 'down' : 'stable'
+  }
+
+  const visibilityTrend = getTrendIndicator(monitor.stats.visibilityData)
+  const mentionsTrend = getTrendIndicator(monitor.stats.mentionsData)
+  const citationTrend = getTrendIndicator(monitor.stats.citationData)
+
+  const TrendIcon = ({ trend }: { trend: string | null }) => {
+    if (trend === 'up') return <ArrowUp className="size-3 text-green-500" />
+    if (trend === 'down') return <ArrowDown className="size-3 text-red-500" />
+    return <div className="size-3 bg-gray-300 rounded-full" />
+  }
+
   return (
-    <a
-      className="block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg"
+    <Link
       href={`/monitors/${monitor.id}`}
+      className="block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-[1.01]"
       aria-label={`View details for ${monitor.name} monitor monitoring ${monitor.website.name}`}
       role="article"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          window.location.href = `/monitors/${monitor.id}`
-        }
-      }}
     >
       <Card
         id="monitor-card"
-        className="group w-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-0 shadow-md overflow-hidden"
+        className="group w-full border-0 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
       >
-        {/* Header Section */}
-        <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 py-4 px-6">
-          <div className="flex items-start justify-between gap-4">
+        {/* Header with compact design */}
+        <CardHeader className="border-b bg-gray-50/50 dark:bg-gray-800/30 py-4 px-6">
+          <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-3 mb-1">
                 <h3 className="group-hover:text-primary text-lg font-semibold transition-colors truncate">
-                  {monitor.website.name}
+                  {monitor.name}
                 </h3>
                 <Badge
                   variant={statusConfig.variant}
@@ -67,143 +79,124 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
                   {statusConfig.label}
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground truncate">
-                {monitor.website.url}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Monitor: {monitor.name}
-              </p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <FileText className="size-3" />
+                  {monitor.website.name}
+                </span>
+                <span className="truncate">{monitor.website.url}</span>
+              </div>
             </div>
 
-            <div className="flex flex-col items-end gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
-                <RefreshCcw className="size-3" aria-hidden="true" />
-                <span>Updated {monitor.lastUpdated}</span>
+                <RefreshCcw className="size-3" />
+                <span>{monitor.lastUpdated}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="size-3" aria-hidden="true" />
-                <span>Created {monitor.createdAt}</span>
-              </div>
+              <ChevronRight className="size-4 opacity-50 group-hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </CardHeader>
 
-        {/* Content Section */}
-        <CardContent className="p-6">
-          {/* Key Metrics Row */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div
-              className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg"
-              role="region"
-              aria-label="Visibility metrics"
-            >
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Eye className="size-4 text-blue-600" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground">Visibility</span>
+        {/* Content with integrated metrics */}
+        <CardContent className="p-0">
+          {/* Integrated Metrics Grid */}
+          <div className="grid grid-cols-3 divide-x divide-border">
+            {/* Visibility Metric */}
+            <div className="p-4 bg-gradient-to-b from-blue-50/50 to-transparent dark:from-blue-950/20">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Eye className="size-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-600">Visibility</span>
+                </div>
+                <TrendIcon trend={visibilityTrend} />
               </div>
-              <div className="text-2xl font-bold text-blue-600" aria-label="Visibility score">
+              <div className="text-2xl font-bold text-blue-600 mb-1">
                 {monitor.stats.visibilityScore}%
               </div>
-              <div className="text-xs text-muted-foreground" aria-label="Based on total prompts">
+              <div className="text-xs text-muted-foreground mb-3">
                 {monitor.stats.totalPrompts} prompts
               </div>
+              <div className="h-12">
+                <MonitorStats stats={monitor.stats} type="visibility" />
+              </div>
             </div>
 
-            <div
-              className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg"
-              role="region"
-              aria-label="Mentions metrics"
-            >
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <MessageCircle className="size-4 text-green-600" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground">Mentions</span>
+            {/* Mentions Metric */}
+            <div className="p-4 bg-gradient-to-b from-green-50/50 to-transparent dark:from-green-950/20">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="size-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">Mentions</span>
+                </div>
+                <TrendIcon trend={mentionsTrend} />
               </div>
-              <div className="text-2xl font-bold text-green-600" aria-label="Total mentions">
+              <div className="text-2xl font-bold text-green-600 mb-1">
                 {monitor.stats.mentions}
               </div>
-              <div className="text-xs text-muted-foreground" aria-label="Total responses">
+              <div className="text-xs text-muted-foreground mb-3">
                 {monitor.stats.totalResponses} responses
+              </div>
+              <div className="h-12">
+                <MonitorStats stats={monitor.stats} type="mentions" />
               </div>
             </div>
 
-            <div
-              className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg"
-              role="region"
-              aria-label="Citation rank metrics"
-            >
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <BarChart3 className="size-4 text-purple-600" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground">Citation Rank</span>
+            {/* Citation Rank Metric */}
+            <div className="p-4 bg-gradient-to-b from-purple-50/50 to-transparent dark:from-purple-950/20">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="size-4 text-purple-600" />
+                  <span className="text-sm font-medium text-purple-600">Citation Rank</span>
+                </div>
+                <TrendIcon trend={citationTrend} />
               </div>
-              <div className="text-2xl font-bold text-purple-600" aria-label="Average citation rank">
+              <div className="text-2xl font-bold text-purple-600 mb-1">
                 {monitor.stats.avgCitationRank}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground mb-3">
                 Average rank
+              </div>
+              <div className="h-12">
+                <MonitorStats stats={monitor.stats} type="citation" />
               </div>
             </div>
           </div>
 
           {/* Models Section */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="size-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Tracked Models</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {monitor.models.map((model) => (
-                <div
-                  key={model.id}
-                  className="bg-muted/50 hover:bg-muted flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-colors"
-                >
-                  <img
-                    alt={model.name}
-                    loading="lazy"
-                    width="14"
-                    height="14"
-                    decoding="async"
-                    data-nimg="1"
-                    src={model.icon}
-                    className="w-[14px] h-[14px]"
-                    style={{ color: 'transparent' }}
-                  />
-                  {model.name}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <div className="text-sm text-muted-foreground mb-2">
-                Visibility Trend
+          <div className="border-t bg-gray-50/30 dark:bg-gray-800/20 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="size-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Models</span>
               </div>
-              <div className="h-24">
-                <MonitorStats stats={monitor.stats} type="visibility" />
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <div className="text-sm text-muted-foreground mb-2">
-                Mentions Trend
-              </div>
-              <div className="h-24">
-                <MonitorStats stats={monitor.stats} type="mentions" />
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <div className="text-sm text-muted-foreground mb-2">
-                Citation Rank Trend
-              </div>
-              <div className="h-24">
-                <MonitorStats stats={monitor.stats} type="citation" />
+              <div className="flex items-center gap-1 overflow-hidden">
+                {monitor.models.slice(0, 4).map((model, index) => (
+                  <div key={model.id} className="flex items-center -ml-1 first:ml-0">
+                    <div className="bg-background border border-border rounded-full p-1 shadow-sm">
+                      <img
+                        alt={model.name}
+                        loading="lazy"
+                        width="16"
+                        height="16"
+                        decoding="async"
+                        src={model.icon}
+                        className="size-4"
+                        style={{ color: 'transparent' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {monitor.models.length > 4 && (
+                  <div className="ml-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    +{monitor.models.length - 4} more
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-    </a>
+    </Link>
   )
 }

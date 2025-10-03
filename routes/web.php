@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AmplifyController;
 use App\Http\Controllers\CompetitorsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
@@ -25,7 +26,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Brand and Marketing
+    Route::get('amplify', [AmplifyController::class, 'index'])->name('amplify');
+    Route::post('amplify/chat', [AmplifyController::class, 'chat'])->name('amplify.chat');
+    Route::post('amplify/chat/stream', [AmplifyController::class, 'chatStream'])->name('amplify.chat.stream');
+    Route::post('amplify/model-preference', [AmplifyController::class, 'updateModelPreference'])->name('amplify.model.preference');
+    Route::get('amplify/conversations', [AmplifyController::class, 'getConversations'])->name('amplify.conversations');
+    Route::post('amplify/conversations', [AmplifyController::class, 'createConversation'])->name('amplify.conversations.create');
+    Route::get('amplify/conversations/{id}/messages', [AmplifyController::class, 'getConversationMessages'])->name('amplify.conversations.messages');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('brand-profile.update');
     Route::get('competitors', [CompetitorsController::class, 'index'])->name('competitors');
 
     Route::get('personas', function () {
@@ -51,7 +60,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics');
     
     Route::get('crawlers', function () {
-        return Inertia::render('crawlers');
+        $user = Auth::user();
+        $monitors = [];
+
+        // Get monitors data similar to DashboardController
+        if (app('db')->getSchemaBuilder()->hasTable('monitors')) {
+            $monitors = app('db')->table('monitors')
+                ->select(['name', 'website_name', 'website_url'])
+                ->where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->toArray();
+        }
+
+        // Get fallback from onboarding if no monitors exist
+        if (empty($monitors)) {
+            $onboardingProgress = \App\Models\OnboardingProgress::where('user_id', $user->id)
+                ->whereNotNull('completed_at')
+                ->first();
+
+            if ($onboardingProgress && $onboardingProgress->company_name) {
+                $monitors = [[
+                    'name' => $onboardingProgress->company_name,
+                    'website_name' => $onboardingProgress->company_name,
+                    'website_url' => $onboardingProgress->company_website ?? ''
+                ]];
+            }
+        }
+
+        return Inertia::render('crawlers', [
+            'monitors' => $monitors
+        ]);
     })->name('crawlers');
 
     // Website

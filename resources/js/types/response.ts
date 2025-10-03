@@ -19,9 +19,23 @@ export interface CompetitorMention {
   mentioned: boolean
 }
 
+export interface CitationSource {
+  url: string
+  title: string
+}
+
+export interface CitationPosition {
+  marker: string
+  numbers: number[]
+  position: number
+  end_position: number
+  source_index?: number
+}
+
 export interface Response {
   id: string
   text: string
+  textWithCitations?: string // Text with inline [1], [2,3] markers
   model: ResponseModel
   visibility: number // percentage
   brandMentions: BrandMention[]
@@ -30,6 +44,13 @@ export interface Response {
   promptId?: string
   tokens?: number
   cost?: number
+  citations?: {
+    sources: CitationSource[]
+    mapping: Record<string, number>
+    positions: CitationPosition[]
+    count: number
+    fingerprint?: any
+  }
 }
 
 export interface ResponseTableProps {

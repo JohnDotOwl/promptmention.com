@@ -13,6 +13,25 @@ interface PromptsTableProps {
   sortConfig?: PromptSortConfig
 }
 
+/**
+ * Safely format a date for display in the table
+ */
+function safeFormatDateForTable(dateValue: string | undefined | null): string {
+  if (!dateValue) {
+    return 'N/A'
+  }
+
+  try {
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) {
+      return 'N/A'
+    }
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  } catch (error) {
+    return 'N/A'
+  }
+}
+
 interface SortableHeaderProps {
   column: string
   children: React.ReactNode
@@ -71,15 +90,15 @@ function ProgressCircle({ value }: { value: number }) {
   const circumference = 2 * Math.PI * radius
   const strokeDasharray = `${circumference} ${circumference}`
   const strokeDashoffset = circumference - (value / 100) * circumference
-  
+
   let colorClass = 'stroke-blue-500 dark:stroke-blue-500'
   let bgColorClass = 'stroke-blue-200 dark:stroke-blue-500/30'
-  
+
   if (value >= 70) {
     colorClass = 'stroke-yellow-500 dark:stroke-yellow-500'
     bgColorClass = 'stroke-yellow-200 dark:stroke-yellow-500/30'
   }
-  
+
   if (value >= 90) {
     colorClass = 'stroke-red-500 dark:stroke-red-500'
     bgColorClass = 'stroke-red-200 dark:stroke-red-500/30'
@@ -88,32 +107,75 @@ function ProgressCircle({ value }: { value: number }) {
   return (
     <div className="relative" role="progressbar" aria-label="Progress circle" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} data-max="100" data-value={value} tremor-id="tremor-raw">
       <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90 transform w-5 h-5">
-        <circle 
-          r={radius} 
-          cx="32" 
-          cy="32" 
-          strokeWidth="10" 
-          fill="transparent" 
+        <circle
+          r={radius}
+          cx="32"
+          cy="32"
+          strokeWidth="10"
+          fill="transparent"
           stroke=""
-          strokeLinecap="round" 
+          strokeLinecap="round"
           className={`transition-colors ease-linear ${bgColorClass}`}
         />
-        <circle 
-          r={radius} 
-          cx="32" 
-          cy="32" 
-          strokeWidth="10" 
+        <circle
+          r={radius}
+          cx="32"
+          cy="32"
+          strokeWidth="10"
           strokeDasharray={strokeDasharray}
           strokeDashoffset={strokeDashoffset}
-          fill="transparent" 
+          fill="transparent"
           stroke=""
-          strokeLinecap="round" 
+          strokeLinecap="round"
           className={`${colorClass} transform-gpu transition-all duration-300 ease-in-out`}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-xs font-medium text-gray-900 -ml-2">{value}%</span>
       </div>
+    </div>
+  )
+}
+
+function ModelStatusIndicator({ modelStatus }: { modelStatus: Record<string, any> }) {
+  const modelIcons = {
+    'gemini-2.5-flash': { name: 'Gemini', color: 'blue' },
+    'gpt-oss-120b': { name: 'GPT-OSS', color: 'green' },
+    'llama-4-scout-17b-16e-instruct': { name: 'Llama-4', color: 'purple' }
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      {Object.entries(modelIcons).map(([modelId, modelInfo]) => {
+        const status = modelStatus[modelId]
+        const hasResponse = status?.has_response
+
+        return (
+          <TooltipProvider key={modelId}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={`
+                    w-3 h-3 rounded-full border border-current
+                    ${hasResponse
+                      ? `${modelInfo.color === 'blue' ? 'bg-blue-500 border-blue-500' : ''}
+                         ${modelInfo.color === 'green' ? 'bg-green-500 border-green-500' : ''}
+                         ${modelInfo.color === 'purple' ? 'bg-purple-500 border-purple-500' : ''}`
+                      : 'bg-gray-200 border-gray-300'
+                    }
+                  `}
+                  title={`${modelInfo.name}: ${hasResponse ? 'Generated' : 'Pending'}`}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">
+                  {modelInfo.name}: {hasResponse ? '✓ Generated' : '⏳ Pending'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      })}
     </div>
   )
 }
@@ -192,8 +254,11 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   Intent
                 </SortableHeader>
               </th>
-              <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '50px'}}>
-                Resp.
+              <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '120px'}}>
+                <div className="flex items-center gap-1.5">
+                  Models
+                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
+                </div>
               </th>
               <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '65px'}}>
                 <div className="flex items-center gap-1.5">
@@ -245,7 +310,12 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   {getIntentBadge(prompt.intent || 'informational')}
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
-                  <div>{prompt.responseCount || 0} resp.</div>
+                  <div className="flex items-center gap-2">
+                    <ModelStatusIndicator modelStatus={prompt.modelStatus || {}} />
+                    <span className="text-xs text-muted-foreground">
+                      {prompt.responseCount || 0}
+                    </span>
+                  </div>
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
                   <ProgressCircle value={prompt.visibility || 0} />
@@ -271,7 +341,7 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   </Link>
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
-                  {prompt.created ? new Date(prompt.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}
+                  {safeFormatDateForTable(prompt.created)}
                 </td>
               </tr>
             ))}

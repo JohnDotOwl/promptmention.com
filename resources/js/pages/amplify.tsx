@@ -62,7 +62,7 @@ interface AmplifyProps extends SharedData {
         conversations: any[];
         hasHistory: boolean;
     };
-    suggestedPrompts: SuggestedPrompt[];
+    suggestedPrompts: Record<string, any>;
     initialMessage: string;
     availableModels: Record<string, AIModel>;
     userPreferredModel: string;
@@ -543,11 +543,29 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         loadConversations();
     }, []);
 
+    // Listen for custom prompt execution events
+    useEffect(() => {
+        const handleExecutePrompt = (event: CustomEvent) => {
+            const prompt = event.detail;
+            if (prompt && typeof prompt === 'string') {
+                handleSendMessage(prompt);
+            }
+        };
+
+        // Add event listener
+        window.addEventListener('executePrompt', handleExecutePrompt as EventListener);
+
+        // Cleanup
+        return () => {
+            window.removeEventListener('executePrompt', handleExecutePrompt as EventListener);
+        };
+    }, [handleSendMessage]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Amplify" />
 
-            <div className="flex flex-col h-full bg-gray-50">
+            <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 4rem)' }}>
                 {/* Page Header */}
                 <div className="relative z-10 py-6 border-b bg-white">
                     <div className="px-6">
@@ -580,7 +598,8 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                 {/* Chat Interface */}
                 <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar - Conversation History */}
-                    <ConversationSidebar
+                    <div className="h-full">
+                        <ConversationSidebar
                         conversations={conversations}
                         onNewConversation={handleNewConversation}
                         onSelectConversation={handleSelectConversation}
@@ -589,6 +608,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                         totalMentions={brandContext.totalMentions}
                         hasData={brandContext.hasData}
                     />
+                    </div>
 
                     {/* Main Chat Area */}
                     <div className="flex-1 flex flex-col bg-white">
@@ -599,11 +619,12 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                             {showSuggestions && messages.length <= 1 && (
                                 <div className="mb-8">
                                     <SuggestedActions
-                                        onAnalyzePerformance={() => handleQuickAction('How did our brand perform this week?')}
-                                        onSuggestContent={() => handleQuickAction('Suggest content ideas for our brand')}
-                                        onCompetitorAnalysis={() => handleQuickAction('Analyze our competitor performance')}
-                                        onOptimizationTips={() => handleQuickAction('How can we improve our visibility?')}
+                                        onAnalyzePerformance={() => {}}
+                                        onSuggestContent={() => {}}
+                                        onCompetitorAnalysis={() => {}}
+                                        onOptimizationTips={() => {}}
                                         hasData={brandContext.hasData}
+                                        suggestedPrompts={suggestedPrompts}
                                     />
                                 </div>
                             )}

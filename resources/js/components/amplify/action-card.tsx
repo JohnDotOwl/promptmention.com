@@ -94,6 +94,16 @@ export const QuickAction: React.FC<QuickActionProps> = ({
     );
 };
 
+// Personalized prompt data structure
+interface PromptData {
+    title: string;
+    description: string;
+    action: string;
+    prompt: string;
+    variant: 'primary' | 'secondary';
+    data_driven: boolean;
+}
+
 // Suggested Actions Container
 interface SuggestedActionsProps {
     onAnalyzePerformance: () => void;
@@ -101,6 +111,12 @@ interface SuggestedActionsProps {
     onCompetitorAnalysis: () => void;
     onOptimizationTips: () => void;
     hasData: boolean;
+    suggestedPrompts?: {
+        performance_analysis?: PromptData;
+        content_strategy?: PromptData;
+        competitor_intelligence?: PromptData;
+        optimization_tips?: PromptData;
+    };
 }
 
 export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
@@ -108,49 +124,98 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
     onSuggestContent,
     onCompetitorAnalysis,
     onOptimizationTips,
-    hasData
+    hasData,
+    suggestedPrompts
 }) => {
+    // Create dynamic action handlers that use the personalized prompts
+    const handlePerformanceAnalysis = () => {
+        const prompt = suggestedPrompts?.performance_analysis?.prompt || 'How did our brand perform this week?';
+        onAnalyzePerformance();
+        // Execute the personalized prompt by sending it as a message
+        setTimeout(() => {
+            const event = new CustomEvent('executePrompt', { detail: prompt });
+            window.dispatchEvent(event);
+        }, 100);
+    };
+
+    const handleContentStrategy = () => {
+        const prompt = suggestedPrompts?.content_strategy?.prompt || 'Suggest content ideas for our brand';
+        onSuggestContent();
+        setTimeout(() => {
+            const event = new CustomEvent('executePrompt', { detail: prompt });
+            window.dispatchEvent(event);
+        }, 100);
+    };
+
+    const handleCompetitorAnalysis = () => {
+        const prompt = suggestedPrompts?.competitor_intelligence?.prompt || 'Analyze our competitor performance';
+        onCompetitorAnalysis();
+        setTimeout(() => {
+            const event = new CustomEvent('executePrompt', { detail: prompt });
+            window.dispatchEvent(event);
+        }, 100);
+    };
+
+    const handleOptimizationTips = () => {
+        const prompt = suggestedPrompts?.optimization_tips?.prompt || 'How can we improve our visibility?';
+        onOptimizationTips();
+        setTimeout(() => {
+            const event = new CustomEvent('executePrompt', { detail: prompt });
+            window.dispatchEvent(event);
+        }, 100);
+    };
+
     return (
         <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">I can help you with:</h3>
 
             <div className="grid grid-cols-1 gap-3">
                 <ActionCard
-                    title="Performance Analysis"
-                    description="Deep dive into your brand's mention trends and visibility metrics"
+                    title={suggestedPrompts?.performance_analysis?.title || "Performance Analysis"}
+                    description={suggestedPrompts?.performance_analysis?.description || "Deep dive into your brand's mention trends and visibility metrics"}
                     icon="analytics"
-                    action="Analyze Performance"
-                    onClick={onAnalyzePerformance}
-                    variant={hasData ? 'primary' : 'secondary'}
+                    action={suggestedPrompts?.performance_analysis?.action || "Analyze Performance"}
+                    onClick={handlePerformanceAnalysis}
+                    variant={suggestedPrompts?.performance_analysis?.variant || (hasData ? 'primary' : 'secondary')}
                 />
 
                 <ActionCard
-                    title="Content Strategy"
-                    description="Get AI-powered content ideas to boost your brand visibility"
+                    title={suggestedPrompts?.content_strategy?.title || "Content Strategy"}
+                    description={suggestedPrompts?.content_strategy?.description || "Get AI-powered content ideas to boost your brand visibility"}
                     icon="content"
-                    action="Suggest Content"
-                    onClick={onSuggestContent}
-                    variant="secondary"
+                    action={suggestedPrompts?.content_strategy?.action || "Suggest Content"}
+                    onClick={handleContentStrategy}
+                    variant={suggestedPrompts?.content_strategy?.variant || 'secondary'}
                 />
 
                 <ActionCard
-                    title="Competitor Intelligence"
-                    description="Understand how competitors perform and find opportunities"
+                    title={suggestedPrompts?.competitor_intelligence?.title || "Competitor Intelligence"}
+                    description={suggestedPrompts?.competitor_intelligence?.description || "Understand how competitors perform and find opportunities"}
                     icon="competitors"
-                    action="Competitor Analysis"
-                    onClick={onCompetitorAnalysis}
-                    variant="secondary"
+                    action={suggestedPrompts?.competitor_intelligence?.action || "Competitor Analysis"}
+                    onClick={handleCompetitorAnalysis}
+                    variant={suggestedPrompts?.competitor_intelligence?.variant || 'secondary'}
                 />
 
                 <ActionCard
-                    title="Optimization Tips"
-                    description="Personalized recommendations to improve your AI visibility"
+                    title={suggestedPrompts?.optimization_tips?.title || "Optimization Tips"}
+                    description={suggestedPrompts?.optimization_tips?.description || "Personalized recommendations to improve your AI visibility"}
                     icon="optimization"
-                    action="Get Tips"
-                    onClick={onOptimizationTips}
-                    variant="secondary"
+                    action={suggestedPrompts?.optimization_tips?.action || "Get Tips"}
+                    onClick={handleOptimizationTips}
+                    variant={suggestedPrompts?.optimization_tips?.variant || 'secondary'}
                 />
             </div>
+
+            {/* Data-driven indicator */}
+            {suggestedPrompts && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span>Personalized insights based on your brand data</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

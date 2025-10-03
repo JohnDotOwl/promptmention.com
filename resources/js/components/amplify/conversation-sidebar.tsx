@@ -36,6 +36,14 @@ const categoryColors = {
     general: 'text-gray-600',
 };
 
+// Helper function to truncate text with ellipsis
+const truncateText = (text: string, maxLength: number): string => {
+    if (!text || text.length <= maxLength) {
+        return text;
+    }
+    return text.substring(0, maxLength).trim() + '...';
+};
+
 export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     conversations,
     onNewConversation,
@@ -70,7 +78,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     return (
         <div className="flex flex-col h-full bg-white border-r border-gray-200">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-gradient-to-r from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -155,15 +163,15 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-1">
-                                                <h4 className="text-sm font-medium text-gray-900 truncate">
-                                                    {conversation.title}
+                                                <h4 className="text-sm font-medium text-gray-900 truncate" title={conversation.title}>
+                                                    {truncateText(conversation.title, 25)}
                                                 </h4>
                                                 {conversation.unread && (
                                                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-600 truncate mb-1">
-                                                {conversation.lastMessage}
+                                            <p className="text-xs text-gray-600 truncate mb-1" title={conversation.lastMessage}>
+                                                {truncateText(conversation.lastMessage, 40)}
                                             </p>
                                             <p className="text-xs text-gray-500">
                                                 {formatTimestamp(conversation.timestamp)}
@@ -178,7 +186,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
             </div>
 
             {/* Quick Actions Footer */}
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 flex-shrink-0">
                 <div className="space-y-2">
                     <p className="text-xs font-medium text-gray-700 mb-2">Quick Start</p>
                     <div className="grid grid-cols-2 gap-2">

@@ -72,15 +72,17 @@ class AmplifyController extends Controller
         $context = [
             'brandName' => null,
             'website' => null,
+            'industry' => null,
             'totalMentions' => 0,
             'visibilityScore' => 0,
             'hasData' => false,
             'competitors' => [],
             'recentActivity' => false,
+            'userId' => $user->id,
         ];
 
         try {
-            // Get project/brand name
+            // Get project/brand name and industry
             if ($this->tableExists('onboarding_progress')) {
                 $onboarding = DB::table('onboarding_progress')
                     ->where('user_id', $user->id)
@@ -89,6 +91,7 @@ class AmplifyController extends Controller
                 if ($onboarding) {
                     $context['brandName'] = $onboarding->company_name;
                     $context['website'] = $onboarding->company_website;
+                    $context['industry'] = $onboarding->industry;
                 }
             }
 
@@ -102,6 +105,7 @@ class AmplifyController extends Controller
                 if ($monitor) {
                     $context['brandName'] = $context['brandName'] ?: $monitor->name;
                     $context['website'] = $context['website'] ?: $monitor->website_url;
+                    $context['industry'] = $context['industry'] ?: $monitor->industry;
                 }
             }
 
@@ -175,35 +179,284 @@ class AmplifyController extends Controller
     private function getSuggestedPrompts($user, $brandContext): array
     {
         $prompts = [
-            'general' => [
-                'How can we improve our brand visibility?',
-                'What are the latest trends in our industry?',
-                'Analyze our competitor performance',
-                'Suggest content ideas for our brand',
+            'performance_analysis' => [
+                'title' => 'Performance Analysis',
+                'description' => 'Deep dive into your brand\'s mention trends and visibility metrics',
+                'action' => 'Analyze Performance',
+                'prompt' => $this->generatePerformancePrompt($brandContext),
+                'variant' => $brandContext['hasData'] ? 'primary' : 'secondary',
+                'data_driven' => $brandContext['hasData']
             ],
-            'data_specific' => [],
+            'content_strategy' => [
+                'title' => 'Content Strategy',
+                'description' => 'Get AI-powered content ideas to boost your brand visibility',
+                'action' => 'Suggest Content',
+                'prompt' => $this->generateContentPrompt($brandContext),
+                'variant' => 'secondary',
+                'data_driven' => $brandContext['hasData']
+            ],
+            'competitor_intelligence' => [
+                'title' => 'Competitor Intelligence',
+                'description' => 'Understand how competitors perform and find opportunities',
+                'action' => 'Competitor Analysis',
+                'prompt' => $this->generateCompetitorPrompt($brandContext),
+                'variant' => 'secondary',
+                'data_driven' => !empty($brandContext['competitors'])
+            ],
+            'optimization_tips' => [
+                'title' => 'Optimization Tips',
+                'description' => 'Personalized recommendations to improve your AI visibility',
+                'action' => 'Get Tips',
+                'prompt' => $this->generateOptimizationPrompt($brandContext),
+                'variant' => 'secondary',
+                'data_driven' => $brandContext['hasData']
+            ]
         ];
 
-        // Add data-specific prompts if user has monitoring data
-        if ($brandContext['hasData']) {
-            $prompts['data_specific'] = [
-                'How did our brand perform this week?',
-                'Which AI models mention us most often?',
-                'What\'s driving our mention trends?',
-                'Compare our visibility to competitors',
-            ];
-        }
-
-        // Add brand-specific prompts if we have brand name
-        if ($brandContext['brandName']) {
-            $prompts['personalized'] = [
-                "How can {$brandContext['brandName']} get more mentions?",
-                "What content strategies work for {$brandContext['brandName']}?",
-                "Analyze {$brandContext['brandName']}'s competitive position",
-            ];
-        }
-
         return $prompts;
+    }
+
+    /**
+     * Generate personalized performance analysis prompt
+     */
+    private function generatePerformancePrompt($brandContext): string
+    {
+        $brandName = $brandContext['brandName'] ?? 'your brand';
+        $mentions = $brandContext['totalMentions'];
+
+        if (!$brandContext['hasData']) {
+            return "How can we track and analyze {$brandName}'s performance across AI models?";
+        }
+
+        // Get week-over-week trend
+        $trendData = $this->getWeeklyTrend($brandContext);
+        $trendText = '';
+        if ($trendData['hasTrend']) {
+            $change = $trendData['change'];
+            $direction = $change >= 0 ? 'increased' : 'decreased';
+            $trendText = " mentions this week ({$direction} by " . abs($change) . "%)";
+        } else {
+            $trendText = " mentions this week";
+        }
+
+        return "How did {$brandName} achieve {$mentions}{$trendText}? What's driving our visibility trends?";
+    }
+
+    /**
+     * Generate personalized content strategy prompt
+     */
+    private function generateContentPrompt($brandContext): string
+    {
+        $brandName = $brandContext['brandName'] ?? 'your brand';
+        $industry = $this->getUserIndustry($brandContext);
+
+        if (!$brandContext['hasData']) {
+            if ($industry) {
+                return "What content strategies are working well in the {$industry} industry that {$brandName} could leverage?";
+            }
+            return "What content themes and topics would help increase {$brandName}'s visibility across AI models?";
+        }
+
+        // Get top performing content themes if available
+        $topThemes = $this->getTopContentThemes($brandContext);
+        if (!empty($topThemes)) {
+            $themeText = implode(', ', array_slice($topThemes, 0, 3));
+            return "How can {$brandName} create more content around '{$themeText}' to maximize AI model mentions?";
+        }
+
+        if ($industry) {
+            return "What content opportunities is {$brandName} missing in the {$industry} sector based on current trends?";
+        }
+
+        return "What content ideas would generate the most AI model mentions for {$brandName} right now?";
+    }
+
+    /**
+     * Generate personalized competitor intelligence prompt
+     */
+    private function generateCompetitorPrompt($brandContext): string
+    {
+        $brandName = $brandContext['brandName'] ?? 'your brand';
+        $competitors = $brandContext['competitors'] ?? [];
+
+        if (empty($competitors)) {
+            return "Who are {$brandName}'s main competitors and how can we analyze their performance?";
+        }
+
+        $competitorNames = array_map(function($comp) { return $comp->name; }, array_slice($competitors, 0, 3));
+        $competitorsList = implode(', ', $competitorNames);
+
+        if ($brandContext['hasData']) {
+            return "How does {$brandName}'s performance compare against {$competitorsList} in AI model visibility and mentions?";
+        }
+
+        return "What strategies are {$competitorsList} using to increase their AI visibility that {$brandName} should know about?";
+    }
+
+    /**
+     * Generate personalized optimization tips prompt
+     */
+    private function generateOptimizationPrompt($brandContext): string
+    {
+        $brandName = $brandContext['brandName'] ?? 'your brand';
+        $mentions = $brandContext['totalMentions'];
+
+        if (!$brandContext['hasData']) {
+            return "What are the top 3 optimization strategies to help {$brandName} get mentioned more frequently by AI models?";
+        }
+
+        if ($mentions < 5) {
+            return "How can {$brandName} break through the noise and consistently get mentioned by AI models?";
+        } elseif ($mentions < 20) {
+            return "What strategies will help {$brandName} scale from {$mentions} to 50+ weekly mentions across AI models?";
+        } else {
+            return "How can {$brandName} maintain and grow our strong performance of {$mentions} weekly mentions?";
+        }
+    }
+
+    /**
+     * Get week-over-week mention trend
+     */
+    private function getWeeklyTrend($brandContext): array
+    {
+        if (!isset($brandContext['userId'])) {
+            return ['hasTrend' => false];
+        }
+
+        try {
+            $userId = $brandContext['userId'];
+            $monitorIds = DB::table('monitors')
+                ->where('user_id', $userId)
+                ->pluck('id')
+                ->toArray();
+
+            if (empty($monitorIds)) {
+                return ['hasTrend' => false];
+            }
+
+            // Get current week and previous week mentions
+            $currentWeek = now()->subDays(7);
+            $previousWeek = now()->subDays(14);
+
+            $currentWeekMentions = DB::table('responses')
+                ->whereIn('monitor_id', $monitorIds)
+                ->where('created_at', '>=', $currentWeek)
+                ->whereRaw('(brand_mention_count > 0 OR brand_mentioned = true)')
+                ->count();
+
+            $previousWeekMentions = DB::table('responses')
+                ->whereIn('monitor_id', $monitorIds)
+                ->where('created_at', '>=', $previousWeek)
+                ->where('created_at', '<', $currentWeek)
+                ->whereRaw('(brand_mention_count > 0 OR brand_mentioned = true)')
+                ->count();
+
+            if ($previousWeekMentions == 0) {
+                return ['hasTrend' => false];
+            }
+
+            $change = round((($currentWeekMentions - $previousWeekMentions) / $previousWeekMentions) * 100);
+
+            return [
+                'hasTrend' => true,
+                'change' => $change,
+                'current' => $currentWeekMentions,
+                'previous' => $previousWeekMentions
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Failed to calculate weekly trend', ['error' => $e->getMessage()]);
+            return ['hasTrend' => false];
+        }
+    }
+
+    /**
+     * Get user's industry from onboarding or monitors
+     */
+    private function getUserIndustry($brandContext): ?string
+    {
+        // First try to get from brand context (populated in getBrandContext)
+        if (!empty($brandContext['industry'])) {
+            return $brandContext['industry'];
+        }
+
+        // If not in context, try to get directly from database
+        try {
+            $userId = $brandContext['userId'] ?? null;
+            if (!$userId) {
+                return null;
+            }
+
+            // Check onboarding_progress first
+            $onboarding = DB::table('onboarding_progress')
+                ->where('user_id', $userId)
+                ->first();
+
+            if ($onboarding && !empty($onboarding->industry)) {
+                return $onboarding->industry;
+            }
+
+            // Check monitors table
+            $monitor = DB::table('monitors')
+                ->where('user_id', $userId)
+                ->where('status', 'active')
+                ->first();
+
+            if ($monitor && !empty($monitor->industry)) {
+                return $monitor->industry;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get user industry', ['error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get top performing content themes from response data
+     */
+    private function getTopContentThemes($brandContext): array
+    {
+        try {
+            $userId = $brandContext['userId'];
+            $monitorIds = DB::table('monitors')
+                ->where('user_id', $userId)
+                ->pluck('id')
+                ->toArray();
+
+            if (empty($monitorIds)) {
+                return [];
+            }
+
+            // This is a simplified version - in reality, you'd analyze response_text
+            // for recurring themes and topics that correlate with high visibility
+            $themes = DB::table('responses')
+                ->whereIn('monitor_id', $monitorIds)
+                ->where('created_at', '>=', now()->subDays(30))
+                ->whereRaw('(brand_mention_count > 0 OR brand_mentioned = true)')
+                ->pluck('response_text')
+                ->take(20)
+                ->toArray();
+
+            // Extract common keywords/themes (simplified)
+            $commonWords = [];
+            foreach ($themes as $theme) {
+                $words = str_word_count(strtolower($theme), 1);
+                foreach ($words as $word) {
+                    if (strlen($word) > 4) { // Only words longer than 4 chars
+                        $commonWords[$word] = ($commonWords[$word] ?? 0) + 1;
+                    }
+                }
+            }
+
+            arsort($commonWords);
+            return array_keys(array_slice($commonWords, 0, 5, true));
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get content themes', ['error' => $e->getMessage()]);
+            return [];
+        }
     }
 
     /**
@@ -387,10 +640,21 @@ class AmplifyController extends Controller
             ->orderBy('last_message_at', 'desc')
             ->get()
             ->map(function ($conversation) {
+                $lastMessage = $conversation->latestMessage->content ?? 'No messages yet';
+
+                // Truncate title to 30 characters and last message to 60 characters
+                $title = strlen($conversation->title) > 30
+                    ? substr($conversation->title, 0, 27) . '...'
+                    : $conversation->title;
+
+                $truncatedLastMessage = strlen($lastMessage) > 60
+                    ? substr($lastMessage, 0, 57) . '...'
+                    : $lastMessage;
+
                 return [
                     'id' => $conversation->id,
-                    'title' => $conversation->title,
-                    'lastMessage' => $conversation->latestMessage->content ?? 'No messages yet',
+                    'title' => $title,
+                    'lastMessage' => $truncatedLastMessage,
                     'timestamp' => $conversation->last_message_at,
                     'unread' => false, // TODO: Implement read/unread functionality
                     'category' => $conversation->category,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AmplifyChatRequest;
 use App\Models\AmplifyConversation;
 use App\Models\AmplifyMessage;
+use App\Models\User;
 use App\Services\BrandAssistantService;
 use App\Services\CerebrasAIService;
 use Illuminate\Http\Request;
@@ -311,18 +312,55 @@ class AmplifyController extends Controller
             // Get brand context
             $brandContext = $this->getBrandContext($user);
 
-            // Return streaming response
-            return $this->cerebrasService->streamResponse($user, $message, $brandContext);
+            // Return Laravel's native streaming response with Generator
+            return response()->stream(function () use ($user, $message, $brandContext, $conversation) {
+                try {
+                    $fullContent = '';
+
+                    // Get the generator from Cerebras service
+                    foreach ($this->cerebrasService->streamResponse($user, $message, $brandContext) as $chunk) {
+                        echo $chunk;
+                        $fullContent .= $chunk;
+                        ob_flush();
+                        flush();
+                    }
+
+                    // Save the complete AI response after streaming finishes
+                    if (!empty($fullContent)) {
+                        AmplifyMessage::createAssistantMessage(
+                            $conversation->id,
+                            $fullContent,
+                            null,
+                            'cerebras-gpt-oss-120b',
+                            'cerebras',
+                            true
+                        );
+
+                        // Update conversation timestamp
+                        $conversation->updateLastMessageTime();
+                    }
+
+                } catch (\Exception $e) {
+                    Log::error('Streaming error', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->id
+                    ]);
+                    echo "\n\nError: Failed to complete streaming.";
+                }
+            }, 200, [
+                'Cache-Control' => 'no-cache',
+                'X-Accel-Buffering' => 'no',
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to process Amplify streaming chat', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
-                'error' => 'Failed to start streaming. Please try again.',
-                'success' => false
+                'error' => 'Failed to start streaming. Please try again.'
             ], 500);
         }
     }
@@ -352,27 +390,43 @@ class AmplifyController extends Controller
      */
     public function getConversations(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $conversations = AmplifyConversation::where('user_id', $user->id)
-            ->active()
-            ->with(['latestMessage'])
-            ->orderBy('last_message_at', 'desc')
-            ->get()
-            ->map(function ($conversation) {
-                return [
-                    'id' => $conversation->id,
-                    'title' => $conversation->title,
-                    'lastMessage' => $conversation->latestMessage->content ?? 'No messages yet',
-                    'timestamp' => $conversation->last_message_at,
-                    'unread' => false, // TODO: Implement read/unread functionality
-                    'category' => $conversation->category,
-                ];
-            });
+            $conversations = AmplifyConversation::where('user_id', $user->id)
+                ->active()
+                ->orderBy('last_message_at', 'desc')
+                ->get()
+                ->map(function ($conversation) {
+                    // Get latest message safely
+                    $latestMessage = $conversation->messages()
+                        ->latest()
+                        ->first();
 
-        return response()->json([
-            'conversations' => $conversations
-        ]);
+                    return [
+                        'id' => $conversation->id,
+                        'title' => $conversation->title,
+                        'lastMessage' => $latestMessage ? $latestMessage->content : 'No messages yet',
+                        'timestamp' => $conversation->last_message_at,
+                        'unread' => false, // TODO: Implement read/unread functionality
+                        'category' => $conversation->category,
+                    ];
+                });
+
+            return response()->json([
+                'conversations' => $conversations
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get conversations', [
+                'user_id' => $user->id ?? null,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'conversations' => []
+            ]);
+        }
     }
 
     /**

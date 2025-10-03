@@ -67,22 +67,16 @@ class ResponsesController extends Controller
                 $citations = null;
                 if ($response->citation_sources) {
                     $sources = json_decode($response->citation_sources, true) ?: [];
-                    $mapping = json_decode($response->citation_mapping, true) ?: [];
-                    $positions = json_decode($response->citation_positions, true) ?: [];
 
                     $citations = [
                         'sources' => $sources,
-                        'mapping' => $mapping,
-                        'positions' => $positions,
-                        'count' => (int) ($response->citation_sources_count ?? count($sources)),
-                        'fingerprint' => json_decode($response->citation_fingerprint, true)
+                        'count' => count($sources)
                     ];
                 }
 
                 return [
                     'id' => $response->id,
                     'text' => $response->response_text ?? '',
-                    'textWithCitations' => $response->response_text_with_citations ?? '',
                     'model' => $modelInfo,
                     'visibility' => (int) ($response->visibility_score ?? 0),
                     'brandMentions' => $brandMentions,

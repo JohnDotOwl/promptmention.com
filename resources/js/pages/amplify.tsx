@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
+import { useStream } from '@laravel/stream-react';
 import { Send, Mic, Square, Sparkles, BarChart3, TrendingUp, Users } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { UserMessage } from '@/components/amplify/user-message';
@@ -9,7 +10,6 @@ import { AssistantMessage } from '@/components/amplify/assistant-message';
 import { SuggestedActions, QuickAction } from '@/components/amplify/action-card';
 import { ConversationSidebar, defaultConversations } from '@/components/amplify/conversation-sidebar';
 import { InsightCard, MetricsGrid, StatusBadge } from '@/components/amplify/insight-card';
-import { ModelSelector, ModelProviderInfo } from '@/components/amplify/model-selector';
 
 // Define TypeScript interfaces
 interface BrandContext {
@@ -83,8 +83,6 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
     const [conversations, setConversations] = useState(defaultConversations);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState(true);
-    const [selectedModel, setSelectedModel] = useState<string>(userPreferredModel);
-    const [isStreaming, setIsStreaming] = useState(false);
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +99,51 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         }
     }, [initialMessage, messages.length]);
 
+    // Set up streaming hook
+    const { data: streamData, isStreaming, isFetching, send: sendStream } = useStream(
+        '/amplify/chat/stream',
+        {
+            csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            onData: (chunk: string) => {
+                // Update the streaming message with new content
+                if (streamingMessageId) {
+                    setMessages(prev =>
+                        prev.map(msg =>
+                            msg.id === streamingMessageId
+                                ? { ...msg, content: (msg.content || '') + chunk }
+                                : msg
+                        )
+                    );
+                }
+            },
+            onFinish: () => {
+                setIsTyping(false);
+                // Mark streaming as complete
+                if (streamingMessageId) {
+                    setMessages(prev =>
+                        prev.map(msg =>
+                            msg.id === streamingMessageId
+                                ? {
+                                    ...msg,
+                                    aiModel: 'cerebras-gpt-oss-120b',
+                                    aiProvider: 'cerebras',
+                                    isStreamed: true
+                                }
+                                : msg
+                        )
+                    );
+                    setStreamingMessageId(null);
+                }
+            },
+            onError: (error: Error) => {
+                console.error('Streaming error:', error);
+                if (streamingMessageId) {
+                    handleStreamError(streamingMessageId);
+                }
+            }
+        }
+    );
+
     // Auto-scroll to bottom of messages
     useEffect(() => {
         scrollToBottom();
@@ -110,24 +153,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleModelChange = async (modelId: string) => {
-        setSelectedModel(modelId);
-
-        // Save user preference to backend
-        try {
-            await fetch('/amplify/model-preference', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ model: modelId }),
-            });
-        } catch (error) {
-            console.error('Failed to save model preference:', error);
-        }
-    };
-
+    
     const handleSendMessage = async (message: string, conversationId?: string | null) => {
         if (!message.trim()) return;
 
@@ -144,17 +170,17 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         setIsTyping(true);
         setShowSuggestions(false);
 
-        const currentModel = availableModels[selectedModel];
-        const useStreaming = currentModel?.streaming && selectedModel === 'cerebras-gpt-oss-120b';
+        const currentModel = availableModels['cerebras-gpt-oss-120b'];
+        const useStreaming = currentModel?.streaming || false;
 
         if (useStreaming) {
-            await handleStreamingMessage(message, conversationId);
+            handleStreamingMessage(message, conversationId);
         } else {
             await handleRegularMessage(message, conversationId);
         }
     };
 
-    const handleStreamingMessage = async (message: string, conversationId?: string | null) => {
+    const handleStreamingMessage = (message: string, conversationId?: string | null) => {
         // Create placeholder for streaming message
         const messageId = (Date.now() + 1).toString();
         setStreamingMessageId(messageId);
@@ -168,104 +194,28 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
 
         setMessages(prev => [...prev, streamingMessage]);
 
-        try {
-            const response = await fetch('/amplify/chat/stream', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({
-                    message: message,
-                    conversation_id: conversationId || activeConversationId,
-                    model: selectedModel,
-                }),
-            });
+        // Send the streaming request directly
+        sendStream({
+            message,
+            conversation_id: conversationId || activeConversationId,
+            model: 'cerebras-gpt-oss-120b',
+        });
+    };
 
-            if (!response.ok) {
-                throw new Error('Failed to start streaming');
-            }
+    const handleStreamError = (messageId: string) => {
+        // Remove streaming message and show error
+        setMessages(prev => prev.filter(msg => msg.id !== messageId));
 
-            setIsStreaming(true);
+        const errorMessage: ConversationMessage = {
+            id: (Date.now() + 2).toString(),
+            type: 'assistant',
+            content: 'Sorry, I encountered an error connecting to the AI service. Please try again.',
+            timestamp: new Date(),
+        };
 
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-
-            if (!reader) {
-                throw new Error('Failed to get response reader');
-            }
-
-            let accumulatedContent = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-
-                            if (data.type === 'content') {
-                                accumulatedContent += data.content;
-                                setMessages(prev =>
-                                    prev.map(msg =>
-                                        msg.id === messageId
-                                            ? { ...msg, content: accumulatedContent }
-                                            : msg
-                                    )
-                                );
-                            } else if (data.type === 'error') {
-                                throw new Error(data.error);
-                            } else if (data.type === 'done') {
-                                setIsStreaming(false);
-                                setStreamingMessageId(null);
-
-                                // Update final message with model info
-                                setMessages(prev =>
-                                    prev.map(msg =>
-                                        msg.id === messageId
-                                            ? {
-                                                ...msg,
-                                                aiModel: selectedModel,
-                                                aiProvider: 'cerebras',
-                                                isStreamed: true
-                                            }
-                                            : msg
-                                    )
-                                );
-                                return;
-                            }
-                        } catch (parseError) {
-                            // Ignore JSON parse errors for partial chunks
-                            continue;
-                        }
-                    }
-                }
-            }
-
-        } catch (error) {
-            console.error('Streaming failed:', error);
-
-            // Remove streaming message and show error
-            setMessages(prev => prev.filter(msg => msg.id !== streamingMessageId));
-
-            const errorMessage: ConversationMessage = {
-                id: (Date.now() + 2).toString(),
-                type: 'assistant',
-                content: 'Sorry, I encountered an error connecting to the AI service. Please try again.',
-                timestamp: new Date(),
-            };
-
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsStreaming(false);
-            setIsTyping(false);
-            setStreamingMessageId(null);
-        }
+        setMessages(prev => [...prev, errorMessage]);
+        setIsTyping(false);
+        setStreamingMessageId(null);
     };
 
     const handleRegularMessage = async (message: string, conversationId?: string | null) => {
@@ -279,7 +229,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                 body: JSON.stringify({
                     message: message,
                     conversation_id: conversationId || activeConversationId,
-                    model: selectedModel,
+                    model: 'cerebras-gpt-oss-120b',
                 }),
             });
 
@@ -296,7 +246,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                 content: data.response.content,
                 timestamp: new Date(),
                 richData: data.response.richData,
-                aiModel: data.model || selectedModel,
+                aiModel: data.model || 'cerebras-gpt-oss-120b',
                 aiProvider: data.response?.provider || 'brand-assistant',
             };
 
@@ -565,7 +515,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                         Powered by Cerebras AI
                                     </span>
                                 </div>
-                                {isStreaming && (
+                                {isStreaming && streamingMessageId && (
                                     <div className="flex items-center justify-end space-x-2 text-sm text-blue-600 mt-2">
                                         <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
                                         <span>Streaming response...</span>
@@ -676,12 +626,12 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                     disabled={!inputMessage.trim() || isTyping || isStreaming}
                                     className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl px-6 py-3 transition-all flex items-center gap-2"
                                 >
-                                    {isStreaming ? (
+                                    {isStreaming && streamingMessageId ? (
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                     ) : (
                                         <Send className="w-4 h-4" />
                                     )}
-                                    {isStreaming ? 'Streaming...' : 'Send'}
+                                    {isStreaming && streamingMessageId ? 'Streaming...' : 'Send'}
                                 </button>
                             </div>
 

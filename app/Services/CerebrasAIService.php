@@ -23,99 +23,17 @@ class CerebrasAIService
 
     /**
      * Generate a streaming response using Cerebras AI
-     * Returns a Generator that yields text chunks
      */
-    public function streamResponse(User $user, string $message, array $context = []): \Generator
+    public function streamResponse(User $user, string $message, array $context = []): StreamedResponse
     {
-        $systemPrompt = $this->buildSystemPrompt($user, $context);
-
-        $postData = [
-            'model' => $this->model,
-            'stream' => true,
-            'max_tokens' => 4096,
-            'temperature' => 0.7,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $systemPrompt
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $message
-                ]
-            ]
-        ];
-
-        $ch = curl_init($this->baseUrl . '/chat/completions');
-
-        $headers = [
-            'Content-Type: application/json',
-        ];
-
-        if ($this->apiKey) {
-            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
-        }
-
-        $buffer = '';
-
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($postData),
-            CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_RETURNTRANSFER => false,
-            CURLOPT_WRITEFUNCTION => function($ch, $data) use (&$buffer) {
-                $buffer .= $data;
-
-                // Process complete lines from buffer
-                while (($pos = strpos($buffer, "\n")) !== false) {
-                    $line = substr($buffer, 0, $pos);
-                    $buffer = substr($buffer, $pos + 1);
-
-                    $line = trim($line);
-                    if (empty($line) || !str_starts_with($line, 'data: ')) {
-                        continue;
-                    }
-
-                    $jsonStr = substr($line, 6); // Remove "data: " prefix
-
-                    if ($jsonStr === '[DONE]') {
-                        continue;
-                    }
-
-                    $chunk = json_decode($jsonStr, true);
-                    if (isset($chunk['choices'][0]['delta']['content'])) {
-                        $content = $chunk['choices'][0]['delta']['content'];
-                        // This will be yielded by the generator
-                        echo $content;
-                    }
-                }
-
-                return strlen($data);
-            },
-            CURLOPT_TIMEOUT => 120,
+        return new StreamedResponse(function () use ($user, $message, $context) {
+            $this->sendStreamingRequest($user, $message, $context);
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no', // Disable nginx buffering
         ]);
-
-        ob_start();
-        $result = curl_exec($ch);
-
-        if (curl_errno($ch)) {
-            $error = curl_error($ch);
-            curl_close($ch);
-            ob_end_clean();
-            throw new \Exception('Stream connection error: ' . $error);
-        }
-
-        curl_close($ch);
-
-        // Get the accumulated content from the buffer
-        $content = ob_get_clean();
-
-        // Yield the content in chunks
-        $chunkSize = 100; // Send in small chunks for smooth streaming
-        $length = strlen($content);
-        for ($i = 0; $i < $length; $i += $chunkSize) {
-            yield substr($content, $i, $chunkSize);
-        }
     }
 
     /**
@@ -160,9 +78,8 @@ class CerebrasAIService
                     'user_id' => $user->id
                 ]);
 
-                // Return a friendly error response instead of throwing
                 return [
-                    'content' => "I'm having trouble connecting to the AI service right now. This might be due to high demand or a temporary issue. Please try again in a moment.",
+                    'content' => "I'm having trouble connecting to the AI service right now. Please try again in a moment.",
                     'richData' => null,
                     'model' => $this->model,
                     'provider' => 'cerebras',
@@ -190,6 +107,128 @@ class CerebrasAIService
         }
     }
 
+    /**
+     * Send streaming request to Cerebras API
+     */
+    private function sendStreamingRequest(User $user, string $message, array $context): void
+    {
+        $systemPrompt = $this->buildSystemPrompt($user, $context);
+
+        $postData = [
+            'model' => $this->model,
+            'stream' => true,
+            'max_tokens' => 4096,
+            'temperature' => 0.7,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemPrompt
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $message
+                ]
+            ]
+        ];
+
+        $ch = curl_init($this->baseUrl . '/chat/completions');
+
+        $headers = [
+            'Content-Type: application/json',
+        ];
+
+        if ($this->apiKey) {
+            $headers[] = 'Authorization: Bearer ' . $this->apiKey;
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($postData),
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => false,
+            CURLOPT_WRITEFUNCTION => function($ch, $data) {
+                $this->handleStreamChunk($data);
+                return strlen($data);
+            },
+            CURLOPT_TIMEOUT => 120,
+        ]);
+
+        $result = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            $this->sendStreamError('Stream connection error: ' . curl_error($ch));
+        }
+
+        curl_close($ch);
+
+        // Send final chunk to indicate completion
+        $this->sendStreamChunk([
+            'type' => 'done',
+            'provider' => 'cerebras',
+            'model' => $this->model
+        ]);
+    }
+
+    /**
+     * Handle individual stream chunks
+     */
+    private function handleStreamChunk(string $data): void
+    {
+        $lines = explode("\n", $data);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            if (empty($line) || !str_starts_with($line, 'data: ')) {
+                continue;
+            }
+
+            $jsonStr = substr($line, 6); // Remove "data: " prefix
+
+            if ($jsonStr === '[DONE]') {
+                $this->sendStreamChunk([
+                    'type' => 'done',
+                    'provider' => 'cerebras',
+                    'model' => $this->model
+                ]);
+                break;
+            }
+
+            $chunk = json_decode($jsonStr, true);
+
+            if (isset($chunk['choices'][0]['delta']['content'])) {
+                $content = $chunk['choices'][0]['delta']['content'];
+
+                $this->sendStreamChunk([
+                    'type' => 'content',
+                    'content' => $content,
+                    'provider' => 'cerebras',
+                    'model' => $this->model
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Send chunk to frontend via Server-Sent Events
+     */
+    private function sendStreamChunk(array $data): void
+    {
+        echo "data: " . json_encode($data) . "\n\n";
+        ob_flush();
+        flush();
+    }
+
+    /**
+     * Send error message via stream
+     */
+    private function sendStreamError(string $error): void
+    {
+        $this->sendStreamChunk([
+            'type' => 'error',
+            'error' => $error
+        ]);
+    }
 
     /**
      * Build system prompt with brand context

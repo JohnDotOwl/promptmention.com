@@ -47,6 +47,12 @@ class AmplifyController extends Controller
         $availableModels = $this->getAvailableModels();
         $userPreferredModel = $user->preferred_ai_model ?? 'cerebras-gpt-oss-120b';
 
+        Log::info('Amplify page loaded', [
+            'availableModels' => array_keys($availableModels),
+            'userPreferredModel' => $userPreferredModel,
+            'cerebrasAvailable' => $this->cerebrasService->isAvailable()
+        ]);
+
         return Inertia::render('amplify', [
             'user' => $user,
             'brandContext' => $brandContext,
@@ -238,6 +244,12 @@ class AmplifyController extends Controller
             return response()->json(['error' => 'Message is required'], 422);
         }
 
+        Log::info('chat request', [
+            'selectedModel' => $selectedModel,
+            'isAvailable' => $this->cerebrasService->isAvailable(),
+            'useStreaming' => $useStreaming
+        ]);
+
         try {
             // Get or create conversation
             $conversation = $this->getOrCreateConversation($user, $conversationId, $message);
@@ -273,7 +285,8 @@ class AmplifyController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to process Amplify chat message', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
@@ -297,9 +310,22 @@ class AmplifyController extends Controller
             return response()->json(['error' => 'Message is required'], 422);
         }
 
+        Log::info('chatStream request', [
+            'selectedModel' => $selectedModel,
+            'isAvailable' => $this->cerebrasService->isAvailable(),
+            'modelMatch' => $selectedModel === 'cerebras-gpt-oss-120b'
+        ]);
+
         // Only allow streaming for Cerebras model
         if ($selectedModel !== 'cerebras-gpt-oss-120b' || !$this->cerebrasService->isAvailable()) {
-            return response()->json(['error' => 'Streaming not available for selected model'], 422);
+            return response()->json([
+                'error' => 'Streaming not available for selected model',
+                'debug' => [
+                    'selectedModel' => $selectedModel,
+                    'expected' => 'cerebras-gpt-oss-120b',
+                    'isAvailable' => $this->cerebrasService->isAvailable()
+                ]
+            ], 422);
         }
 
         try {
@@ -312,55 +338,18 @@ class AmplifyController extends Controller
             // Get brand context
             $brandContext = $this->getBrandContext($user);
 
-            // Return Laravel's native streaming response with Generator
-            return response()->stream(function () use ($user, $message, $brandContext, $conversation) {
-                try {
-                    $fullContent = '';
-
-                    // Get the generator from Cerebras service
-                    foreach ($this->cerebrasService->streamResponse($user, $message, $brandContext) as $chunk) {
-                        echo $chunk;
-                        $fullContent .= $chunk;
-                        ob_flush();
-                        flush();
-                    }
-
-                    // Save the complete AI response after streaming finishes
-                    if (!empty($fullContent)) {
-                        AmplifyMessage::createAssistantMessage(
-                            $conversation->id,
-                            $fullContent,
-                            null,
-                            'cerebras-gpt-oss-120b',
-                            'cerebras',
-                            true
-                        );
-
-                        // Update conversation timestamp
-                        $conversation->updateLastMessageTime();
-                    }
-
-                } catch (\Exception $e) {
-                    Log::error('Streaming error', [
-                        'error' => $e->getMessage(),
-                        'user_id' => $user->id
-                    ]);
-                    echo "\n\nError: Failed to complete streaming.";
-                }
-            }, 200, [
-                'Cache-Control' => 'no-cache',
-                'X-Accel-Buffering' => 'no',
-            ]);
+            // Return streaming response
+            return $this->cerebrasService->streamResponse($user, $message, $brandContext);
 
         } catch (\Exception $e) {
             Log::error('Failed to process Amplify streaming chat', [
                 'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([
-                'error' => 'Failed to start streaming. Please try again.'
+                'error' => 'Failed to start streaming. Please try again.',
+                'success' => false
             ], 500);
         }
     }
@@ -390,43 +379,27 @@ class AmplifyController extends Controller
      */
     public function getConversations(Request $request)
     {
-        try {
-            $user = Auth::user();
+        $user = Auth::user();
 
-            $conversations = AmplifyConversation::where('user_id', $user->id)
-                ->active()
-                ->orderBy('last_message_at', 'desc')
-                ->get()
-                ->map(function ($conversation) {
-                    // Get latest message safely
-                    $latestMessage = $conversation->messages()
-                        ->latest()
-                        ->first();
+        $conversations = AmplifyConversation::where('user_id', $user->id)
+            ->active()
+            ->with(['latestMessage'])
+            ->orderBy('last_message_at', 'desc')
+            ->get()
+            ->map(function ($conversation) {
+                return [
+                    'id' => $conversation->id,
+                    'title' => $conversation->title,
+                    'lastMessage' => $conversation->latestMessage->content ?? 'No messages yet',
+                    'timestamp' => $conversation->last_message_at,
+                    'unread' => false, // TODO: Implement read/unread functionality
+                    'category' => $conversation->category,
+                ];
+            });
 
-                    return [
-                        'id' => $conversation->id,
-                        'title' => $conversation->title,
-                        'lastMessage' => $latestMessage ? $latestMessage->content : 'No messages yet',
-                        'timestamp' => $conversation->last_message_at,
-                        'unread' => false, // TODO: Implement read/unread functionality
-                        'category' => $conversation->category,
-                    ];
-                });
-
-            return response()->json([
-                'conversations' => $conversations
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to get conversations', [
-                'user_id' => $user->id ?? null,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'conversations' => []
-            ]);
-        }
+        return response()->json([
+            'conversations' => $conversations
+        ]);
     }
 
     /**
@@ -567,12 +540,18 @@ class AmplifyController extends Controller
      */
     private function generateAIResponse(User $user, string $model, string $message, array $context): array
     {
+        Log::info('generateAIResponse called', [
+            'model' => $model,
+            'isAvailable' => $this->cerebrasService->isAvailable(),
+            'match' => $model === 'cerebras-gpt-oss-120b'
+        ]);
+
         // Only support Cerebras model
-        if ($model === 'cerebras-gpt-oss-120b' && $this->cerebrasService->isAvailable()) {
+        if ($this->cerebrasService->isAvailable()) {
             return $this->cerebrasService->generateResponse($user, $message, $context);
         }
 
-        throw new \Exception('Selected AI model is not available');
+        throw new \Exception('Selected AI model is not available - Cerebras service unavailable');
     }
 
     /**

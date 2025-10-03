@@ -9,7 +9,6 @@ use App\Services\PromptGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Inertia\Inertia;
 
@@ -164,9 +163,6 @@ class OnboardingController extends Controller
         ]);
 
         $progress->markStepCompleted(3);
-
-        // Analyze website
-        $this->analyzeWebsite($progress);
 
         return redirect('/onboarding/step/3');
     }
@@ -618,76 +614,4 @@ class OnboardingController extends Controller
         // Deprecated - see MonitorSetupService::queueMonitorSetup()
     }
     */
-
-    private function analyzeWebsite(OnboardingProgress $progress)
-    {
-        try {
-            // Simple website analysis - in a real app, you might use a more sophisticated service
-            $response = Http::timeout(10)->get($progress->company_website);
-            
-            if ($response->successful()) {
-                $content = $response->body();
-                
-                // Basic analysis
-                $analysis = [
-                    'title' => $this->extractTitle($content),
-                    'description' => $this->extractDescription($content),
-                    'industry' => $this->guessIndustry($content),
-                ];
-
-                $progress->update([
-                    'website_analysis' => $analysis,
-                    'company_description' => $analysis['description'] ?? 'No description found.',
-                    'industry' => $analysis['industry'] ?? 'General Business',
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Fallback if analysis fails
-            $progress->update([
-                'company_description' => 'Website analysis unavailable.',
-                'industry' => 'General Business',
-            ]);
-        }
-    }
-
-    private function extractTitle(string $content): ?string
-    {
-        if (preg_match('/<title[^>]*>(.*?)<\/title>/i', $content, $matches)) {
-            return trim(strip_tags($matches[1]));
-        }
-        return null;
-    }
-
-    private function extractDescription(string $content): ?string
-    {
-        if (preg_match('/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i', $content, $matches)) {
-            return trim($matches[1]);
-        }
-        return null;
-    }
-
-    private function guessIndustry(string $content): string
-    {
-        $industries = [
-            'HR Management Software' => ['hr', 'payroll', 'employee', 'management', 'human resources'],
-            'Technology' => ['software', 'tech', 'developer', 'app', 'platform', 'digital'],
-            'E-commerce' => ['shop', 'store', 'buy', 'sell', 'product', 'ecommerce'],
-            'Finance' => ['finance', 'bank', 'loan', 'investment', 'money'],
-            'Healthcare' => ['health', 'medical', 'doctor', 'patient', 'clinic'],
-            'Education' => ['education', 'school', 'learn', 'course', 'training'],
-            'Marketing' => ['marketing', 'advertising', 'campaign', 'promotion'],
-        ];
-
-        $content = strtolower($content);
-        
-        foreach ($industries as $industry => $keywords) {
-            foreach ($keywords as $keyword) {
-                if (str_contains($content, $keyword)) {
-                    return $industry;
-                }
-            }
-        }
-
-        return 'General Business';
-    }
 }

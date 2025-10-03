@@ -138,8 +138,37 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                             <Cell key={`cell-${index}`} fill={entry.color} className="recharts-sector" tabIndex={-1} />
                           ))}
                         </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              const total = modelUsageData.reduce((sum, item) => sum + item.count, 0);
+                              const percentage = ((data.count / total) * 100).toFixed(1);
+                              return (
+                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-lg">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: data.color }}
+                                    />
+                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                      {data.name === 'gemini-2.0-flash' ? 'Gemini 2.0 Flash' :
+                                       data.name === 'gpt-4o-search' ? 'ChatGPT Search' :
+                                       data.name === 'mistral-small-latest' ? 'Mistral Small' : data.name}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                                    <div>{data.count} responses</div>
+                                    <div>{percentage}% of total</div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
                         <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-gray-700 dark:fill-gray-300 text-2xl font-bold">
-                          60
+                          {modelUsageData.reduce((sum, item) => sum + item.count, 0)}
                         </text>
                       </PieChart>
                     </ResponsiveContainer>

@@ -12,8 +12,6 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChevronUp, ChevronDown, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
-import { CitedText } from '@/components/citations/cited-text'
-import { SourcesList } from '@/components/citations/sources-list'
 
 interface ResponsesTableProps {
   responses: Response[]
@@ -170,24 +168,9 @@ export function ResponsesTable({ responses, onSort, sortConfig }: ResponsesTable
                   <div className="ml-1">
                     <div className="line-clamp-1">
                       <p className="text-sm">
-                        {response.textWithCitations && response.citations ? (
-                          <CitedText
-                            text={truncateText(response.textWithCitations, 200)}
-                            citations={response.citations}
-                          />
-                        ) : (
-                          truncateText(response.text, 200)
-                        )}
+                        {truncateText(response.text, 200)}
                       </p>
                     </div>
-                    {response.citations && response.citations.count > 0 && (
-                      <div className="mt-2">
-                        <SourcesList
-                          sources={response.citations.sources}
-                          count={response.citations.count}
-                        />
-                      </div>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell className="last:py-0">

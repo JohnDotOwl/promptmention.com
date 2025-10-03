@@ -185,7 +185,8 @@ class AmplifyController extends Controller
                 'action' => 'Analyze Performance',
                 'prompt' => $this->generatePerformancePrompt($brandContext),
                 'variant' => $brandContext['hasData'] ? 'primary' : 'secondary',
-                'data_driven' => $brandContext['hasData']
+                'data_driven' => $brandContext['hasData'],
+                'data_insight' => $this->getPerformanceDataInsight($brandContext)
             ],
             'content_strategy' => [
                 'title' => 'Content Strategy',
@@ -193,7 +194,8 @@ class AmplifyController extends Controller
                 'action' => 'Suggest Content',
                 'prompt' => $this->generateContentPrompt($brandContext),
                 'variant' => 'secondary',
-                'data_driven' => $brandContext['hasData']
+                'data_driven' => $brandContext['hasData'],
+                'data_insight' => $this->getContentDataInsight($brandContext)
             ],
             'competitor_intelligence' => [
                 'title' => 'Competitor Intelligence',
@@ -201,7 +203,8 @@ class AmplifyController extends Controller
                 'action' => 'Competitor Analysis',
                 'prompt' => $this->generateCompetitorPrompt($brandContext),
                 'variant' => 'secondary',
-                'data_driven' => !empty($brandContext['competitors'])
+                'data_driven' => !empty($brandContext['competitors']),
+                'data_insight' => $this->getCompetitorDataInsight($brandContext)
             ],
             'optimization_tips' => [
                 'title' => 'Optimization Tips',
@@ -209,7 +212,8 @@ class AmplifyController extends Controller
                 'action' => 'Get Tips',
                 'prompt' => $this->generateOptimizationPrompt($brandContext),
                 'variant' => 'secondary',
-                'data_driven' => $brandContext['hasData']
+                'data_driven' => $brandContext['hasData'],
+                'data_insight' => $this->getOptimizationDataInsight($brandContext)
             ]
         ];
 
@@ -460,6 +464,143 @@ class AmplifyController extends Controller
     }
 
     /**
+     * Get performance data insight for hover tooltip
+     */
+    private function getPerformanceDataInsight($brandContext): array
+    {
+        $insight = [
+            'has_data' => $brandContext['hasData'],
+            'metrics' => [],
+            'message' => 'Performance data not available yet'
+        ];
+
+        if ($brandContext['hasData']) {
+            $mentions = $brandContext['totalMentions'];
+            $trend = $this->getWeeklyTrend($brandContext);
+
+            $insight['metrics'][] = "Total mentions: {$mentions} this week";
+
+            if ($trend['hasTrend']) {
+                $direction = $trend['change'] >= 0 ? '📈' : '📉';
+                $insight['metrics'][] = "{$direction} " . abs($trend['change']) . "% vs last week";
+            }
+
+            $insight['metrics'][] = "📊 Data from last 7 days";
+            $insight['message'] = 'Performance tracking active';
+        } else {
+            $insight['metrics'][] = "🔍 Start monitoring to see insights";
+            $insight['message'] = 'No performance data available';
+        }
+
+        return $insight;
+    }
+
+    /**
+     * Get content strategy data insight for hover tooltip
+     */
+    private function getContentDataInsight($brandContext): array
+    {
+        $insight = [
+            'has_data' => false,
+            'metrics' => [],
+            'message' => 'Content insights limited'
+        ];
+
+        $industry = $this->getUserIndustry($brandContext);
+        if ($industry) {
+            $insight['has_data'] = true;
+            $insight['metrics'][] = "🏭 Industry: {$industry}";
+            $insight['message'] = 'Industry-based content strategy';
+        }
+
+        if ($brandContext['hasData']) {
+            $themes = $this->getTopContentThemes($brandContext);
+            if (!empty($themes)) {
+                $topThemes = implode(', ', array_slice($themes, 0, 3));
+                $insight['has_data'] = true;
+                $insight['metrics'][] = "🎯 Top themes: {$topThemes}";
+                $insight['message'] = 'Content themes identified';
+            }
+        }
+
+        if (!$insight['has_data']) {
+            $insight['metrics'][] = "📝 Set up industry for better insights";
+        }
+
+        return $insight;
+    }
+
+    /**
+     * Get competitor intelligence data insight for hover tooltip
+     */
+    private function getCompetitorDataInsight($brandContext): array
+    {
+        $insight = [
+            'has_data' => false,
+            'metrics' => [],
+            'message' => 'Competitor data not available'
+        ];
+
+        $competitors = $brandContext['competitors'] ?? [];
+
+        if (!empty($competitors)) {
+            $competitorCount = count($competitors);
+            $insight['has_data'] = true;
+            $insight['metrics'][] = "👥 Competitors tracked: {$competitorCount}";
+
+            $competitorNames = array_map(function($comp) { return $comp->name; }, array_slice($competitors, 0, 3));
+            if (!empty($competitorNames)) {
+                $namesList = implode(', ', $competitorNames);
+                $insight['metrics'][] = "🎯 Tracking: {$namesList}";
+            }
+
+            $insight['message'] = 'Competitive analysis available';
+        } else {
+            $insight['metrics'][] = "🔍 Add competitors for analysis";
+            $insight['message'] = 'No competitors configured';
+        }
+
+        return $insight;
+    }
+
+    /**
+     * Get optimization tips data insight for hover tooltip
+     */
+    private function getOptimizationDataInsight($brandContext): array
+    {
+        $insight = [
+            'has_data' => $brandContext['hasData'],
+            'metrics' => [],
+            'message' => 'Basic optimization tips'
+        ];
+
+        if ($brandContext['hasData']) {
+            $mentions = $brandContext['totalMentions'];
+
+            if ($mentions < 5) {
+                $stage = "🌱 Emerging";
+                $recommendation = "Focus on visibility foundation";
+            } elseif ($mentions < 20) {
+                $stage = "📈 Growing";
+                $recommendation = "Scale mention strategies";
+            } else {
+                $stage = "🚀 Established";
+                $recommendation = "Maintain growth momentum";
+            }
+
+            $insight['metrics'][] = "📊 Mentions: {$mentions}/week";
+            $insight['metrics'][] = "{$stage} stage";
+            $insight['metrics'][] = "💡 {$recommendation}";
+            $insight['message'] = 'Scaling recommendations ready';
+        } else {
+            $insight['metrics'][] = "🎯 Start with basic visibility tactics";
+            $insight['message'] = 'Foundation strategies available';
+        }
+
+        return $insight;
+    }
+
+    /**
      * Get initial greeting message
      */
     private function getInitialGreeting($user, $brandContext): string
@@ -566,7 +707,10 @@ class AmplifyController extends Controller
         Log::info('chatStream request', [
             'selectedModel' => $selectedModel,
             'isAvailable' => $this->cerebrasService->isAvailable(),
-            'modelMatch' => $selectedModel === 'cerebras-gpt-oss-120b'
+            'modelMatch' => $selectedModel === 'cerebras-gpt-oss-120b',
+            'cerebrasServiceClass' => get_class($this->cerebrasService),
+            'cerebrasApiKeyExists' => !empty(env('CEREBRAS_API_KEY')),
+            'cerebrasApiKeyLength' => strlen(env('CEREBRAS_API_KEY') ?? ''),
         ]);
 
         // Only allow streaming for Cerebras model

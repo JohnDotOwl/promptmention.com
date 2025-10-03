@@ -16,9 +16,9 @@ class CerebrasAIService
 
     public function __construct()
     {
-        $this->apiKey = env('CEREBRAS_API_KEY');
-        $this->baseUrl = 'https://api.cerebras.ai/v1';
-        $this->model = 'gpt-oss-120b';
+        $this->apiKey = config('cerebras.api_key');
+        $this->baseUrl = config('cerebras.base_url');
+        $this->model = config('cerebras.model');
     }
 
     /**
@@ -52,13 +52,13 @@ class CerebrasAIService
                     $headers['Authorization'] = 'Bearer ' . $this->apiKey;
                 }
 
-                $response = Http::timeout(60)
+                $response = Http::timeout(config('cerebras.timeout', 60))
                     ->withHeaders($headers)
                 ->post($this->baseUrl . '/chat/completions', [
                     'model' => $this->model,
                     'stream' => false,
-                    'max_tokens' => 4096,
-                    'temperature' => 0.7,
+                    'max_tokens' => config('cerebras.max_tokens', 4096),
+                    'temperature' => config('cerebras.temperature', 0.7),
                     'messages' => [
                         [
                             'role' => 'system',
@@ -117,8 +117,8 @@ class CerebrasAIService
         $postData = [
             'model' => $this->model,
             'stream' => true,
-            'max_tokens' => 4096,
-            'temperature' => 0.7,
+            'max_tokens' => config('cerebras.max_tokens', 4096),
+            'temperature' => config('cerebras.temperature', 0.7),
             'messages' => [
                 [
                     'role' => 'system',
@@ -150,7 +150,7 @@ class CerebrasAIService
                 $this->handleStreamChunk($data);
                 return strlen($data);
             },
-            CURLOPT_TIMEOUT => 120,
+            CURLOPT_TIMEOUT => config('cerebras.timeout', 120),
         ]);
 
         $result = curl_exec($ch);

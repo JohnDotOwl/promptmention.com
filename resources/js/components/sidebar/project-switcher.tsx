@@ -33,13 +33,15 @@ export interface Project {
 }
 
 export interface Monitor {
-  id: string | number
+  id?: string | number
   name: string
-  website: {
+  website?: {
     name: string
     url: string
   }
-  status: string
+  website_name?: string  // Alternative flat structure
+  website_url?: string   // Alternative flat structure
+  status?: string
   isPending?: boolean
 }
 
@@ -49,6 +51,21 @@ interface ProjectSwitcherProps {
 
 export function ProjectSwitcher({ monitors = [] }: ProjectSwitcherProps) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false)
+
+  // Helper function to get website name from monitor (handles both data structures)
+  const getWebsiteName = (monitor: Monitor): string => {
+    return monitor.website?.name || monitor.website_name || monitor.name || 'Unknown'
+  }
+
+  // Helper function to get website URL from monitor (handles both data structures)
+  const getWebsiteUrl = (monitor: Monitor): string => {
+    return monitor.website?.url || monitor.website_url || ''
+  }
+
+  // Helper function to get monitor ID (handles both data structures)
+  const getMonitorId = (monitor: Monitor): string | number => {
+    return monitor.id || monitor.name || Math.random().toString(36).substr(2, 9)
+  }
 
   // Get the first monitor as active, or null if no monitors
   const activeMonitor = monitors.length > 0 ? monitors[0] : null

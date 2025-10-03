@@ -144,7 +144,7 @@ export function DashboardContent({
           </div>
           <div className="col-span-4">
             <BrandMentionsList
-              mentions={(recentActivity || []).filter(activity => activity.type === 'mention')}
+              mentions={dashboardData?.competitorMentions}
             />
           </div>
           <div className="col-span-4">

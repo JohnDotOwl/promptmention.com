@@ -45,6 +45,7 @@ class DashboardController extends Controller
                 'shareOfVoice' => $this->getShareOfVoice($user),
                 'visibilityScoreTimeline' => $this->getVisibilityScoreTimeline($user),
                 'modelMentions' => $this->getModelMentions($user),
+                'competitorMentions' => $this->getCompetitorMentions($user),
             ],
             'projectName' => $this->getProjectName($user),
             'onboardingCompleted' => $onboardingCompleted,
@@ -1093,6 +1094,107 @@ class DashboardController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Failed to get top cited sources', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+    private function getCompetitorMentions($user): array
+    {
+        try {
+            // Get user's monitors
+            $monitorIds = [];
+            if ($this->tableExists('monitors')) {
+                $monitorIds = DB::table('monitors')
+                    ->where('user_id', $user->id)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            if (empty($monitorIds)) {
+                return [];
+            }
+
+            // Define time periods for trend calculation
+            $currentPeriodStart = now()->subDays(7);
+            $previousPeriodStart = now()->subDays(14);
+            $previousPeriodEnd = now()->subDays(7);
+
+            // Get competitor mentions from current period
+            $currentCompetitorCounts = [];
+            if ($this->tableExists('responses')) {
+                $currentResponses = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->where('created_at', '>=', $currentPeriodStart)
+                    ->whereNotNull('competitors_mentioned')
+                    ->whereRaw("competitors_mentioned::text != 'null'")
+                    ->pluck('competitors_mentioned');
+
+                foreach ($currentResponses as $competitorsJson) {
+                    $competitors = json_decode($competitorsJson, true);
+                    if (is_array($competitors)) {
+                        foreach ($competitors as $competitor) {
+                            $competitorName = is_string($competitor) ? $competitor : ($competitor['name'] ?? 'Unknown');
+                            $currentCompetitorCounts[$competitorName] = ($currentCompetitorCounts[$competitorName] ?? 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            // Get competitor mentions from previous period for trend
+            $previousCompetitorCounts = [];
+            if ($this->tableExists('responses')) {
+                $previousResponses = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])
+                    ->whereNotNull('competitors_mentioned')
+                    ->whereRaw("competitors_mentioned::text != 'null'")
+                    ->pluck('competitors_mentioned');
+
+                foreach ($previousResponses as $competitorsJson) {
+                    $competitors = json_decode($competitorsJson, true);
+                    if (is_array($competitors)) {
+                        foreach ($competitors as $competitor) {
+                            $competitorName = is_string($competitor) ? $competitor : ($competitor['name'] ?? 'Unknown');
+                            $previousCompetitorCounts[$competitorName] = ($previousCompetitorCounts[$competitorName] ?? 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            // Sort by current period count and take top 7
+            arsort($currentCompetitorCounts);
+            $topCompetitors = array_slice($currentCompetitorCounts, 0, 7, true);
+
+            // Build result array with rank, name, mentions, and trend
+            $results = [];
+            $rank = 1;
+            foreach ($topCompetitors as $name => $currentCount) {
+                $previousCount = $previousCompetitorCounts[$name] ?? 0;
+
+                // Calculate percentage change
+                $trend = 0;
+                $isPositive = false;
+                if ($previousCount > 0) {
+                    $trend = round((($currentCount - $previousCount) / $previousCount) * 100, 1);
+                    $isPositive = $trend > 0;
+                }
+
+                $results[] = [
+                    'rank' => $rank++,
+                    'name' => $name,
+                    'mentions' => $currentCount,
+                    'trend' => abs($trend),
+                    'isPositive' => $isPositive,
+                ];
+            }
+
+            return $results;
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to get competitor mentions', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage()
             ]);

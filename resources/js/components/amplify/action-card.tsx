@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, Target, FileText, Search, Users, Info } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, FileText, Search, Users, Info, Sparkles } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ActionCardProps {
     title: string;
@@ -51,7 +58,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
                     <div className="flex items-start justify-between mb-1">
                         <h4 className="font-medium text-gray-900">{title}</h4>
                         {dataInsight && (
-                            <DataInsightIcon dataInsight={dataInsight} />
+                            <DataInsightDialog dataInsight={dataInsight} />
                         )}
                     </div>
                     <p className="text-sm text-gray-600 mb-3 leading-relaxed">{description}</p>
@@ -118,55 +125,96 @@ interface DataInsight {
     message: string;
 }
 
-// Data Insight Icon Component
-interface DataInsightIconProps {
+// Data Insight Dialog Component
+interface DataInsightDialogProps {
     dataInsight: DataInsight;
 }
 
-export const DataInsightIcon: React.FC<DataInsightIconProps> = ({ dataInsight }) => {
-    const [showTooltip, setShowTooltip] = useState(false);
+export const DataInsightDialog: React.FC<DataInsightDialogProps> = ({ dataInsight }) => {
+    const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="relative inline-block">
+        <>
             <button
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(true);
+                }}
                 className={`p-1 rounded-full transition-colors ${
                     dataInsight.has_data
                         ? 'text-green-600 hover:bg-green-50'
                         : 'text-gray-400 hover:bg-gray-50'
                 }`}
-                title="View data insights"
+                title="Click to view data insights"
             >
                 <Info className="w-3 h-3" />
             </button>
 
-            {showTooltip && (
-                <div className="absolute z-50 bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-gray-700 max-w-md whitespace-normal bottom-full left-1/2 transform -translate-x-1/2 mb-2">
-                    {/* Arrow */}
-                    <div className="absolute w-2 h-2 bg-gray-900 border-r border-t border-gray-700 rotate-45 -bottom-1 left-1/2 transform -translate-x-1/2"></div>
-
-                    {/* Content */}
-                    <div className="text-sm space-y-3">
-                        <div className="font-semibold text-gray-100">
-                            Data Insights
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className={`p-2 rounded-lg ${
+                                dataInsight.has_data
+                                    ? 'bg-green-100 text-green-600'
+                                    : 'bg-gray-100 text-gray-400'
+                            }`}>
+                                <Info className="w-5 h-5" />
+                            </div>
+                            <DialogTitle className="text-lg font-semibold">
+                                Data Insights
+                            </DialogTitle>
                         </div>
+                        <DialogDescription>
+                            {dataInsight.has_data
+                                ? "Here are the data-driven insights for this recommendation:"
+                                : "No data available for this recommendation yet."
+                            }
+                        </DialogDescription>
+                    </DialogHeader>
 
-                        <div className="space-y-2">
-                            {dataInsight.metrics.map((metric, index) => (
-                                <div key={index} className="text-gray-200 leading-relaxed">
-                                    {metric}
+                    <div className="mt-6 space-y-6">
+                        {dataInsight.has_data && dataInsight.metrics.length > 0 && (
+                            <div>
+                                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                                    <BarChart3 className="w-4 h-4" />
+                                    Key Metrics
+                                </h4>
+                                <div className="space-y-3">
+                                    {dataInsight.metrics.map((metric, index) => (
+                                        <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                            <p className="text-gray-700 leading-relaxed text-sm">
+                                                {metric}
+                                            </p>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            </div>
+                        )}
+
+                        <div className="pt-4 border-t border-gray-200">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" />
+                                    Recommendation
+                                </h4>
+                                <p className="text-blue-800 text-sm leading-relaxed">
+                                    {dataInsight.message}
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="text-gray-400 italic pt-2 border-t border-gray-700">
-                            {dataInsight.message}
+                        <div className="text-xs text-gray-500 text-center">
+                            {dataInsight.has_data
+                                ? "These insights are based on your current brand performance data"
+                                : "Start monitoring your brand to see personalized insights here"
+                            }
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 };
 

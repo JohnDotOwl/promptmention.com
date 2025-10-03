@@ -94,7 +94,7 @@ class AmplifyMessage extends Model
     /**
      * Create a new assistant message.
      */
-    public static function createAssistantMessage(int $conversationId, string $content, array $richData = null, string $aiModel = null, string $aiProvider = null, bool $isStreamed = false, array $metadata = []): self
+    public static function createAssistantMessage(int $conversationId, string $content, ?array $richData = null, ?string $aiModel = null, ?string $aiProvider = null, bool $isStreamed = false, array $metadata = []): self
     {
         return static::create([
             'conversation_id' => $conversationId,

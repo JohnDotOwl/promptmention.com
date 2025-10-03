@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AmplifyConversation extends Model
 {
@@ -40,15 +41,15 @@ class AmplifyConversation extends Model
      */
     public function messages(): HasMany
     {
-        return $this->hasMany(AmplifyMessage::class)->orderBy('created_at');
+        return $this->hasMany(AmplifyMessage::class, 'conversation_id')->orderBy('created_at');
     }
 
     /**
      * Get the latest message for the conversation.
      */
-    public function latestMessage(): HasMany
+    public function latestMessage(): HasOne
     {
-        return $this->hasMany(AmplifyMessage::class)->latest();
+        return $this->hasOne(AmplifyMessage::class, 'conversation_id')->latest();
     }
 
     /**

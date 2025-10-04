@@ -4,12 +4,28 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { type VisibilityScorePoint } from "@/types/dashboard"
 
 const generateDefaultData = (): VisibilityScorePoint[] => {
-  const dates = ["26 Sep", "27 Sep", "28 Sep", "29 Sep", "30 Sep", "01 Oct", "02 Oct"]
-  return dates.map((date, index) => ({
-    date,
-    visibilityScore: index === 4 ? 30.5 : 0, // Only 30 Sep has data
-    responses: index === 4 ? 69 : 0,
-  }))
+  const today = new Date()
+  const data: VisibilityScorePoint[] = []
+
+  // Add historical data for context (past 6 days, in chronological order)
+  for (let i = 6; i >= 1; i--) {
+    const date = new Date(today)
+    date.setDate(today.getDate() - i)
+    data.push({
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      visibilityScore: 0, // No historical data yet
+      responses: 0,
+    })
+  }
+
+  // Today's data (current date with the 30.5% score) - appears last on the right
+  data.push({
+    date: today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    visibilityScore: 30.5,
+    responses: 69,
+  })
+
+  return data
 }
 
 const defaultData = generateDefaultData()

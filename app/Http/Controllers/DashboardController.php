@@ -814,17 +814,26 @@ class DashboardController extends Controller
 
     private function getVisibilityScoreTimeline($user): array
     {
-        // Mock data showing visibility score over time
-        $dates = ['26 Sep', '27 Sep', '28 Sep', '29 Sep', '30 Sep', '01 Oct', '02 Oct'];
+        // Generate dynamic dates in chronological order (earlier dates first, today last)
+        $today = now();
         $data = [];
 
-        foreach ($dates as $index => $date) {
+        // Add historical data for context (past 6 days, in chronological order)
+        for ($i = 6; $i >= 1; $i--) {
+            $date = $today->copy()->subDays($i);
             $data[] = [
-                'date' => $date,
-                'visibilityScore' => $index === 4 ? 30.5 : 0, // Only 30 Sep has data
-                'responses' => $index === 4 ? 69 : 0,
+                'date' => $date->format('M j'),
+                'visibilityScore' => 0, // No historical data yet
+                'responses' => 0,
             ];
         }
+
+        // Today's data (current date with the 30.5% score) - appears last on the right
+        $data[] = [
+            'date' => $today->format('M j'),
+            'visibilityScore' => 30.5,
+            'responses' => 69,
+        ];
 
         return $data;
     }

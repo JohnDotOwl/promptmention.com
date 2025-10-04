@@ -47,12 +47,11 @@ function StatChart({ data, color, dataKey = 'value', title }: StatChartProps) {
 
   return (
     <div className="h-full w-full">
-      <div className="relative h-full w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={data}
-            margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
-          >
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={data}
+          margin={{ top: 4, right: 4, left: 4, bottom: 4 }}
+        >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={chartColor} stopOpacity="0.6" />
@@ -97,8 +96,7 @@ function StatChart({ data, color, dataKey = 'value', title }: StatChartProps) {
               }}
             />
           </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      </ResponsiveContainer>
     </div>
   )
 }

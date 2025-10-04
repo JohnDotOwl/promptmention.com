@@ -144,20 +144,59 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                               const data = payload[0].payload;
                               const total = modelUsageData.reduce((sum, item) => sum + item.count, 0);
                               const percentage = ((data.count / total) * 100).toFixed(1);
+
+                              // Get model favicon
+                              const getFavicon = (modelName: string) => {
+                                switch(modelName) {
+                                  case 'gemini-2.0-flash':
+                                    return 'https://www.google.com/s2/favicons?domain=ai.google.dev&sz=256';
+                                  case 'gpt-4o-search':
+                                    return 'https://www.google.com/s2/favicons?domain=openai.com&sz=256';
+                                  case 'mistral-small-latest':
+                                    return 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=256';
+                                  default:
+                                    return null;
+                                }
+                              };
+
+                              const getLabel = (modelName: string) => {
+                                switch(modelName) {
+                                  case 'gemini-2.0-flash':
+                                    return 'Gemini 2.0 Flash';
+                                  case 'gpt-4o-search':
+                                    return 'ChatGPT Search';
+                                  case 'mistral-small-latest':
+                                    return 'Mistral Small';
+                                  default:
+                                    return modelName;
+                                }
+                              };
+
+                              const favicon = getFavicon(data.name);
+
                               return (
-                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 shadow-lg">
+                                <div className="bg-background border border-border/50 rounded-lg p-3 shadow-lg">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <div
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: data.color }}
-                                    />
-                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                      {data.name === 'gemini-2.0-flash' ? 'Gemini 2.0 Flash' :
-                                       data.name === 'gpt-4o-search' ? 'ChatGPT Search' :
-                                       data.name === 'mistral-small-latest' ? 'Mistral Small' : data.name}
+                                    {favicon ? (
+                                      <img
+                                        src={favicon}
+                                        alt={getLabel(data.name)}
+                                        className="w-4 h-4 rounded-sm"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: data.color }}
+                                      />
+                                    )}
+                                    <span className="font-medium text-foreground">
+                                      {getLabel(data.name)}
                                     </span>
                                   </div>
-                                  <div className="text-sm text-gray-600 dark:text-gray-300">
+                                  <div className="text-sm text-muted-foreground">
                                     <div>{data.count} responses</div>
                                     <div>{percentage}% of total</div>
                                   </div>

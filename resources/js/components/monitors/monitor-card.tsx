@@ -96,148 +96,147 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
     >
       <Card
         id="monitor-card"
-        className="group w-full border-0 shadow-sm hover:shadow-lg overflow-hidden bg-white dark:bg-gray-900/50 backdrop-blur-sm"
+        className="group w-full border-0 shadow-sm hover:shadow-lg overflow-hidden bg-white dark:bg-gray-900/50 backdrop-blur-sm py-0 gap-0 block min-h-[280px]"
       >
-        {/* Enhanced Header */}
-        <CardHeader className="border-b bg-gradient-to-r from-gray-50/80 to-gray-50/40 dark:from-gray-800/50 dark:to-gray-800/30 py-3 lg:py-4 px-4 lg:px-6">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3 lg:gap-4">
+        {/* Header */}
+        <CardHeader className="border-b bg-gray-50/60 dark:bg-gray-800/30 py-4 px-5">
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-3 mb-2">
-                <h3 className="group-hover:text-blue-600 dark:group-hover:text-blue-400 text-lg lg:text-xl font-bold truncate">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="group-hover:text-blue-600 dark:group-hover:text-blue-400 text-xl font-bold truncate">
                   {monitor.name}
                 </h3>
                 <Badge
                   variant={statusConfig.variant}
-                  className={`text-xs font-medium ${statusConfig.className} shrink-0 flex items-center gap-1 px-2 lg:px-3 py-1 w-fit sm:w-auto`}
+                  className={`text-xs font-medium ${statusConfig.className} shrink-0 flex items-center gap-1 px-2 py-1`}
                 >
                   {statusConfig.icon}
                   {statusConfig.label}
                 </Badge>
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <FileText className="size-3 lg:size-4 text-blue-500" />
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <FileText className="size-3 text-blue-500" />
                   {monitor.website.name}
                 </span>
-                <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full truncate max-w-full sm:max-w-[200px]">
+                <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded truncate max-w-[180px]">
                   {monitor.website.url}
                 </span>
               </div>
             </div>
 
-            <div className="flex flex-row sm:flex-col items-end gap-2 sm:gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
                 <RefreshCcw className="size-3" />
-                <span className="hidden sm:inline">{formatRelativeTime(monitor.lastUpdated)}</span>
-                <span className="sm:hidden">{formatRelativeTime(monitor.lastUpdated).split(' ')[0]}</span>
+                <span>{formatRelativeTime(monitor.lastUpdated).split(' ')[0]}</span>
               </div>
-              <ChevronRight className="size-4 lg:size-5 opacity-40 group-hover:text-blue-500" />
+              <ChevronRight className="size-4 opacity-40 group-hover:text-blue-500" />
             </div>
           </div>
         </CardHeader>
 
         {/* Enhanced Content with Metrics */}
         <CardContent className="p-0">
-          {/* Key Metrics */}
+          {/* Key Metrics - Colorful gradient scheme */}
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-x divide-border/50">
             {/* Visibility Metric */}
-            <div className="p-3 bg-blue-50/60 dark:bg-blue-950/20">
-              <div className="flex items-center justify-between mb-2">
+            <div className="p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-blue-900/40 border border-blue-200/50 dark:border-blue-800/30">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 bg-blue-100 dark:bg-blue-900/50 rounded">
-                    <Eye className="size-3 text-blue-600 dark:text-blue-400" />
+                  <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded shadow-sm">
+                    <Eye className="size-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Visibility</span>
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Visibility</span>
                 </div>
                 <TrendIcon trend={visibilityTrend} />
               </div>
-              <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1 tabular-nums">
+              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2 tabular-nums">
                 {monitor.stats.visibilityScore}%
               </div>
-              <div className="text-xs text-muted-foreground mb-2">
+              <div className="text-sm text-blue-600 dark:text-blue-300 mb-3">
                 {monitor.stats.totalPrompts} prompts
               </div>
-              <div className="h-8 bg-white/50 dark:bg-gray-800/50 rounded p-1">
+              <div className="h-10 bg-white/70 dark:bg-gray-900/50 rounded p-1.5">
                 <MonitorStats stats={monitor.stats} type="visibility" />
               </div>
             </div>
 
             {/* Mentions Metric */}
-            <div className="p-3 bg-green-50/60 dark:bg-green-950/20">
-              <div className="flex items-center justify-between mb-2">
+            <div className="p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 dark:from-green-950/30 dark:via-emerald-950/20 dark:to-green-900/40 border border-green-200/50 dark:border-green-800/30">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 bg-green-100 dark:bg-green-900/50 rounded">
-                    <MessageCircle className="size-3 text-green-600 dark:text-green-400" />
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/50 rounded shadow-sm">
+                    <MessageCircle className="size-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <span className="text-xs font-semibold text-green-700 dark:text-green-300">Mentions</span>
+                  <span className="text-sm font-semibold text-green-700 dark:text-green-300">Mentions</span>
                 </div>
                 <TrendIcon trend={mentionsTrend} />
               </div>
-              <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1 tabular-nums">
+              <div className="text-2xl font-bold text-green-900 dark:text-green-100 mb-2 tabular-nums">
                 {monitor.stats.mentions}
               </div>
-              <div className="text-xs text-muted-foreground mb-2">
+              <div className="text-sm text-green-600 dark:text-green-300 mb-3">
                 {monitor.stats.totalResponses} responses
               </div>
-              <div className="h-8 bg-white/50 dark:bg-gray-800/50 rounded p-1">
+              <div className="h-10 bg-white/70 dark:bg-gray-900/50 rounded p-1.5">
                 <MonitorStats stats={monitor.stats} type="mentions" />
               </div>
             </div>
 
             {/* Citation Rank Metric */}
-            <div className="p-3 bg-purple-50/60 dark:bg-purple-950/20">
-              <div className="flex items-center justify-between mb-2">
+            <div className="p-4 bg-gradient-to-br from-purple-50 via-violet-50 to-purple-100 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/40 border border-purple-200/50 dark:border-purple-800/30">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1 bg-purple-100 dark:bg-purple-900/50 rounded">
-                    <BarChart3 className="size-3 text-purple-600 dark:text-purple-400" />
+                  <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 rounded shadow-sm">
+                    <BarChart3 className="size-4 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">Citation Rank</span>
+                  <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">Citation Rank</span>
                 </div>
                 <TrendIcon trend={citationTrend} />
               </div>
-              <div className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-1 tabular-nums">
+              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 mb-2 tabular-nums">
                 {monitor.stats.avgCitationRank}
               </div>
-              <div className="text-xs text-muted-foreground mb-2">
+              <div className="text-sm text-purple-600 dark:text-purple-300 mb-3">
                 Average rank
               </div>
-              <div className="h-8 bg-white/50 dark:bg-gray-800/50 rounded p-1">
+              <div className="h-10 bg-white/70 dark:bg-gray-900/50 rounded p-1.5">
                 <MonitorStats stats={monitor.stats} type="citation" />
               </div>
             </div>
           </div>
 
           {/* Models Section */}
-          <div className="border-t border-border/50 bg-gray-50/60 dark:bg-gray-800/30 p-3">
+          <div className="border-t border-border/50 bg-gray-50/60 dark:bg-gray-800/30 p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-gray-100 dark:bg-gray-800 rounded">
-                  <TrendingUp className="size-3 text-gray-600 dark:text-gray-400" />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-white dark:bg-gray-900 rounded shadow-sm">
+                  <TrendingUp className="size-4 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div>
                   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">AI Models</span>
                   <p className="text-xs text-muted-foreground">{monitor.models.length} platforms</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {monitor.models.slice(0, 4).map((model, index) => (
-                  <div key={model.id} className="flex items-center -ml-1.5 first:ml-0">
-                    <div className="bg-white dark:bg-gray-900 border border-border rounded-full p-1">
+                  <div key={model.id} className="flex items-center -ml-2 first:ml-0">
+                    <div className="bg-white dark:bg-gray-900 border border-border rounded-full p-1.5 shadow-sm">
                       <img
                         alt={model.name}
                         loading="lazy"
-                        width="16"
-                        height="16"
+                        width="20"
+                        height="20"
                         decoding="async"
                         src={model.icon}
-                        className="size-4"
+                        className="size-5"
                         style={{ color: 'transparent' }}
                       />
                     </div>
                   </div>
                 ))}
                 {monitor.models.length > 4 && (
-                  <div className="ml-1 text-xs text-muted-foreground bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  <div className="ml-1 text-sm text-muted-foreground bg-gray-100 dark:bg-gray-800 px-2.5 py-1.5 rounded">
                     +{monitor.models.length - 4}
                   </div>
                 )}

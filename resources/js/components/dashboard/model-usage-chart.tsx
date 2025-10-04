@@ -13,14 +13,44 @@ const chartConfig = {
   "gemini-2.0-flash": {
     label: "Gemini 2.0 Flash",
     color: "#3B82F6",
+    icon: () => (
+      <img
+        src="https://www.google.com/s2/favicons?domain=ai.google.dev&sz=256"
+        alt="Gemini"
+        className="w-4 h-4 rounded-sm"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none'
+        }}
+      />
+    ),
   },
   "gpt-4o-search": {
     label: "GPT-4o Search",
     color: "#10B981",
+    icon: () => (
+      <img
+        src="https://www.google.com/s2/favicons?domain=openai.com&sz=256"
+        alt="OpenAI"
+        className="w-4 h-4 rounded-sm"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none'
+        }}
+      />
+    ),
   },
   "mistral-small-latest": {
     label: "Mistral Small",
     color: "#8B5CF6",
+    icon: () => (
+      <img
+        src="https://www.google.com/s2/favicons?domain=mistral.ai&sz=256"
+        alt="Mistral"
+        className="w-4 h-4 rounded-sm"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none'
+        }}
+      />
+    ),
   },
 }
 
@@ -63,7 +93,11 @@ export function ModelUsageChart({ data = defaultData }: ModelUsageChartProps) {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={<ChartTooltipContent
+                hideLabel
+                className="border-border/50 bg-background text-foreground"
+                indicator="dot"
+              />}
             />
             <Pie
               data={data}

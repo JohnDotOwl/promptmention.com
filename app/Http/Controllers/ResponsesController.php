@@ -183,11 +183,11 @@ class ResponsesController extends Controller
     
     private function getResponseTimelineData($responses)
     {
-        // Initialize date groups for the last 30 days
+        // Initialize date groups for the last 7 days
         $dateGroups = [];
         $today = new \DateTime();
 
-        for ($i = 29; $i >= 0; $i--) {
+        for ($i = 6; $i >= 0; $i--) {
             $date = (clone $today)->modify("-$i days");
             $dateStr = $date->format('Y-m-d');
             $dateGroups[$dateStr] = [

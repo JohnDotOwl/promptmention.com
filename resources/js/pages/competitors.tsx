@@ -299,7 +299,7 @@ export default function Competitors() {
                                             <CardHeader className="pb-4 relative z-10">
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div className="flex items-start gap-3 flex-1">
-                                                        <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-200 overflow-hidden">
+                                                        <div className="relative w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-200 overflow-hidden">
                                                             {competitor.website && isValidWebsiteUrl(competitor.website) && (
                                                                 <>
                                                                     <img
@@ -314,13 +314,13 @@ export default function Competitors() {
                                                                             if (fallback) fallback.style.display = 'flex';
                                                                         }}
                                                                     />
-                                                                    <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-red-500 to-orange-600 rounded-xl" style={{ display: 'none' }}>
+                                                                    <div className="absolute inset-0 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-lg bg-gray-100 dark:bg-gray-800 rounded-xl" style={{ display: 'none' }}>
                                                                         {(competitor.name && competitor.name.length > 0) ? competitor.name.charAt(0).toUpperCase() : '?'}
                                                                     </div>
                                                                 </>
                                                             )}
                                                             {(!competitor.website || !isValidWebsiteUrl(competitor.website)) && (
-                                                                <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+                                                                <div className="absolute inset-0 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-lg bg-gray-100 dark:bg-gray-800 rounded-xl">
                                                                     {(competitor.name && competitor.name.length > 0) ? competitor.name.charAt(0).toUpperCase() : '?'}
                                                                 </div>
                                                             )}
@@ -436,43 +436,104 @@ export default function Competitors() {
                         {/* Your Monitors */}
                         {monitors.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Your Brand Monitors
-                                </h2>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/20">
+                                        <Monitor className="h-6 w-6 text-white" />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        Your Brand Monitors
+                                    </h2>
+                                    <Badge variant="default" className="text-sm px-3 py-1">
+                                        {monitors.length} active
+                                    </Badge>
+                                </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {monitors.slice(0, 4).map((monitor) => (
-                                        <Card key={monitor.id} className="hover:shadow-md transition-shadow">
-                                            <CardHeader className="pb-3">
-                                                <div className="flex items-center justify-between">
-                                                    <CardTitle className="text-base">
-                                                        {monitor.website.name}
-                                                    </CardTitle>
-                                                    <Badge variant={monitor.status === 'active' ? 'default' : 'secondary'}>
-                                                        {monitor.status}
-                                                    </Badge>
-                                                </div>
-                                                <CardDescription className="text-sm">
-                                                    {monitor.website.url}
-                                                </CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-2">
-                                                    {monitor.competitorCount > 0 && (
-                                                        <div className="flex justify-between text-sm">
-                                                            <span className="text-gray-600 dark:text-gray-400">Competitors</span>
-                                                            <span className="font-medium">{monitor.competitorCount}</span>
+                                        <Card key={monitor.id} className="relative overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border-2 hover:border-blue-200 dark:hover:border-blue-900">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-bl-full transform translate-x-16 -translate-y-16 group-hover:scale-150 transition-transform duration-300" />
+
+                                            <CardHeader className="pb-4 relative z-10">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex items-start gap-3 flex-1">
+                                                        <div className="relative w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-200 overflow-hidden">
+                                                            <img
+                                                                src={`https://www.google.com/s2/favicons?domain=${extractDomainForFavicon(monitor.website.url)}&sz=256`}
+                                                                alt={`${monitor.website.name} favicon`}
+                                                                className="w-full h-full object-cover rounded-xl"
+                                                                onError={(e) => {
+                                                                    // Fallback to initials if favicon fails to load
+                                                                    const target = e.target as HTMLImageElement;
+                                                                    target.style.display = 'none';
+                                                                    const fallback = target.nextElementSibling as HTMLDivElement;
+                                                                    if (fallback) fallback.style.display = 'flex';
+                                                                }}
+                                                            />
+                                                            <div className="absolute inset-0 flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-lg bg-gray-100 dark:bg-gray-800 rounded-xl" style={{ display: 'none' }}>
+                                                                {(monitor.website.name && monitor.website.name.length > 0) ? monitor.website.name.charAt(0).toUpperCase() : '?'}
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="w-full mt-3"
-                                                        asChild
-                                                    >
-                                                        <Link href={`/monitors/${monitor.id}`}>
-                                                            Manage Monitor →
-                                                        </Link>
-                                                    </Button>
+                                                        <div className="flex-1 min-w-0">
+                                                            <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1.5 truncate">
+                                                                {monitor.website.name}
+                                                            </CardTitle>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge
+                                                                    variant={monitor.status === 'active' ? 'default' : 'secondary'}
+                                                                    className="text-xs font-medium"
+                                                                >
+                                                                    {monitor.status === 'active' && <CheckCircle className="h-3 w-3 mr-1 fill-current" />}
+                                                                    {monitor.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 group-hover:from-gray-100 group-hover:to-gray-50 dark:group-hover:from-gray-800 dark:group-hover:to-gray-800/50 transition-all border border-gray-200 dark:border-gray-700">
+                                                    <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
+                                                        <Globe className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                                        <span className="text-gray-700 dark:text-gray-300 font-medium truncate">
+                                                            {monitor.website.url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="pt-0 relative z-10">
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-1 gap-3">
+                                                        {monitor.competitorCount > 0 && (
+                                                            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/30">
+                                                                <div className="flex items-center gap-2 text-sm">
+                                                                    <Swords className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                                    <span className="text-gray-700 dark:text-gray-300 font-medium">Competitors</span>
+                                                                </div>
+                                                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{monitor.competitorCount}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex gap-2 pt-2">
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="flex-1 font-semibold shadow-sm hover:shadow-md transition-all"
+                                                            asChild
+                                                        >
+                                                            <Link href={`/monitors/${monitor.id}`}>
+                                                                <Eye className="h-4 w-4 mr-1.5" />
+                                                                Manage
+                                                            </Link>
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="font-semibold hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                            asChild
+                                                        >
+                                                            <Link href={monitor.website.url} target="_blank" rel="noopener noreferrer">
+                                                                <ExternalLink className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </CardContent>
                                         </Card>

@@ -91,6 +91,13 @@ interface PageProps {
       cost: number
       created_at: string
     }>
+    models: string[]
+    model_display_names: string[]
+    modelStatus: Record<string, {
+      has_response: boolean
+      response_count: number
+      last_response: string | null
+    }>
     created: string
     updated: string
   }>

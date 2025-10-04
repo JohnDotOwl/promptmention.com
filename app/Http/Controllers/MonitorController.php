@@ -343,6 +343,51 @@ class MonitorController extends Controller
                     $avgVisibility = $totalVisibility / $responses->count();
                 }
 
+                // Extract unique model names and display names from responses
+                $models = [];
+                $modelDisplayNames = [];
+                $modelStatus = [];
+
+                foreach ($responses as $response) {
+                    $modelName = $response['model_name'];
+                    $modelDisplayName = $modelName;
+
+                    // Convert model names to display names
+                    switch ($modelName) {
+                        case 'gemini-2.5-flash-preview-09-2025':
+                        case 'gemini-2.5-flash':
+                            $modelDisplayName = 'Gemini';
+                            break;
+                        case 'gpt-oss-120b':
+                            $modelDisplayName = 'GPT-OSS';
+                            break;
+                        case 'llama-4-scout-17b-16e-instruct':
+                            $modelDisplayName = 'Llama-4';
+                            break;
+                    }
+
+                    if (!in_array($modelName, $models)) {
+                        $models[] = $modelName;
+                        $modelDisplayNames[] = $modelDisplayName;
+                    }
+
+                    // Build model status
+                    if (!isset($modelStatus[$modelName])) {
+                        $modelStatus[$modelName] = [
+                            'has_response' => true,
+                            'response_count' => 0,
+                            'last_response' => null
+                        ];
+                    }
+                    $modelStatus[$modelName]['response_count']++;
+
+                    // Update last response if this one is more recent
+                    $currentLast = $modelStatus[$modelName]['last_response'];
+                    if ($currentLast === null || $response['created_at'] > $currentLast) {
+                        $modelStatus[$modelName]['last_response'] = $response['created_at'];
+                    }
+                }
+
                 $prompts[] = [
                     'id' => $prompt->id,
                     'text' => $prompt->text ?? 'Untitled Prompt',
@@ -364,6 +409,9 @@ class MonitorController extends Controller
                         ]
                     ],
                     'responses' => $responses->toArray(),
+                    'models' => $models,
+                    'model_display_names' => $modelDisplayNames,
+                    'modelStatus' => $modelStatus,
                     'created' => $this->safeFormatDate($prompt->created_at),
                     'updated' => $this->safeFormatDate($prompt->updated_at)
                 ];

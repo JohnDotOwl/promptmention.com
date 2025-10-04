@@ -1,8 +1,6 @@
 import { type Response, type ResponseSortConfig } from '@/types/response'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -10,8 +8,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { ChevronUp, ChevronDown, HelpCircle } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronUp, ChevronDown, HelpCircle, ExternalLink } from 'lucide-react'
+import { router } from '@inertiajs/react'
 
 interface ResponsesTableProps {
   responses: Response[]
@@ -125,6 +123,12 @@ export function ResponsesTable({ responses, onSort, sortConfig }: ResponsesTable
     return text.substring(0, maxLength) + '...'
   }
 
+  const handleResponseClick = (response: Response) => {
+    if (response.promptId) {
+      router.visit(`/prompts/${response.promptId}`)
+    }
+  }
+
   return (
     <div className="border-border bg-background overflow-hidden rounded-lg border">
       <div className="relative w-full overflow-x-auto">
@@ -163,14 +167,24 @@ export function ResponsesTable({ responses, onSort, sortConfig }: ResponsesTable
           </TableHeader>
           <TableBody>
             {responses.map((response) => (
-              <TableRow key={response.id} className="cursor-pointer" data-state="false">
+              <TableRow
+                key={response.id}
+                className="cursor-pointer hover:bg-muted/50 transition-colors group"
+                onClick={() => handleResponseClick(response)}
+                data-state="false"
+              >
                 <TableCell className="last:py-0">
-                  <div className="ml-1">
-                    <div className="line-clamp-1">
+                  <div className="ml-1 flex items-center justify-between group">
+                    <div className="line-clamp-1 flex-1">
                       <p className="text-sm">
                         {truncateText(response.text, 200)}
                       </p>
                     </div>
+                    {response.promptId && (
+                      <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="last:py-0">

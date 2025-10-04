@@ -1,15 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
-import { useState, useEffect, useRef } from 'react';
-import { Send, Mic, Square, Sparkles, BarChart3, TrendingUp, Users } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Head } from '@inertiajs/react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, Mic, Square } from 'lucide-react';
 import { UserMessage } from '@/components/amplify/user-message';
 import { AssistantMessage } from '@/components/amplify/assistant-message';
-import { SuggestedActions, QuickAction } from '@/components/amplify/action-card';
+import { SuggestedActions } from '@/components/amplify/action-card';
 import { ConversationSidebar, defaultConversations } from '@/components/amplify/conversation-sidebar';
-import { InsightCard, MetricsGrid, StatusBadge } from '@/components/amplify/insight-card';
-import { ModelSelector, ModelProviderInfo } from '@/components/amplify/model-selector';
 
 // Define TypeScript interfaces
 interface BrandContext {
@@ -32,7 +29,7 @@ interface ConversationMessage {
     timestamp: Date;
     richData?: {
         type: 'insight' | 'metrics' | 'comparison' | 'recommendation';
-        data: any;
+        data: Record<string, unknown>;
     };
     isTyping?: boolean;
     aiModel?: string;
@@ -40,10 +37,6 @@ interface ConversationMessage {
     isStreamed?: boolean;
 }
 
-interface SuggestedPrompt {
-    category: string;
-    prompts: string[];
-}
 
 interface AIModel {
     id: string;
@@ -59,10 +52,10 @@ interface AIModel {
 interface AmplifyProps extends SharedData {
     brandContext: BrandContext;
     conversationHistory: {
-        conversations: any[];
+        conversations: Message[];
         hasHistory: boolean;
     };
-    suggestedPrompts: Record<string, any>;
+    suggestedPrompts: Record<string, { title: string; description: string; category: string }>;
     initialMessage: string;
     availableModels: Record<string, AIModel>;
     userPreferredModel: string;
@@ -110,25 +103,8 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleModelChange = async (modelId: string) => {
-        setSelectedModel(modelId);
-
-        // Save user preference to backend
-        try {
-            await fetch('/amplify/model-preference', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ model: modelId }),
-            });
-        } catch (error) {
-            console.error('Failed to save model preference:', error);
-        }
-    };
-
-    const handleSendMessage = async (message: string, conversationId?: string | null) => {
+    
+    const handleSendMessage = useCallback(async (message: string, conversationId?: string | null) => {
         if (!message.trim()) return;
 
         // Add user message immediately for better UX
@@ -153,7 +129,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         } else {
             await handleRegularMessage(message, conversationId);
         }
-    };
+    }, [availableModels, selectedModel, handleStreamingMessage, handleRegularMessage]);
 
     const handleStreamingMessage = async (message: string, conversationId?: string | null) => {
         // Create placeholder for streaming message
@@ -240,7 +216,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                 );
                                 return;
                             }
-                        } catch (parseError) {
+                        } catch {
                             // Ignore JSON parse errors for partial chunks
                             continue;
                         }
@@ -325,88 +301,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         }
     };
 
-    const generateAIResponse = (userMessage: string, context: BrandContext): { content: string; richData?: any } => {
-        const lowerMessage = userMessage.toLowerCase();
-
-        if (lowerMessage.includes('how') && lowerMessage.includes('perform')) {
-            if (context.hasData) {
-                const performanceLevel = context.totalMentions > 10 ? 'strong' : 'moderate';
-                const insights = {
-                    type: 'insight',
-                    data: {
-                        title: 'Weekly Performance Summary',
-                        type: 'metric',
-                        value: context.totalMentions.toString(),
-                        change: { value: 15, isPositive: context.totalMentions > 5 },
-                        description: `Your brand received ${context.totalMentions} mentions this week, showing ${performanceLevel} engagement across AI models.`,
-                        action: {
-                            text: 'View Detailed Analysis',
-                            onClick: () => handleSendMessage('Show me detailed performance analysis')
-                        }
-                    }
-                };
-
-                return {
-                    content: `Based on your recent data, you've received ${context.totalMentions} mentions this week. Here's your performance breakdown:`,
-                    richData: insights
-                };
-            } else {
-                return {
-                    content: "I don't see enough monitoring data yet. Let's set up brand monitoring first so I can provide detailed performance insights!"
-                };
-            }
-        }
-
-        if (lowerMessage.includes('competitor') || lowerMessage.includes('compare')) {
-            if (context.competitors.length > 0) {
-                const competitorData = {
-                    type: 'comparison',
-                    data: [
-                        { name: 'Your Brand', mentions: context.totalMentions, change: 15 },
-                        { name: context.competitors[0]?.name || 'Competitor A', mentions: 8, change: -5 },
-                        { name: context.competitors[1]?.name || 'Competitor B', mentions: 12, change: 3 },
-                    ]
-                };
-
-                return {
-                    content: `I can see you have ${context.competitors.length} competitors in your monitoring. Here's how you compare:`,
-                    richData: {
-                        type: 'insight',
-                        data: competitorData
-                    }
-                };
-            } else {
-                return {
-                    content: "Let's first identify your key competitors so I can provide competitive analysis and benchmarking insights."
-                };
-            }
-        }
-
-        if (lowerMessage.includes('visibility') || lowerMessage.includes('mention')) {
-            const strategies = {
-                type: 'recommendation',
-                data: {
-                    title: 'Visibility Optimization Strategies',
-                    type: 'recommendation',
-                    description: "Based on your brand profile, here are the top strategies to increase your AI visibility:",
-                    action: {
-                        text: 'Create Content Strategy',
-                        onClick: () => handleSendMessage('Create a content strategy for my brand')
-                    }
-                }
-            };
-
-            return {
-                content: "To increase your visibility across AI models, I recommend these proven strategies:",
-                richData: strategies
-            };
-        }
-
-        return {
-            content: "I'm here to help you amplify your brand's visibility! I can analyze your performance, suggest optimization strategies, and even help create content. What specific aspect would you like to focus on?"
-        };
-    };
-
+    
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -424,10 +319,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         // Voice recording stop logic would go here
     };
 
-    const handleQuickAction = (prompt: string) => {
-        handleSendMessage(prompt);
-    };
-
+    
     const handleNewConversation = async () => {
         try {
             // Create new conversation via API
@@ -487,7 +379,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
             const data = await response.json();
 
             // Convert API messages to our format
-            const apiMessages = data.messages.map((msg: any) => ({
+            const apiMessages = data.messages.map((msg: Message) => ({
                 id: msg.id.toString(),
                 type: msg.type as 'user' | 'assistant',
                 content: msg.content,
@@ -521,7 +413,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
             const data = await response.json();
 
             // Convert API conversations to our format
-            const apiConversations = data.conversations.map((conv: any) => ({
+            const apiConversations = data.conversations.map((conv: { id: number; title: string; created_at: string }) => ({
                 id: conv.id,
                 title: conv.title,
                 lastMessage: conv.lastMessage,

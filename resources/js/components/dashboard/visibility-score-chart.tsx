@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts"
 import { type VisibilityScorePoint } from "@/types/dashboard"
 
 const generateDefaultData = (): VisibilityScorePoint[] => {

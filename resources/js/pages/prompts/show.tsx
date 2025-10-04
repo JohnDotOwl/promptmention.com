@@ -48,7 +48,7 @@ function safeFormatDate(dateValue: string | undefined | null, formatString: stri
       return 'Invalid Date'
     }
     return format(date, formatString)
-  } catch (error) {
+  } catch {
     return 'Invalid Date'
   }
 }
@@ -272,25 +272,25 @@ export default function Show({ prompt }: PageProps) {
                               </table>
                             </div>
                           ),
-                          th: ({node, ...props}) => (
+                          th: ({...props}) => (
                             <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-900 uppercase tracking-wider border-b border-gray-200" {...props} />
                           ),
-                          td: ({node, ...props}) => (
+                          td: ({...props}) => (
                             <td className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100" {...props} />
                           ),
-                          h1: ({node, ...props}) => (
+                          h1: ({...props}) => (
                             <h1 className="text-2xl font-bold text-gray-900 mt-6 mb-4 pb-2 border-b border-gray-200" {...props} />
                           ),
-                          h2: ({node, ...props}) => (
+                          h2: ({...props}) => (
                             <h2 className="text-xl font-semibold text-gray-900 mt-5 mb-3" {...props} />
                           ),
-                          h3: ({node, ...props}) => (
+                          h3: ({...props}) => (
                             <h3 className="text-lg font-medium text-gray-900 mt-4 mb-2" {...props} />
                           ),
-                          p: ({node, ...props}) => (
+                          p: ({...props}) => (
                             <p className="mb-4 text-gray-900 leading-relaxed" {...props} />
                           ),
-                          code: ({node, inline, ...props}) => {
+                          code: ({inline, ...props}) => {
                             if (inline) {
                               return <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono" {...props} />;
                             }
@@ -300,19 +300,19 @@ export default function Show({ prompt }: PageProps) {
                               </div>
                             );
                           },
-                          blockquote: ({node, ...props}) => (
+                          blockquote: ({...props}) => (
                             <blockquote className="border-l-4 border-gray-300 pl-4 py-2 my-4 bg-gray-50 italic text-gray-700" {...props} />
                           ),
-                          ul: ({node, ...props}) => (
+                          ul: ({...props}) => (
                             <ul className="list-disc pl-6 mb-4 text-gray-900 space-y-1" {...props} />
                           ),
-                          ol: ({node, ...props}) => (
+                          ol: ({...props}) => (
                             <ol className="list-decimal pl-6 mb-4 text-gray-900 space-y-1" {...props} />
                           ),
-                          li: ({node, ...props}) => (
+                          li: ({...props}) => (
                             <li className="text-gray-900" {...props} />
                           ),
-                          hr: ({node, ...props}) => (
+                          hr: ({...props}) => (
                             <hr className="my-6 border-gray-300" {...props} />
                           ),
                         }}

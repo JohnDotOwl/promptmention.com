@@ -2,9 +2,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Sparkline } from '@/components/ui/sparkline'
-import { MonitorStats } from './monitor-stats'
 import { type MonitorCardProps } from '@/types/monitor'
-import { RefreshCcw, Calendar, FileText, MessageSquareReply, TrendingUp, Eye, MessageCircle, BarChart3, ArrowUp, ArrowDown, ChevronRight, Clock, Activity, Users, Zap, Target, TrendingDown, Bot, Globe } from 'lucide-react'
+import { RefreshCcw, TrendingUp, Eye, MessageCircle, BarChart3, ChevronRight, Clock, Activity, Zap, TrendingDown, Bot, Globe } from 'lucide-react'
 import { Link } from '@inertiajs/react'
 
 export function MonitorCard({ monitor }: MonitorCardProps) {
@@ -33,7 +32,7 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
 
       // If parsing fails, return original string or a default
       return timeString.includes('-') ? 'some time ago' : timeString
-    } catch (error) {
+    } catch {
       return 'some time ago'
     }
   }
@@ -82,12 +81,6 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
   const visibilityTrend = getTrendIndicator(monitor.stats.visibilityData)
   const mentionsTrend = getTrendIndicator(monitor.stats.mentionsData)
   const citationTrend = getTrendIndicator(monitor.stats.citationData)
-
-  const TrendIcon = ({ trend }: { trend: string | null }) => {
-    if (trend === 'up') return <ArrowUp className="size-4 text-green-500" />
-    if (trend === 'down') return <ArrowDown className="size-4 text-red-500" />
-    return <div className="size-4 bg-gray-300 rounded-full" />
-  }
 
   const TrendIconSmall = ({ trend }: { trend: string | null }) => {
     if (trend === 'up') return <TrendingUp className="size-3 text-green-500" />
@@ -232,6 +225,7 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
               <div className="text-2xl font-bold text-green-900 dark:text-green-100 tabular-nums mb-2">
                 {monitor.stats.mentions.toLocaleString()}
               </div>
+              <Progress value={Math.min(monitor.stats.mentions / 100, 100)} className="h-2 mb-2" />
               <div className="text-xs text-green-700 dark:text-green-300 mb-2">
                 {monitor.stats.totalResponses.toLocaleString()} total responses
               </div>
@@ -274,6 +268,7 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
               <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 tabular-nums mb-2">
                 {monitor.stats.avgCitationRank}
               </div>
+              <Progress value={Math.min(monitor.stats.avgCitationRank * 2, 100)} className="h-2 mb-2" />
               <div className="text-xs text-purple-700 dark:text-purple-300 mb-2">
                 Avg citation rank
               </div>
@@ -339,7 +334,7 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center -ml-1 first:ml-0">
-                  {monitor.models.map((model, index) => (
+                  {monitor.models.map((model) => (
                     <div key={model.id} className="flex items-center -ml-1 first:ml-0">
                       <div className="bg-white dark:bg-gray-900 border border-border rounded-full p-1.5 shadow-sm">
                         <img
@@ -351,6 +346,10 @@ export function MonitorCard({ monitor }: MonitorCardProps) {
                           src={model.icon}
                           className="size-4.5"
                           style={{ color: 'transparent' }}
+                          onError={(e) => {
+                            // Fallback to a generic icon if the specific one fails to load
+                            e.currentTarget.src = '/llm-icons/generic.svg';
+                          }}
                         />
                       </div>
                     </div>

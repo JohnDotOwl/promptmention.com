@@ -1,9 +1,9 @@
 import { type Mention, type MentionSortConfig } from '@/types/mention'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { ChevronUp, ChevronDown, HelpCircle, ChevronFirst, ChevronLeft, ChevronRight, ChevronLast } from 'lucide-react'
+import { ChevronUp, ChevronDown, HelpCircle, ChevronFirst, ChevronLeft, ChevronRight, ChevronLast, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from '@inertiajs/react'
 
 interface MentionsTableEnhancedProps {
   mentions: Mention[]
@@ -276,15 +276,26 @@ export function MentionsTableEnhanced({
                     <MetricProgress value={mention.domainRating} />
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <a
-                      href={mention.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline truncate block"
-                      title={mention.url}
-                    >
-                      {mention.title}
-                    </a>
+                    {mention.isExternal ? (
+                      <a
+                        href={mention.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline truncate block"
+                        title={mention.url}
+                      >
+                        {mention.title}
+                        <ExternalLink className="inline ml-1 h-3 w-3" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={mention.url}
+                        className="text-blue-600 hover:underline truncate block"
+                        title={`View prompt that mentioned ${mention.domain}`}
+                      >
+                        {mention.title}
+                      </Link>
+                    )}
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
                     <div className="flex items-center gap-2">
@@ -295,10 +306,10 @@ export function MentionsTableEnhanced({
                     <div>{mention.estimatedTraffic ? mention.estimatedTraffic.toLocaleString() : '-'}</div>
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    <MetricProgress value={mention.pageRank || 0} />
+                    <MetricProgress value={mention.pageRank || 1} />
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
-                    {mention.position}
+                    {mention.position || 1}
                   </td>
                   <td className="p-2 whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] min-w-0 py-2 align-top px-2 first:px-1">
                     {new Date(mention.firstSeen).toLocaleDateString('en-US', { 

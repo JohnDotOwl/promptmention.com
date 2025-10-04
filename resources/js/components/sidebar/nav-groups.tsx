@@ -3,7 +3,6 @@ import {
   ChartArea,
   Eclipse,
   Swords,
-  UserPen,
   Radar,
   SquareChevronRight,
   MessageCircleMore,

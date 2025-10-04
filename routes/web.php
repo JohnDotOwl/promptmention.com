@@ -5,6 +5,7 @@ use App\Http\Controllers\AmplifyController;
 use App\Http\Controllers\CompetitorsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\MentionsController;
 use App\Http\Controllers\MonitorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PromptsController;
@@ -52,9 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     Route::get('responses', [ResponsesController::class, 'index'])->name('responses');
     
-    Route::get('mentions', function () {
-        return Inertia::render('mentions');
-    })->name('mentions');
+    Route::get('mentions', [MentionsController::class, 'index'])->name('mentions');
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics');

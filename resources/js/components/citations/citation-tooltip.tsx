@@ -1,16 +1,15 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { ExternalLink, Info } from 'lucide-react'
 import { CitationSource } from '@/types/response'
 
 interface CitationTooltipProps {
-  children: React.ReactNode
   citationNumber: number
   source: CitationSource
 }
 
-export function CitationTooltip({ children, citationNumber, source }: CitationTooltipProps) {
+export function CitationTooltip({ citationNumber, source }: CitationTooltipProps) {
   return (
     <TooltipProvider>
       <Tooltip>

@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default function HeroSection() {
     return (

@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, GlobeIcon, HashIcon, PercentIcon, MessageSquareIcon, TargetIcon, BotIcon, ThumbsUpIcon, ThumbsDownIcon, MinusIcon, ShuffleIcon } from "lucide-react";
 import { format } from "date-fns";
 
-import { type Prompt, type Response } from '@/types/prompt'
+import { type Prompt } from '@/types/prompt'
 
 interface PromptDetailDialogProps {
     prompt: Prompt | null;

@@ -30,7 +30,7 @@ export function TopBrandsList({
               </div>
             </div>
           ) : (
-            brands.map((brand, index) => (
+            brands.map((brand) => (
               <div
                 key={brand.domain || brand.name}
                 className="flex relative items-center justify-between py-3 px-6 gap-4 transition-opacity cursor-pointer hover:bg-muted/50 border-b last:border-transparent bg-white"

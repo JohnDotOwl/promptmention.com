@@ -1,6 +1,4 @@
-import { usePage } from '@inertiajs/react';
 import { Users, Clock } from 'lucide-react';
-import { SharedData } from '@/types';
 
 interface WaitlistIndicatorProps {
     user?: {

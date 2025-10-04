@@ -1,12 +1,7 @@
-import { 
-    Globe, 
-    TrendingUp, 
-    BarChart3, 
-    Bell, 
-    Languages, 
-    Zap,
-    Shield,
-    Users,
+import {
+    Globe,
+    BarChart3,
+    Bell,
     LineChart
 } from 'lucide-react';
 

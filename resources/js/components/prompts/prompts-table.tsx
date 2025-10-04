@@ -1,5 +1,4 @@
 import { type Prompt, type PromptSortConfig } from '@/types/prompt'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -27,7 +26,7 @@ function safeFormatDateForTable(dateValue: string | undefined | null): string {
       return 'N/A'
     }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  } catch (error) {
+  } catch {
     return 'N/A'
   }
 }

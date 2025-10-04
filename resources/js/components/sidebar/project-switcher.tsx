@@ -12,17 +12,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { usePage, Link } from "@inertiajs/react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Link } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
 
 export interface Project {

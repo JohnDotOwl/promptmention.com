@@ -11,6 +11,37 @@ use App\Models\OnboardingProgress;
 class MonitorController extends Controller
 {
     /**
+     * Safely format a date value to ISO string
+     */
+    private function safeFormatDate($dateValue): string
+    {
+        if (empty($dateValue)) {
+            return now()->toISOString();
+        }
+
+        // If it's already a string, try to parse it
+        if (is_string($dateValue)) {
+            try {
+                return \Carbon\Carbon::parse($dateValue)->toISOString();
+            } catch (\Exception $e) {
+                return now()->toISOString();
+            }
+        }
+
+        // If it's an object with format method (like Carbon instance)
+        if (is_object($dateValue) && method_exists($dateValue, 'toISOString')) {
+            try {
+                return $dateValue->toISOString();
+            } catch (\Exception $e) {
+                return now()->toISOString();
+            }
+        }
+
+        // Fallback to current time
+        return now()->toISOString();
+    }
+
+    /**
      * Display a listing of monitors for the authenticated user.
      */
     public function index()
@@ -120,7 +151,7 @@ class MonitorController extends Controller
             'website_url' => 'required|url|max:255',
             'description' => 'nullable|string|max:1000',
             'ai_models' => 'nullable|array',
-            'ai_models.*' => 'string|in:chatgpt-search,gemini-2-flash,mistral-small'
+            'ai_models.*' => 'string|in:chatgpt-search,gemini-2-flash,mistral-small,llama-4-scout'
         ]);
 
         $userId = Auth::id();
@@ -139,11 +170,12 @@ class MonitorController extends Controller
             ]);
 
             // Add selected AI models or default ones
-            $aiModels = $validated['ai_models'] ?? ['chatgpt-search', 'gemini-2-flash', 'mistral-small'];
+            $aiModels = $validated['ai_models'] ?? ['chatgpt-search', 'gemini-2-flash', 'mistral-small', 'llama-4-scout'];
             $aiModelData = [
                 'chatgpt-search' => ['name' => 'ChatGPT Search', 'icon' => '/llm-icons/openai.svg'],
                 'gemini-2-flash' => ['name' => 'Gemini 2.0 Flash', 'icon' => '/llm-icons/gemini.svg'],
-                'mistral-small' => ['name' => 'Mistral Small', 'icon' => '/llm-icons/mistral.svg']
+                'mistral-small' => ['name' => 'Mistral Small', 'icon' => '/llm-icons/mistral.svg'],
+                'llama-4-scout' => ['name' => 'Llama 4 Scout', 'icon' => 'https://www.google.com/s2/favicons?domain=meta.ai&sz=256']
             ];
 
             foreach ($aiModels as $modelId) {
@@ -223,6 +255,121 @@ class MonitorController extends Controller
         // Get chart data
         $chartData = $this->getChartData($id);
 
+        // Get prompts for this monitor with response data
+        $prompts = [];
+        if ($this->tableExists('prompts')) {
+            $promptsQuery = DB::table('prompts')
+                ->where('monitor_id', $id)
+                ->select(
+                    'id',
+                    'text',
+                    'type',
+                    'intent',
+                    'language_code',
+                    'language_name',
+                    'language_flag',
+                    'visibility_percentage',
+                    'response_count',
+                    'created_at',
+                    'updated_at'
+                )
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            foreach ($promptsQuery as $prompt) {
+                // Get responses for this prompt
+                $responses = [];
+                if ($this->tableExists('responses')) {
+                    $responses = DB::table('responses')
+                        ->where('prompt_id', $prompt->id)
+                        ->select(
+                            'id',
+                            'model_name',
+                            'response_text',
+                            'brand_mentioned',
+                            'sentiment',
+                            'visibility_score',
+                            'competitors_mentioned',
+                            'citation_sources',
+                            'tokens_used',
+                            'cost',
+                            'created_at'
+                        )
+                        ->orderBy('created_at', 'desc')
+                        ->get()
+                        ->map(function ($response) {
+                            // Safe JSON parsing with fallbacks
+                            $competitors = [];
+                            $citations = [];
+
+                            if ($response->competitors_mentioned) {
+                                try {
+                                    $competitors = json_decode($response->competitors_mentioned, true) ?? [];
+                                } catch (Exception $e) {
+                                    $competitors = [];
+                                }
+                            }
+
+                            if ($response->citation_sources) {
+                                try {
+                                    $citations = json_decode($response->citation_sources, true) ?? [];
+                                } catch (Exception $e) {
+                                    $citations = [];
+                                }
+                            }
+
+                            return [
+                                'id' => $response->id ?? 'N/A',
+                                'model_name' => $response->model_name ?? 'Unknown Model',
+                                'response_text' => $response->response_text ?? 'No response text available',
+                                'brand_mentioned' => (bool) ($response->brand_mentioned ?? false),
+                                'sentiment' => $response->sentiment ?? 'neutral',
+                                'visibility_score' => (float) ($response->visibility_score ?? 0.0),
+                                'competitors_mentioned' => $competitors,
+                                'citation_sources' => $citations,
+                                'tokens_used' => (int) ($response->tokens_used ?? 0),
+                                'cost' => (float) ($response->cost ?? 0.0),
+                                'created_at' => $response->created_at ?? now()->toISOString()
+                            ];
+                        });
+                }
+
+                // Calculate average visibility from responses
+                $avgVisibility = 0.0;
+                if ($responses->count() > 0) {
+                    $totalVisibility = $responses->reduce(function ($sum, $response) {
+                        return $sum + ($response['visibility_score'] ?? 0.0);
+                    }, 0);
+                    $avgVisibility = $totalVisibility / $responses->count();
+                }
+
+                $prompts[] = [
+                    'id' => $prompt->id,
+                    'text' => $prompt->text ?? 'Untitled Prompt',
+                    'type' => $prompt->type ?? 'brand-specific',
+                    'intent' => $prompt->intent ?? 'informational',
+                    'responseCount' => $responses->count(),
+                    'visibility' => $avgVisibility > 0 ? $avgVisibility : (float) ($prompt->visibility_percentage ?? 0.0),
+                    'language' => [
+                        'code' => $prompt->language_code ?? 'en',
+                        'name' => $prompt->language_name ?? 'English',
+                        'flag' => $prompt->language_flag ?? '🇺🇸'
+                    ],
+                    'monitor' => [
+                        'id' => (int) $id,
+                        'name' => $monitor->name ?? 'Unknown Monitor',
+                        'website' => [
+                            'name' => $monitor->website_name ?? 'Unknown Website',
+                            'url' => $monitor->website_url ?? '#'
+                        ]
+                    ],
+                    'responses' => $responses->toArray(),
+                    'created' => $this->safeFormatDate($prompt->created_at),
+                    'updated' => $this->safeFormatDate($prompt->updated_at)
+                ];
+            }
+        }
+
         $monitorData = [
             'id' => $monitor->id,
             'name' => $monitor->name,
@@ -248,7 +395,8 @@ class MonitorController extends Controller
 
         return Inertia::render('monitors/show', [
             'id' => $id,
-            'monitor' => $monitorData
+            'monitor' => $monitorData,
+            'prompts' => $prompts
         ]);
     }
 
@@ -365,7 +513,8 @@ class MonitorController extends Controller
                 'models' => [
                     ['id' => 'chatgpt-search', 'name' => 'ChatGPT Search', 'icon' => '/llm-icons/openai.svg'],
                     ['id' => 'gemini-2-flash', 'name' => 'Gemini 2.0 Flash', 'icon' => '/llm-icons/gemini.svg'],
-                    ['id' => 'mistral-small', 'name' => 'Mistral Small', 'icon' => '/llm-icons/mistral.svg']
+                    ['id' => 'mistral-small', 'name' => 'Mistral Small', 'icon' => '/llm-icons/mistral.svg'],
+                    ['id' => 'llama-4-scout', 'name' => 'Llama 4 Scout', 'icon' => 'https://www.google.com/s2/favicons?domain=meta.ai&sz=256']
                 ],
                 'isPending' => true // Special flag to indicate this is a fallback
             ];

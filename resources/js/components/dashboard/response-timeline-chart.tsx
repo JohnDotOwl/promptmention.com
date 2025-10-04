@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import { type TimelineData } from "@/types/dashboard"
 
 const generateTimelineData = (): TimelineData[] => {

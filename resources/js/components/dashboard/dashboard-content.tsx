@@ -74,9 +74,7 @@ interface DashboardContentProps {
 }
 
 export function DashboardContent({
-  metrics,
   chartData,
-  recentActivity,
   queueStatus,
   isPolling,
   dashboardData,
@@ -128,7 +126,7 @@ export function DashboardContent({
         <div className="grid grid-cols-12 gap-6">
           <BrandVisibilityChart
             data={dashboardData?.brandVisibility}
-            brands={dashboardData?.topBrands?.map((brand: any) => brand.name) || []}
+            brands={dashboardData?.topBrands?.map((brand: { name: string }) => brand.name) || []}
           />
           <TopBrandsList
             brands={dashboardData?.topBrands}

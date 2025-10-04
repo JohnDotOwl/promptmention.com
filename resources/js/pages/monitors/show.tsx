@@ -22,9 +22,7 @@ import {
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from 'recharts'
 import type { BreadcrumbItem } from '@/types'
 import type { PromptSortConfig } from '@/types/prompt'
-import { mockPrompts } from '@/data/prompts'
 import { PromptsTable } from '@/components/prompts/prompts-table'
-import { mockResponses } from '@/data/responses'
 import { ResponsesTable } from '@/components/responses/responses-table'
 import type { Response, ResponseSortConfig } from '@/types/response'
 import { MentionsTable } from '@/components/mentions/mentions-table'
@@ -60,6 +58,42 @@ interface PageProps {
     lastUpdated: string
     createdAt: string
   }
+  prompts: Array<{
+    id: string
+    text: string
+    type: string
+    intent: string
+    responseCount: number
+    visibility: number
+    language: {
+      code: string
+      name: string
+      flag: string
+    }
+    monitor: {
+      id: number
+      name: string
+      website: {
+        name: string
+        url: string
+      }
+    }
+    responses: Array<{
+      id: string
+      model_name: string
+      response_text: string
+      brand_mentioned: boolean
+      sentiment: string
+      visibility_score: number
+      competitors_mentioned: string[]
+      citation_sources: string[]
+      tokens_used: number
+      cost: number
+      created_at: string
+    }>
+    created: string
+    updated: string
+  }>
 }
 
 // Heatmap data interface
@@ -290,7 +324,7 @@ function MonitorTabs({ activeTab, onTabChange }: { activeTab: string, onTabChang
 }
 
 
-export default function MonitorShow({ id, monitor }: PageProps) {
+export default function MonitorShow({ id, monitor, prompts }: PageProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [activeFilter, setActiveFilter] = useState('7d')
   const [search, setSearch] = useState('')
@@ -334,17 +368,17 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   
   // Monitor data is passed as prop from controller
 
-  // Filter prompts for this monitor
+  // Use real prompts data from props (already filtered by monitor ID from controller)
   const monitorPrompts = useMemo(() => {
-    return mockPrompts.filter(prompt => prompt.monitor.id === id)
-  }, [id])
+    return prompts || []
+  }, [prompts])
 
-  // Get responses for this monitor (for now, we'll use all mock responses)
+  // Get responses for this monitor from real prompts data
   const monitorResponses = useMemo(() => {
-    // In a real app, you'd filter by monitor ID
-    // For now, we'll just return all responses as examples
-    return mockResponses
-  }, [])
+    // Extract all responses from all prompts for this monitor
+    const allResponses = prompts.flatMap(prompt => prompt.responses || [])
+    return allResponses
+  }, [prompts])
 
   // Handle sorting
   const handleSort = (column: string, direction: 'asc' | 'desc') => {

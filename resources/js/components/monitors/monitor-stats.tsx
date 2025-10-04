@@ -26,7 +26,7 @@ function StatChart({ data, color, dataKey = 'value', title }: StatChartProps) {
   const gradientId = `gradient-${dataKey}-${color.replace('-', '')}`
 
   // Enhanced tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number | string }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-lg p-3 shadow-xl">

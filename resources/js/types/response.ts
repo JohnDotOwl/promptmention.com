@@ -49,7 +49,7 @@ export interface Response {
     mapping: Record<string, number>
     positions: CitationPosition[]
     count: number
-    fingerprint?: any
+    fingerprint?: Record<string, unknown>
   }
 }
 

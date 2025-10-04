@@ -17,6 +17,9 @@ export interface Mention {
   model: MentionModel
   firstSeen: string
   isExternal: boolean
+  responseId?: number
+  promptId?: number
+  monitorName?: string
 }
 
 export interface MentionTableProps {

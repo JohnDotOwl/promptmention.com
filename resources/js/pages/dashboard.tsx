@@ -71,7 +71,12 @@ interface DashboardProps {
         monitor_setup: { pending: number; processing: number };
         total_jobs: number;
     };
-    dashboardData?: any;
+    dashboardData?: {
+        brandVisibility?: Array<{ date: string; brand: number; competitors: number[] }>;
+        topBrands?: Array<{ name: string; mentions: number; change: number }>;
+        mentionsByModel?: Record<string, number>;
+        recentMentions?: Array<{ id: number; content: string; timestamp: string }>;
+    };
     projectName?: string;
     onboardingCompleted: boolean;
 }

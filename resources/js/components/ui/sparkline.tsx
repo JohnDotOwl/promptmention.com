@@ -1,4 +1,3 @@
-import { type ChartDataPoint } from '@/types/monitor'
 
 interface SparklineProps {
   data: Array<{ value: number }>

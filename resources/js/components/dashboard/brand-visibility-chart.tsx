@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Dot } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Dot } from "recharts"
 import { type BrandVisibilityData } from "@/types/dashboard"
 
 const defaultColors = [

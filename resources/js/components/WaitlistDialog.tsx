@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { CheckCircle, Sparkles, Users, Bell } from 'lucide-react';
 import {
     Dialog,

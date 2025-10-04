@@ -54,7 +54,7 @@ function safeDateForSort(dateValue: string | undefined | null): Date {
   try {
     const date = new Date(dateValue)
     return isNaN(date.getTime()) ? new Date() : date
-  } catch (error) {
+  } catch {
     return new Date()
   }
 }

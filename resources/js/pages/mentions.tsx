@@ -6,7 +6,7 @@ import { TopDomainsCard } from '@/components/mentions/top-domains-card'
 import { DomainRankDistributionCard } from '@/components/mentions/domain-rank-distribution-card'
 import { mockMentions } from '@/data/mentions'
 import { useState } from 'react'
-import { type MentionSortConfig } from '@/types/mention'
+import { type MentionSortConfig, type Mention } from '@/types/mention'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -19,7 +19,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ]
 
-export default function Mentions() {
+interface MentionsPageProps {
+  mentions: Mention[]
+  useDatabaseData: boolean
+}
+
+export default function Mentions({ mentions: propsMentions, useDatabaseData }: MentionsPageProps) {
   const [sortConfig, setSortConfig] = useState<MentionSortConfig>({
     column: null,
     direction: 'desc'
@@ -29,7 +34,10 @@ export default function Mentions() {
     setSortConfig({ column, direction })
   }
 
-  const sortedMentions = [...mockMentions].sort((a, b) => {
+  // Use database mentions if available, otherwise fallback to mock data
+  const mentions = propsMentions && propsMentions.length > 0 ? propsMentions : mockMentions
+
+  const sortedMentions = [...mentions].sort((a, b) => {
     if (!sortConfig.column) return 0
 
     let aValue: string | number | Date
@@ -89,6 +97,16 @@ export default function Mentions() {
               <p className="text-muted-foreground mt-1">
                 View all your mentions across all monitors
               </p>
+              {useDatabaseData && mentions.length > 0 && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ Showing {mentions.length} mentions from your monitoring data
+                </p>
+              )}
+              {(!useDatabaseData || mentions.length === 0) && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Showing sample data - your monitoring data will appear here once available
+                </p>
+              )}
             </div>
 
             {/* Charts Grid */}

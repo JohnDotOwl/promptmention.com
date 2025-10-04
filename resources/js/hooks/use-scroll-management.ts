@@ -1,4 +1,3 @@
-import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ScrollPosition {

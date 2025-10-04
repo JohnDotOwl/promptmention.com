@@ -1,4 +1,4 @@
-import { type Prompt, type PromptModel, type Monitor } from '@/types/prompt'
+import { type Prompt, type Monitor } from '@/types/prompt'
 
 const demoMonitor: Monitor = {
   id: '2b7bc04e-d65a-443f-8a1a-a46ea02d30c9',

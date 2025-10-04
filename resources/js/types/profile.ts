@@ -28,7 +28,7 @@ export interface DomainAnalysis {
   industry: string | null;
   keywords: string[];
   competitors: Competitor[];
-  analysisData: any;
+  analysisData: Record<string, unknown>;
   status: string;
   processedAt: string | null;
   createdAt: string | null;

@@ -5,7 +5,11 @@ interface AssistantMessageProps {
     content: string;
     timestamp: Date;
     isTyping?: boolean;
-    richData?: any;
+    richData?: {
+        type: string;
+        insight?: string;
+        [key: string]: unknown;
+    };
 }
 
 export const AssistantMessage: React.FC<AssistantMessageProps> = ({

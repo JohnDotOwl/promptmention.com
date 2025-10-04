@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, Target, FileText, Search, Users, Info, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, FileText, Users, Info, Sparkles } from 'lucide-react';
 import {
     Dialog,
     DialogContent,

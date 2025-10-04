@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { Link } from "@inertiajs/react"

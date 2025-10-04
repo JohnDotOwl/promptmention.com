@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell } from "recharts"
 import { type ModelUsageData } from "@/types/dashboard"
 
 const defaultData: ModelUsageData[] = [

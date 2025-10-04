@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('amplify/chat', [AmplifyController::class, 'chat'])->name('amplify.chat');
     Route::post('amplify/chat/stream', [AmplifyController::class, 'chatStream'])->name('amplify.chat.stream');
     Route::post('amplify/model-preference', [AmplifyController::class, 'updateModelPreference'])->name('amplify.model.preference');
+    Route::post('amplify/search-preference', [AmplifyController::class, 'updateSearchPreference'])->name('amplify.search.preference');
     Route::get('amplify/conversations', [AmplifyController::class, 'getConversations'])->name('amplify.conversations');
     Route::post('amplify/conversations', [AmplifyController::class, 'createConversation'])->name('amplify.conversations.create');
     Route::get('amplify/conversations/{id}/messages', [AmplifyController::class, 'getConversationMessages'])->name('amplify.conversations.messages');

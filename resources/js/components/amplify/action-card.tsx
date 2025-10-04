@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, TrendingUp, Target, FileText, Users, Info, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, FileText, Users, Info, Sparkles, Search } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -24,6 +24,7 @@ const iconMap = {
     content: FileText,
     competitors: Users,
     optimization: Target,
+    search: Search,
 };
 
 export const ActionCard: React.FC<ActionCardProps> = ({
@@ -224,12 +225,14 @@ interface SuggestedActionsProps {
     onSuggestContent: () => void;
     onCompetitorAnalysis: () => void;
     onOptimizationTips: () => void;
+    onTrendSearch?: () => void;
     hasData: boolean;
     suggestedPrompts?: {
         performance_analysis?: PromptData & { data_insight?: DataInsight };
         content_strategy?: PromptData & { data_insight?: DataInsight };
         competitor_intelligence?: PromptData & { data_insight?: DataInsight };
         optimization_tips?: PromptData & { data_insight?: DataInsight };
+        trend_search?: PromptData & { data_insight?: DataInsight };
     };
 }
 
@@ -238,6 +241,7 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
     onSuggestContent,
     onCompetitorAnalysis,
     onOptimizationTips,
+    onTrendSearch,
     hasData,
     suggestedPrompts
 }) => {
@@ -279,11 +283,30 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
         }, 100);
     };
 
+    const handleTrendSearch = () => {
+        const prompt = suggestedPrompts?.trend_search?.prompt || 'What are the latest industry trends and news?';
+        onTrendSearch?.();
+        setTimeout(() => {
+            const event = new CustomEvent('executePrompt', { detail: prompt });
+            window.dispatchEvent(event);
+        }, 100);
+    };
+
     return (
         <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">I can help you with:</h3>
 
             <div className="grid grid-cols-1 gap-3">
+                <ActionCard
+                    title={suggestedPrompts?.trend_search?.title || "Trend & News Search"}
+                    description={suggestedPrompts?.trend_search?.description || "Search for real-time industry trends, competitor news, and market developments"}
+                    icon="search"
+                    action={suggestedPrompts?.trend_search?.action || "Search Trends"}
+                    onClick={handleTrendSearch}
+                    variant={suggestedPrompts?.trend_search?.variant || 'primary'}
+                    dataInsight={suggestedPrompts?.trend_search?.data_insight}
+                />
+
                 <ActionCard
                     title={suggestedPrompts?.performance_analysis?.title || "Performance Analysis"}
                     description={suggestedPrompts?.performance_analysis?.description || "Deep dive into your brand's mention trends and visibility metrics"}

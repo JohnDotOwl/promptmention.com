@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Mic, Square } from 'lucide-react';
+import { Send, Mic, Square, Search, Container, ExternalLink } from 'lucide-react';
 import { UserMessage } from '@/components/amplify/user-message';
 import { AssistantMessage } from '@/components/amplify/assistant-message';
 import { SuggestedActions } from '@/components/amplify/action-card';
@@ -39,13 +39,22 @@ interface ConversationMessage {
     content: string;
     timestamp: Date;
     richData?: {
-        type: 'insight' | 'metrics' | 'comparison' | 'recommendation';
+        type: 'insight' | 'metrics' | 'comparison' | 'recommendation' | 'search';
         data: Record<string, unknown>;
     };
     isTyping?: boolean;
     aiModel?: string;
     aiProvider?: string;
     isStreamed?: boolean;
+    searchMetadata?: SearchMetadata;
+}
+
+interface SearchMetadata {
+    performed: boolean;
+    query: string;
+    totalResults: number;
+    sources: string[];
+    searchTime: string;
 }
 
 
@@ -70,6 +79,7 @@ interface AmplifyProps extends SharedData {
     initialMessage: string;
     availableModels: Record<string, AIModel>;
     userPreferredModel: string;
+    userSearchEnabled: boolean;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -79,7 +89,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Amplify({ auth, brandContext, suggestedPrompts, initialMessage, availableModels, userPreferredModel }: AmplifyProps) {
+export default function Amplify({ auth, brandContext, suggestedPrompts, initialMessage, availableModels, userPreferredModel, userSearchEnabled }: AmplifyProps) {
     const [messages, setMessages] = useState<ConversationMessage[]>([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -90,8 +100,26 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
     const [selectedModel] = useState<string>(userPreferredModel || 'cerebras-gpt-oss-120b');
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchEnabled, setSearchEnabled] = useState(userSearchEnabled || false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    // Save user search preference
+    const saveSearchPreference = async (enabled: boolean) => {
+        try {
+            await fetch('/amplify/search-preference', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ enabled }),
+            });
+        } catch (error) {
+            console.error('Failed to save search preference:', error);
+        }
+    };
 
     // Initialize with AI greeting
     useEffect(() => {
@@ -114,6 +142,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+  
     // Define handler functions before using them in useCallback
     const handleStreamingMessageInternal = async (message: string, conversationId?: string | null) => {
         // Create placeholder for streaming message
@@ -140,6 +169,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                     message: message,
                     conversation_id: conversationId || activeConversationId,
                     model: selectedModel,
+                    search_enabled: searchEnabled,
                 }),
             });
 
@@ -225,6 +255,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         } finally {
             setIsStreaming(false);
             setIsTyping(false);
+            setIsSearching(false);
             setStreamingMessageId(null);
         }
     };
@@ -241,6 +272,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                     message: message,
                     conversation_id: conversationId || activeConversationId,
                     model: selectedModel,
+                    search_enabled: searchEnabled,
                 }),
             });
 
@@ -259,6 +291,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                 richData: data.response.richData,
                 aiModel: data.model || selectedModel,
                 aiProvider: data.response?.provider || 'brand-assistant',
+                searchMetadata: data.search_metadata,
             };
 
             setMessages(prev => [...prev, aiResponse]);
@@ -282,6 +315,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsTyping(false);
+            setIsSearching(false);
         }
     };
 
@@ -299,6 +333,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         setMessages(prev => [...prev, userMessage]);
         setInputMessage('');
         setIsTyping(true);
+        setIsSearching(searchEnabled);
         setShowSuggestions(false);
 
         // Always use streaming for Cerebras model, even if availableModels is empty
@@ -479,18 +514,86 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                     AI-powered assistant to amplify your brand visibility and insights
                                 </p>
                             </div>
-                            {/* Model Info */}
+                            {/* Technology Info - Dual Branding */}
                             <div className="text-right">
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-sm font-medium text-gray-900">LLama 4 Scout</span>
-                                    <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
-                                        Powered by Cerebras AI
-                                    </span>
+                                <div className="flex flex-col items-end space-y-3 lg:space-y-4">
+                                    {/* Docker MCP - DuckDuckGo Section */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+                                        {/* Clickable Main Text with Toggle and Status */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+                                            <a
+                                                href="https://hub.docker.com/r/mcp/duckduckgo"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors text-right sm:text-left"
+                                            >
+                                                Docker MCP - DuckDuckGo
+                                            </a>
+                                            <div className="flex items-center space-x-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const newEnabled = !searchEnabled;
+                                                        setSearchEnabled(newEnabled);
+                                                        saveSearchPreference(newEnabled);
+                                                    }}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                        searchEnabled ? 'bg-green-600' : 'bg-gray-300'
+                                                    }`}
+                                                    aria-label="Toggle Docker MCP search"
+                                                >
+                                                    <span
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                            searchEnabled ? 'translate-x-6' : 'translate-x-1'
+                                                        }`}
+                                                    />
+                                                </button>
+                                                <div className={`flex items-center space-x-1 px-2 py-1 rounded-full ${
+                                                    searchEnabled
+                                                        ? 'bg-green-100'
+                                                        : 'bg-gray-100'
+                                                }`}>
+                                                    <span className={`text-xs font-medium ${
+                                                        searchEnabled
+                                                            ? 'text-green-700'
+                                                            : 'text-gray-600'
+                                                    }`}>
+                                                        {searchEnabled ? 'Active' : 'Disabled'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Standardized Badge - Matches Cerebras AI Style */}
+                                        <a
+                                            href="https://hub.docker.com/r/mcp/duckduckgo"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
+                                        >
+                                            <Container className="w-3 h-3" />
+                                            <span>Powered by Docker MCP</span>
+                                            <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                    </div>
+
+                                    {/* Cerebras AI Section */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-2 sm:space-y-0">
+                                        <span className="text-sm font-medium text-gray-900 text-right sm:text-left">LLama 4 Scout</span>
+                                        <span className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
+                                            Powered by Cerebras AI
+                                        </span>
+                                    </div>
                                 </div>
                                 {isStreaming && (
                                     <div className="flex items-center justify-end space-x-2 text-sm text-blue-600 mt-2">
                                         <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
                                         <span>Streaming response...</span>
+                                    </div>
+                                )}
+                                {isSearching && (
+                                    <div className="flex items-center justify-end space-x-2 text-sm text-green-600 mt-2">
+                                        <Search className="w-4 h-4 animate-pulse" />
+                                        <span>Searching via Docker MCP...</span>
                                     </div>
                                 )}
                             </div>
@@ -526,6 +629,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                         onSuggestContent={() => {}}
                                         onCompetitorAnalysis={() => {}}
                                         onOptimizationTips={() => {}}
+                                        onTrendSearch={() => {}}
                                         hasData={brandContext.hasData}
                                         suggestedPrompts={suggestedPrompts}
                                     />
@@ -547,6 +651,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                             timestamp={message.timestamp}
                                             isTyping={message.isTyping}
                                             richData={message.richData}
+                                            searchMetadata={message.searchMetadata}
                                         />
                                     )}
                                 </div>
@@ -576,7 +681,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                         value={inputMessage}
                                         onChange={(e) => setInputMessage(e.target.value)}
                                         onKeyPress={handleKeyPress}
-                                        placeholder="Ask me anything about your brand's visibility..."
+                                        placeholder="Ask me anything about your brand's visibility... (toggle Docker MCP search for real-time data)"
                                         className="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                                         disabled={isTyping || isStreaming}
                                     />

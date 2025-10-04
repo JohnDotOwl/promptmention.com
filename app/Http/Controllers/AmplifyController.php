@@ -8,6 +8,7 @@ use App\Models\AmplifyMessage;
 use App\Models\User;
 use App\Services\BrandAssistantService;
 use App\Services\CerebrasAIService;
+use App\Services\SearchMCPService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +19,16 @@ class AmplifyController extends Controller
 {
     private BrandAssistantService $brandAssistantService;
     private CerebrasAIService $cerebrasService;
+    private SearchMCPService $searchMCPService;
 
     public function __construct(
         BrandAssistantService $brandAssistantService,
-        CerebrasAIService $cerebrasService
+        CerebrasAIService $cerebrasService,
+        SearchMCPService $searchMCPService
     ) {
         $this->brandAssistantService = $brandAssistantService;
         $this->cerebrasService = $cerebrasService;
+        $this->searchMCPService = $searchMCPService;
     }
 
     /**
@@ -43,9 +47,10 @@ class AmplifyController extends Controller
         // Get suggested prompts based on user data
         $suggestedPrompts = $this->getSuggestedPrompts($user, $brandContext);
 
-        // Get available AI models and user's preference
+        // Get available AI models and user's preferences
         $availableModels = $this->getAvailableModels();
         $userPreferredModel = $user->preferred_ai_model ?? 'cerebras-gpt-oss-120b';
+        $userSearchEnabled = $user->search_enabled ?? false;
 
         Log::info('Amplify page loaded', [
             'availableModels' => array_keys($availableModels),
@@ -61,6 +66,7 @@ class AmplifyController extends Controller
             'initialMessage' => $this->getInitialGreeting($user, $brandContext),
             'availableModels' => $availableModels,
             'userPreferredModel' => $userPreferredModel,
+            'userSearchEnabled' => $userSearchEnabled,
         ]);
     }
 
@@ -214,6 +220,15 @@ class AmplifyController extends Controller
                 'variant' => 'secondary',
                 'data_driven' => $brandContext['hasData'],
                 'data_insight' => $this->getOptimizationDataInsight($brandContext)
+            ],
+            'trend_search' => [
+                'title' => 'Trend & News Search',
+                'description' => 'Search for real-time industry trends, competitor news, and market developments',
+                'action' => 'Search Trends',
+                'prompt' => $this->generateTrendSearchPrompt($brandContext),
+                'variant' => 'primary',
+                'data_driven' => true,
+                'data_insight' => $this->getTrendSearchDataInsight($brandContext)
             ]
         ];
 
@@ -632,7 +647,9 @@ class AmplifyController extends Controller
         $message = $request->input('message');
         $conversationId = $request->input('conversation_id');
         $selectedModel = $request->input('model', $user->preferred_ai_model ?? 'cerebras-gpt-oss-120b');
+        $searchEnabled = $request->input('search_enabled', $user->search_enabled ?? false);
         $useStreaming = $request->input('stream', false);
+        $searchEnabled = $request->input('search_enabled', $user->search_enabled ?? false);
 
         if (!$message) {
             return response()->json(['error' => 'Message is required'], 422);
@@ -654,6 +671,18 @@ class AmplifyController extends Controller
             // Get brand context
             $brandContext = $this->getBrandContext($user);
 
+            // Perform search if enabled by user
+            $searchContext = '';
+            if ($searchEnabled) {
+                Log::info('Search enabled, performing MCP search', ['message' => $message]);
+                $searchResults = $this->searchMCPService->performSearch($message, $brandContext);
+                $searchContext = $this->searchMCPService->formatForAI($searchResults);
+
+                // Add search context to brand context for AI processing
+                $brandContext['searchContext'] = $searchContext;
+                $brandContext['searchResults'] = $searchResults;
+            }
+
             // Generate response based on selected model
             $aiResponse = $this->generateAIResponse($user, $selectedModel, $message, $brandContext);
 
@@ -669,12 +698,25 @@ class AmplifyController extends Controller
             // Update conversation timestamp
             $conversation->updateLastMessageTime();
 
-            return response()->json([
+            $response = [
                 'success' => true,
                 'response' => $aiResponse,
                 'conversation_id' => $conversation->id,
                 'model' => $selectedModel
-            ]);
+            ];
+
+            // Add search metadata if search was performed
+            if (!empty($brandContext['searchResults'])) {
+                $response['search_metadata'] = [
+                    'performed' => true,
+                    'query' => $brandContext['searchResults']['query'],
+                    'total_results' => $brandContext['searchResults']['total_results'],
+                    'sources' => $brandContext['searchResults']['sources'],
+                    'search_time' => $brandContext['searchResults']['timestamp']
+                ];
+            }
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
             Log::error('Failed to process Amplify chat message', [
@@ -699,6 +741,7 @@ class AmplifyController extends Controller
         $message = $request->input('message');
         $conversationId = $request->input('conversation_id');
         $selectedModel = $request->input('model', $user->preferred_ai_model ?? 'cerebras-gpt-oss-120b');
+        $searchEnabled = $request->input('search_enabled', $user->search_enabled ?? false);
 
         if (!$message) {
             return response()->json(['error' => 'Message is required'], 422);
@@ -735,6 +778,17 @@ class AmplifyController extends Controller
             // Get brand context
             $brandContext = $this->getBrandContext($user);
 
+            // Perform search if enabled by user
+            if ($searchEnabled) {
+                Log::info('Search enabled in streaming, performing MCP search', ['message' => $message]);
+                $searchResults = $this->searchMCPService->performSearch($message, $brandContext);
+                $searchContext = $this->searchMCPService->formatForAI($searchResults);
+
+                // Add search context to brand context for AI processing
+                $brandContext['searchContext'] = $searchContext;
+                $brandContext['searchResults'] = $searchResults;
+            }
+
             // Return streaming response
             return $this->cerebrasService->streamResponse($user, $message, $brandContext);
 
@@ -749,6 +803,23 @@ class AmplifyController extends Controller
                 'success' => false
             ], 500);
         }
+    }
+
+    /**
+     * Update user's search preference
+     */
+    public function updateSearchPreference(Request $request)
+    {
+        $user = Auth::user();
+        $enabled = $request->input('enabled', false);
+
+        // Save search preference to user profile
+        $user->update(['search_enabled' => $enabled]);
+
+        return response()->json([
+            'success' => true,
+            'search_enabled' => $enabled
+        ]);
     }
 
     /**
@@ -978,6 +1049,35 @@ class AmplifyController extends Controller
         }
 
         return $models;
+    }
+
+    /**
+     * Generate personalized trend search prompt
+     */
+    private function generateTrendSearchPrompt($brandContext): string
+    {
+        $brandName = $brandContext['brandName'] ?? 'your brand';
+        $industry = $brandContext['industry'] ?? 'your industry';
+
+        // Create a time-sensitive search prompt that will trigger DuckDuckGo
+        return "What are the latest trends and breaking news in the {$industry} industry right now? Search for recent developments about {$brandName} and competitors. What's currently happening in the market that we should know about immediately?";
+    }
+
+    /**
+     * Get trend search data insight
+     */
+    private function getTrendSearchDataInsight($brandContext): array
+    {
+        return [
+            'has_data' => true,
+            'metrics' => [
+                'Real-time web search powered by Docker MCP DuckDuckGo',
+                'Access to latest industry news and market trends',
+                'Current competitor activities and announcements',
+                'Emerging topics and conversations in your industry'
+            ],
+            'message' => 'Search for real-time market intelligence and trending topics to stay ahead of the curve and react quickly to market changes.'
+        ];
     }
 
     /**

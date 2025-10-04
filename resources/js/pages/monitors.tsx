@@ -3,7 +3,8 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { MonitorCard } from '@/components/monitors/monitor-card';
 import { Button } from '@/components/ui/button';
-import { Plus, Monitor, AlertCircle, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Monitor, AlertCircle, RefreshCw, TrendingUp, Eye, MessageSquare, BarChart3 } from 'lucide-react';
 import { type Monitor as MonitorType } from '@/types/monitor';
 
 interface MonitorsPageProps {
@@ -24,6 +25,14 @@ export default function Monitors() {
     const handleRefresh = () => {
         window.location.reload();
     };
+
+    // Calculate overall stats
+    const totalMonitors = monitors?.length || 0;
+    const activeMonitors = monitors?.filter(m => m.status === 'active').length || 0;
+    const totalMentions = monitors?.reduce((sum, m) => sum + (m.stats?.mentions || 0), 0) || 0;
+    const avgVisibility = monitors?.length > 0
+        ? Math.round(monitors.reduce((sum, m) => sum + (m.stats?.visibilityScore || 0), 0) / monitors.length)
+        : 0;
 
     if (error) {
         return (

@@ -42,8 +42,10 @@ class PromptsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        // Get all prompts for the user's monitors with response data
+
+        // Get all prompts with their responses, creating separate rows for each prompt-model combination
+        $promptRows = [];
+
         $prompts = DB::table('prompts')
             ->join('monitors', 'prompts.monitor_id', '=', 'monitors.id')
             ->where('monitors.user_id', $user->id)
@@ -53,81 +55,58 @@ class PromptsController extends Controller
                 'monitors.id as monitor_id'
             )
             ->orderBy('prompts.created_at', 'desc')
-            ->get()
-            ->map(function ($prompt) {
-                // Get responses for this prompt with model status
-                $responses = DB::table('responses')
-                    ->where('prompt_id', $prompt->id)
-                    ->select('id', 'model_name', 'response_text', 'brand_mentioned', 'sentiment', 'visibility_score', 'competitors_mentioned', 'citation_sources', 'created_at')
-                    ->orderBy('created_at', 'desc')
-                    ->get()
-                    ->map(function ($response) {
-                        // Safe JSON parsing for index page
-                        $competitors = [];
-                        $citations = [];
-                        
-                        if ($response->competitors_mentioned) {
-                            try {
-                                $competitors = json_decode($response->competitors_mentioned, true) ?? [];
-                            } catch (Exception $e) {
-                                $competitors = [];
-                            }
-                        }
-                        
-                        if ($response->citation_sources) {
-                            try {
-                                $citations = json_decode($response->citation_sources, true) ?? [];
-                            } catch (Exception $e) {
-                                $citations = [];
-                            }
-                        }
-                        
-                        // Process response text to add line breaks and format properly
-                        $processed_text = $response->response_text ?? 'No response available';
-                        
-                        // Add line breaks after sentences that end with periods followed by capital letters
-                        $processed_text = preg_replace('/(\.) ([A-Z])/', "$1\n\n$2", $processed_text);
-                        
-                        // Add line breaks before bullet points and markdown headers
-                        $processed_text = preg_replace('/(\.) (\* \*\*)/', "$1\n\n$2", $processed_text);
-                        $processed_text = preg_replace('/(\.) (\*\*[^*]+\*\*:)/', "$1\n\n$2", $processed_text);
-                        
-                        // Convert markdown to HTML and preserve line breaks
-                        $processed_text = \Illuminate\Support\Str::markdown($processed_text);
-                        
-                        return [
-                            'id' => $response->id ?? 'N/A',
-                            'model_name' => $response->model_name ?? 'Unknown Model',
-                            'response_text' => $processed_text,
-                            'brand_mentioned' => (bool) ($response->brand_mentioned ?? false),
-                            'sentiment' => $response->sentiment ?? 'neutral',
-                            'visibility_score' => (float) ($response->visibility_score ?? 0.0),
-                            'competitors_mentioned' => $competitors,
-                            'citation_sources' => $citations,
-                            'created_at' => $response->created_at ?? now()->toISOString()
-                        ];
-                    });
-                
-                // Create model status summary
-                $modelStatus = [];
-                $expectedModels = ['gemini-2.5-flash', 'gpt-oss-120b', 'llama-4-scout-17b-16e-instruct'];
+            ->get();
 
-                foreach ($expectedModels as $model) {
-                    $modelResponses = $responses->where('model_name', $model);
-                    $firstResponse = $modelResponses->first();
-                    $modelStatus[$model] = [
-                        'has_response' => $modelResponses->count() > 0,
-                        'response_count' => $modelResponses->count(),
-                        'last_response' => $firstResponse['created_at'] ?? null
-                    ];
+        foreach ($prompts as $prompt) {
+            // Get responses for this prompt (all prompts now have responses)
+            $responses = DB::table('responses')
+                ->where('prompt_id', $prompt->id)
+                ->select('id', 'model_name', 'response_text', 'brand_mentioned', 'sentiment', 'visibility_score', 'competitors_mentioned', 'citation_sources', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Create a separate row for each response (prompt-model combination)
+            foreach ($responses as $response) {
+                // Safe JSON parsing for index page
+                $competitors = [];
+                $citations = [];
+
+                if ($response->competitors_mentioned) {
+                    try {
+                        $competitors = json_decode($response->competitors_mentioned, true) ?? [];
+                    } catch (Exception $e) {
+                        $competitors = [];
+                    }
                 }
 
-                return [
+                if ($response->citation_sources) {
+                    try {
+                        $citations = json_decode($response->citation_sources, true) ?? [];
+                    } catch (Exception $e) {
+                        $citations = [];
+                    }
+                }
+
+                // Get model display name
+                $modelDisplayName = $response->model_name ?? 'Unknown Model';
+                switch ($response->model_name) {
+                    case 'gemini-2.5-flash':
+                        $modelDisplayName = 'Gemini';
+                        break;
+                    case 'gpt-oss-120b':
+                        $modelDisplayName = 'GPT-OSS';
+                        break;
+                    case 'llama-4-scout-17b-16e-instruct':
+                        $modelDisplayName = 'Llama-4';
+                        break;
+                }
+
+                $promptRows[] = [
                     'id' => $prompt->id ?? 'N/A',
                     'text' => $prompt->text ?? 'Untitled Prompt',
                     'type' => $prompt->type ?? 'brand-specific',
                     'intent' => $prompt->intent ?? 'informational',
-                    'responseCount' => $responses->count(),
+                    'responseCount' => 1, // Each row represents 1 response
                     'visibility' => (float) ($prompt->visibility_percentage ?? 0.0),
                     'language' => [
                         'code' => $prompt->language_code ?? 'en',
@@ -138,11 +117,19 @@ class PromptsController extends Controller
                         'id' => (int) ($prompt->monitor_id ?? 0),
                         'name' => $prompt->monitor_name ?? 'Unknown Monitor'
                     ],
-                    'responses' => $responses,
-                    'modelStatus' => $modelStatus,
+                    'model_name' => $response->model_name ?? 'Unknown Model',
+                    'model_display_name' => $modelDisplayName,
+                    'response_id' => $response->id ?? null,
+                    'brand_mentioned' => (bool) ($response->brand_mentioned ?? false),
+                    'sentiment' => $response->sentiment ?? 'neutral',
+                    'visibility_score' => (float) ($response->visibility_score ?? 0.0),
+                    'competitors_mentioned' => $competitors,
+                    'citation_sources' => $citations,
+                    'response_created_at' => $response->created_at ?? now()->toISOString(),
                     'created' => $this->safeFormatDate($prompt->created_at ?? null)
                 ];
-            });
+            }
+        }
 
         // Get user's monitors for status checking
         $monitors = DB::table('monitors')
@@ -165,7 +152,7 @@ class PromptsController extends Controller
             });
 
         return Inertia::render('prompts', [
-            'prompts' => $prompts,
+            'prompts' => collect($promptRows),
             'monitors' => $monitors
         ]);
     }

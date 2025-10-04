@@ -152,8 +152,8 @@ class CompetitorsController extends Controller
         $competitorData = [
             'user' => [
                 'company' => [
-                    'name' => $onboardingProgress->company_name ?? null,
-                    'website' => $onboardingProgress->company_website ?? null,
+                    'name' => $onboardingProgress?->company_name ?? null,
+                    'website' => $onboardingProgress?->company_website ?? null,
                     'industry' => $industry,
                 ]
             ],

@@ -108,20 +108,20 @@ export function ProjectSwitcher({ monitors = [] }: ProjectSwitcherProps) {
             >
               <Avatar className="size-6 rounded-sm">
                 <AvatarImage
-                  src={`https://www.google.com/s2/favicons?domain=${activeMonitor.website.url}&sz=64`}
-                  alt={activeMonitor.website.name}
+                  src={`https://www.google.com/s2/favicons?domain=${getWebsiteUrl(activeMonitor)}&sz=64`}
+                  alt={getWebsiteName(activeMonitor)}
                   className="object-contain"
                 />
                 <AvatarFallback className="rounded-sm bg-primary/10 text-xs">
-                  {activeMonitor.website.name.slice(0, 2).toUpperCase()}
+                  {getWebsiteName(activeMonitor).slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeMonitor.website.name}
+                  {getWebsiteName(activeMonitor)}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {activeMonitor.website.url}
+                  {getWebsiteUrl(activeMonitor)}
                 </span>
               </div>
               <div className="flex items-center gap-1 ml-auto">
@@ -142,25 +142,25 @@ export function ProjectSwitcher({ monitors = [] }: ProjectSwitcherProps) {
             <DropdownMenuSeparator />
             {monitors.map((monitor) => (
               <DropdownMenuItem
-                key={monitor.id}
+                key={getMonitorId(monitor)}
                 className="gap-2 p-2"
               >
                 <Avatar className="size-5 rounded-sm">
                   <AvatarImage
-                    src={`https://www.google.com/s2/favicons?domain=${monitor.website.url}&sz=64`}
-                    alt={monitor.website.name}
+                    src={`https://www.google.com/s2/favicons?domain=${getWebsiteUrl(monitor)}&sz=64`}
+                    alt={getWebsiteName(monitor)}
                     className="object-contain"
                   />
                   <AvatarFallback className="rounded-sm bg-muted text-[10px]">
-                    {monitor.website.name.slice(0, 2).toUpperCase()}
+                    {getWebsiteName(monitor).slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {monitor.website.name}
+                    {getWebsiteName(monitor)}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {monitor.website.url}
+                    {getWebsiteUrl(monitor)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -174,7 +174,7 @@ export function ProjectSwitcher({ monitors = [] }: ProjectSwitcherProps) {
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {monitor.isPending ? 'Pending' : monitor.status}
+                    {monitor.isPending ? 'Pending' : (monitor.status || 'Unknown')}
                   </span>
                 </div>
               </DropdownMenuItem>

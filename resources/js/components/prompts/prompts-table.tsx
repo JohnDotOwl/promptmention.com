@@ -137,46 +137,29 @@ function ProgressCircle({ value }: { value: number }) {
   )
 }
 
-function ModelStatusIndicator({ modelStatus }: { modelStatus: Record<string, any> }) {
-  const modelIcons = {
-    'gemini-2.5-flash': { name: 'Gemini', color: 'blue' },
-    'gpt-oss-120b': { name: 'GPT-OSS', color: 'green' },
-    'llama-4-scout-17b-16e-instruct': { name: 'Llama-4', color: 'purple' }
+function ModelBadge({ modelName, displayName }: { modelName: string, displayName: string }) {
+  const getModelInfo = (model: string) => {
+    switch (model) {
+      case 'gemini-2.5-flash':
+        return { name: 'Gemini', color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700' }
+      case 'gpt-oss-120b':
+        return { name: 'GPT-OSS', color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-700' }
+      case 'llama-4-scout-17b-16e-instruct':
+        return { name: 'Llama-4', color: 'purple', bgColor: 'bg-purple-50', textColor: 'text-purple-700' }
+      default:
+        return { name: displayName, color: 'gray', bgColor: 'bg-gray-50', textColor: 'text-gray-700' }
+    }
   }
 
-  return (
-    <div className="flex items-center gap-1">
-      {Object.entries(modelIcons).map(([modelId, modelInfo]) => {
-        const status = modelStatus[modelId]
-        const hasResponse = status?.has_response
+  const modelInfo = getModelInfo(modelName)
 
-        return (
-          <TooltipProvider key={modelId}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className={`
-                    w-3 h-3 rounded-full border border-current
-                    ${hasResponse
-                      ? `${modelInfo.color === 'blue' ? 'bg-blue-500 border-blue-500' : ''}
-                         ${modelInfo.color === 'green' ? 'bg-green-500 border-green-500' : ''}
-                         ${modelInfo.color === 'purple' ? 'bg-purple-500 border-purple-500' : ''}`
-                      : 'bg-gray-200 border-gray-300'
-                    }
-                  `}
-                  title={`${modelInfo.name}: ${hasResponse ? 'Generated' : 'Pending'}`}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">
-                  {modelInfo.name}: {hasResponse ? '✓ Generated' : '⏳ Pending'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )
-      })}
-    </div>
+  return (
+    <Badge
+      variant="secondary"
+      className={`${modelInfo.bgColor} ${modelInfo.textColor} border-0`}
+    >
+      {modelInfo.name}
+    </Badge>
   )
 }
 
@@ -255,10 +238,7 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                 </SortableHeader>
               </th>
               <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '120px'}}>
-                <div className="flex items-center gap-1.5">
-                  Models
-                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60" />
-                </div>
+                Model
               </th>
               <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '65px'}}>
                 <div className="flex items-center gap-1.5">
@@ -310,12 +290,10 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   {getIntentBadge(prompt.intent || 'informational')}
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    <ModelStatusIndicator modelStatus={prompt.modelStatus || {}} />
-                    <span className="text-xs text-muted-foreground">
-                      {prompt.responseCount || 0}
-                    </span>
-                  </div>
+                  <ModelBadge
+                    modelName={prompt.model_name || 'Unknown Model'}
+                    displayName={prompt.model_display_name || 'Unknown Model'}
+                  />
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
                   <ProgressCircle value={prompt.visibility || 0} />

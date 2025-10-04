@@ -103,22 +103,43 @@ class ResponsesController extends Controller
                 'id' => 'gemini-2.0-flash',
                 'name' => 'gemini-2.0-flash',
                 'displayName' => 'Gemini 2.0 Flash',
-                'icon' => '/llm-icons/gemini.svg',
+                'icon' => 'https://www.google.com/s2/favicons?domain=google.com&sz=256',
+                'color' => 'fill-blue-500'
+            ],
+            'gemini-2.5-flash-preview-09-2025' => [
+                'id' => 'gemini-2.5-flash-preview-09-2025',
+                'name' => 'gemini-2.5-flash-preview-09-2025',
+                'displayName' => 'Gemini 2.5 Flash Preview',
+                'icon' => 'https://www.google.com/s2/favicons?domain=google.com&sz=256',
                 'color' => 'fill-blue-500'
             ],
             'gpt-4o-search' => [
                 'id' => 'gpt-4o-search',
                 'name' => 'gpt-4o-search',
                 'displayName' => 'ChatGPT Search',
-                'icon' => '/llm-icons/openai.svg',
+                'icon' => 'https://www.google.com/s2/favicons?domain=openai.com&sz=256',
+                'color' => 'fill-emerald-500'
+            ],
+            'gpt-oss-120b' => [
+                'id' => 'gpt-oss-120b',
+                'name' => 'gpt-oss-120b',
+                'displayName' => 'GPT OSS 120B',
+                'icon' => 'https://www.google.com/s2/favicons?domain=openai.com&sz=256',
                 'color' => 'fill-emerald-500'
             ],
             'mistral-small-latest' => [
                 'id' => 'mistral-small-latest',
                 'name' => 'mistral-small-latest',
                 'displayName' => 'Mistral Small',
-                'icon' => '/llm-icons/mistral.svg',
+                'icon' => 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=256',
                 'color' => 'fill-violet-500'
+            ],
+            'llama-4-scout-17b-16e-instruct' => [
+                'id' => 'llama-4-scout-17b-16e-instruct',
+                'name' => 'llama-4-scout-17b-16e-instruct',
+                'displayName' => 'Llama 4 Scout',
+                'icon' => 'https://www.google.com/s2/favicons?domain=meta.ai&sz=256',
+                'color' => 'fill-purple-500'
             ]
         ];
         
@@ -141,8 +162,11 @@ class ResponsesController extends Controller
         
         $colors = [
             'gemini-2.0-flash' => '#3B82F6',
+            'gemini-2.5-flash-preview-09-2025' => '#3B82F6',
             'gpt-4o-search' => '#10B981',
-            'mistral-small-latest' => '#8B5CF6'
+            'gpt-oss-120b' => '#10B981',
+            'mistral-small-latest' => '#8B5CF6',
+            'llama-4-scout-17b-16e-instruct' => '#8B5CF6'
         ];
         
         $result = [];
@@ -159,26 +183,38 @@ class ResponsesController extends Controller
     
     private function getResponseTimelineData($responses)
     {
-        // Group responses by date
+        // Initialize date groups for the last 30 days
         $dateGroups = [];
+        $today = new \DateTime();
+
+        for ($i = 29; $i >= 0; $i--) {
+            $date = (clone $today)->modify("-$i days");
+            $dateStr = $date->format('Y-m-d');
+            $dateGroups[$dateStr] = [
+                'date' => $dateStr,
+                'timestamp' => $date->getTimestamp() * 1000, // Add timestamp for JS Date compatibility
+                'gemini-2.0-flash' => 0,
+                'gemini-2.5-flash-preview-09-2025' => 0,
+                'gpt-4o-search' => 0,
+                'gpt-oss-120b' => 0,
+                'mistral-small-latest' => 0,
+                'llama-4-scout-17b-16e-instruct' => 0
+            ];
+        }
+
+        // Group responses by date
         foreach ($responses as $response) {
             $date = date('Y-m-d', strtotime($response['answered']));
-            if (!isset($dateGroups[$date])) {
-                $dateGroups[$date] = [
-                    'date' => $date,
-                    'gemini-2.0-flash' => 0,
-                    'gpt-4o-search' => 0,
-                    'mistral-small-latest' => 0
-                ];
-            }
-            $modelName = $response['model']['name'];
-            if (isset($dateGroups[$date][$modelName])) {
-                $dateGroups[$date][$modelName]++;
+            if (isset($dateGroups[$date])) {
+                $modelName = $response['model']['name'];
+                if (isset($dateGroups[$date][$modelName])) {
+                    $dateGroups[$date][$modelName]++;
+                }
             }
         }
-        
-        // Sort by date and return last 7 days
+
+        // Sort by date and return as indexed array
         ksort($dateGroups);
-        return array_slice(array_values($dateGroups), -7);
+        return array_values($dateGroups);
     }
 }

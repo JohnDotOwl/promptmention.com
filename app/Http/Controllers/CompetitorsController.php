@@ -305,10 +305,10 @@ class CompetitorsController extends Controller
                 'E-commerce technology company specializing in retail solutions.'
             ],
             'default' => [
-                'Competitive company in the {industry} sector.',
-                'Leading business operating in {industry}.',
-                'Key player in the {industry} industry.',
-                'Innovative company in the {industry} space.'
+                'Leading competitor in their industry with innovative solutions.',
+                'Established company with a strong market presence.',
+                'Innovative business focused on growth and excellence.',
+                'Competitive company with industry expertise.'
             ]
         ];
 
@@ -317,11 +317,6 @@ class CompetitorsController extends Controller
 
         // Select a random description or use the first one
         $description = $descriptionList[array_rand($descriptionList)];
-
-        // Replace placeholder if using default description
-        if ($industryKey === 'default') {
-            $description = str_replace('{industry}', strtolower($industry ?? 'technology'), $description);
-        }
 
         return $description;
     }

@@ -5,22 +5,36 @@ export const responseModels: ResponseModel[] = [
     id: 'gemini-2.0-flash',
     name: 'gemini-2.0-flash',
     displayName: 'Gemini 2.0 Flash',
-    icon: '/llm-icons/gemini.svg',
+    icon: 'https://www.google.com/s2/favicons?domain=ai.google.dev&sz=256',
     color: 'fill-blue-500'
   },
   {
     id: 'gpt-4o-search',
     name: 'gpt-4o-search',
     displayName: 'ChatGPT Search',
-    icon: '/llm-icons/openai.svg',
+    icon: 'https://www.google.com/s2/favicons?domain=openai.com&sz=256',
     color: 'fill-emerald-500'
   },
   {
     id: 'mistral-small-latest',
     name: 'mistral-small-latest',
     displayName: 'Mistral Small',
-    icon: '/llm-icons/mistral.svg',
+    icon: 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=256',
     color: 'fill-violet-500'
+  },
+  {
+    id: 'gpt-oss-120b',
+    name: 'gpt-oss-120b',
+    displayName: 'GPT-OSS-120B',
+    icon: 'https://www.google.com/s2/favicons?domain=openai.com&sz=256',
+    color: 'fill-green-500'
+  },
+  {
+    id: 'llama-4-scout-17b-16e-instruct',
+    name: 'llama-4-scout-17b-16e-instruct',
+    displayName: 'Llama 4 Scout',
+    icon: 'https://www.google.com/s2/favicons?domain=meta.ai&sz=256',
+    color: 'fill-purple-500'
   }
 ]
 
@@ -84,6 +98,16 @@ export const modelUsageData: ModelUsageData[] = [
     name: 'mistral-small-latest',
     count: 10,
     color: '#8B5CF6' // violet-500
+  },
+  {
+    name: 'gpt-oss-120b',
+    count: 8,
+    color: '#10B981' // green-500 (same as OpenAI)
+  },
+  {
+    name: 'llama-4-scout-17b-16e-instruct',
+    count: 6,
+    color: '#8B5CF6' // purple-500
   }
 ]
 
@@ -92,24 +116,32 @@ export const responseTimelineData: ResponseTimelineData[] = [
     date: '2025-06-18',
     'gemini-2.0-flash': 0,
     'gpt-4o-search': 0,
-    'mistral-small-latest': 0
+    'mistral-small-latest': 0,
+    'gpt-oss-120b': 0,
+    'llama-4-scout-17b-16e-instruct': 0
   },
   {
     date: '2025-06-20',
     'gemini-2.0-flash': 0,
     'gpt-4o-search': 0,
-    'mistral-small-latest': 0
+    'mistral-small-latest': 0,
+    'gpt-oss-120b': 0,
+    'llama-4-scout-17b-16e-instruct': 0
   },
   {
     date: '2025-06-22',
     'gemini-2.0-flash': 0,
     'gpt-4o-search': 0,
-    'mistral-small-latest': 0
+    'mistral-small-latest': 0,
+    'gpt-oss-120b': 0,
+    'llama-4-scout-17b-16e-instruct': 0
   },
   {
     date: '2025-06-24',
     'gemini-2.0-flash': 10,
     'gpt-4o-search': 10,
-    'mistral-small-latest': 10
+    'mistral-small-latest': 10,
+    'gpt-oss-120b': 8,
+    'llama-4-scout-17b-16e-instruct': 6
   }
 ]

@@ -135,53 +135,53 @@ export default function Monitors() {
                     {/* Enhanced Quick Stats */}
                     {monitors && monitors.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                            <div className="group bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-blue-900/40 rounded-xl p-5 border border-blue-200/50 dark:border-blue-800/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                            <div className="group bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900/50 dark:via-gray-800/50 dark:to-gray-900/50 rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Total Monitors</p>
-                                        <p className="text-3xl font-bold text-blue-900 dark:text-blue-100 tabular-nums">{totalMonitors}</p>
+                                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Total Monitors</p>
+                                        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{totalMonitors}</p>
                                     </div>
-                                    <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <Monitor className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                    <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Monitor className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="group bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 dark:from-green-950/30 dark:via-emerald-950/20 dark:to-green-900/40 rounded-xl p-5 border border-green-200/50 dark:border-green-800/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                            <div className="group bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900/50 dark:via-gray-800/50 dark:to-gray-900/50 rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <p className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">Active</p>
-                                        <p className="text-3xl font-bold text-green-900 dark:text-green-100 tabular-nums">{activeMonitors}</p>
+                                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Active</p>
+                                        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{activeMonitors}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
-                                        <div className="p-3 bg-green-100 dark:bg-green-900/50 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                            <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                        <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                            <TrendingUp className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="group bg-gradient-to-br from-purple-50 via-violet-50 to-purple-100 dark:from-purple-950/30 dark:via-violet-950/20 dark:to-purple-900/40 rounded-xl p-5 border border-purple-200/50 dark:border-purple-800/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                            <div className="group bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900/50 dark:via-gray-800/50 dark:to-gray-900/50 rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <p className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">Total Mentions</p>
-                                        <p className="text-3xl font-bold text-purple-900 dark:text-purple-100 tabular-nums">{totalMentions.toLocaleString()}</p>
+                                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Total Mentions</p>
+                                        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{totalMentions.toLocaleString()}</p>
                                     </div>
-                                    <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <MessageSquare className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                                    <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <MessageSquare className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="group bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-orange-900/40 rounded-xl p-5 border border-orange-200/50 dark:border-orange-800/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                            <div className="group bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-900/50 dark:via-gray-800/50 dark:to-gray-900/50 rounded-xl p-5 border border-gray-200/50 dark:border-gray-700/30 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <p className="text-sm font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wide">Avg Visibility</p>
-                                        <p className="text-3xl font-bold text-orange-900 dark:text-orange-100 tabular-nums">{avgVisibility}%</p>
+                                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Avg Visibility</p>
+                                        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{avgVisibility}%</p>
                                     </div>
-                                    <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                        <Eye className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                                    <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        <Eye className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                                     </div>
                                 </div>
                             </div>
@@ -192,7 +192,7 @@ export default function Monitors() {
                 {/* Enhanced Content */}
                 <div className="flex-1">
                     {monitors.length > 0 ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                             {monitors.map((monitor) => (
                                 <MonitorCard
                                     key={monitor.id}

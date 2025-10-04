@@ -29,6 +29,14 @@ export function ModelSelector({ models, selectedModel, onModelChange, disabled =
         return <Zap className="w-4 h-4 text-orange-500" />;
       case 'PromptMention':
         return <Brain className="w-4 h-4 text-purple-500" />;
+      case 'Meta':
+        return <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">M</div>;
+      case 'OpenAI':
+        return <div className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white text-xs font-bold">O</div>;
+      case 'Google':
+        return <div className="w-4 h-4 rounded-sm bg-blue-500 flex items-center justify-center text-white text-xs font-bold">G</div>;
+      case 'Mistral':
+        return <div className="w-4 h-4 rounded-sm bg-violet-500 flex items-center justify-center text-white text-xs font-bold">M</div>;
       default:
         return <Sparkles className="w-4 h-4 text-gray-500" />;
     }
@@ -40,6 +48,14 @@ export function ModelSelector({ models, selectedModel, onModelChange, disabled =
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'PromptMention':
         return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Meta':
+        return 'bg-gradient-to-r from-blue-50 to-purple-50 text-purple-800 border-purple-200';
+      case 'OpenAI':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Google':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Mistral':
+        return 'bg-violet-100 text-violet-800 border-violet-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -190,6 +206,14 @@ export function ModelProviderInfo({ model }: { model: AIModel }) {
         return <Zap className="w-4 h-4 text-orange-500" />;
       case 'PromptMention':
         return <Brain className="w-4 h-4 text-purple-500" />;
+      case 'Meta':
+        return <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">M</div>;
+      case 'OpenAI':
+        return <div className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white text-xs font-bold">O</div>;
+      case 'Google':
+        return <div className="w-4 h-4 rounded-sm bg-blue-500 flex items-center justify-center text-white text-xs font-bold">G</div>;
+      case 'Mistral':
+        return <div className="w-4 h-4 rounded-sm bg-violet-500 flex items-center justify-center text-white text-xs font-bold">M</div>;
       default:
         return <Sparkles className="w-4 h-4 text-gray-500" />;
     }
@@ -201,6 +225,14 @@ export function ModelProviderInfo({ model }: { model: AIModel }) {
         return 'text-orange-600 bg-orange-50';
       case 'PromptMention':
         return 'text-purple-600 bg-purple-50';
+      case 'Meta':
+        return 'text-purple-600 bg-gradient-to-r from-blue-50 to-purple-50';
+      case 'OpenAI':
+        return 'text-green-600 bg-green-50';
+      case 'Google':
+        return 'text-blue-600 bg-blue-50';
+      case 'Mistral':
+        return 'text-violet-600 bg-violet-50';
       default:
         return 'text-gray-600 bg-gray-50';
     }

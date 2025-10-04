@@ -41,6 +41,21 @@ export default function Competitors() {
         }
     };
 
+    // Helper function to extract domain from URL for favicon
+    const extractDomainForFavicon = (url: string): string => {
+        try {
+            const urlObj = new URL(url);
+            let domain = urlObj.hostname;
+
+            // Remove www. prefix if present
+            domain = domain.replace(/^www\./, '');
+
+            return domain;
+        } catch {
+            return '';
+        }
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Competitors',
@@ -284,8 +299,31 @@ export default function Competitors() {
                                             <CardHeader className="pb-4 relative z-10">
                                                 <div className="flex items-start justify-between mb-3">
                                                     <div className="flex items-start gap-3 flex-1">
-                                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-200">
-                                                            {(competitor.name && competitor.name.length > 0) ? competitor.name.charAt(0).toUpperCase() : '?'}
+                                                        <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-200 overflow-hidden">
+                                                            {competitor.website && isValidWebsiteUrl(competitor.website) && (
+                                                                <>
+                                                                    <img
+                                                                        src={`https://www.google.com/s2/favicons?domain=${extractDomainForFavicon(competitor.website)}&sz=256`}
+                                                                        alt={`${competitor.name || 'Competitor'} favicon`}
+                                                                        className="w-full h-full object-cover rounded-xl"
+                                                                        onError={(e) => {
+                                                                            // Fallback to initials if favicon fails to load
+                                                                            const target = e.target as HTMLImageElement;
+                                                                            target.style.display = 'none';
+                                                                            const fallback = target.nextElementSibling as HTMLDivElement;
+                                                                            if (fallback) fallback.style.display = 'flex';
+                                                                        }}
+                                                                    />
+                                                                    <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-red-500 to-orange-600 rounded-xl" style={{ display: 'none' }}>
+                                                                        {(competitor.name && competitor.name.length > 0) ? competitor.name.charAt(0).toUpperCase() : '?'}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                            {(!competitor.website || !isValidWebsiteUrl(competitor.website)) && (
+                                                                <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-red-500 to-orange-600 rounded-xl">
+                                                                    {(competitor.name && competitor.name.length > 0) ? competitor.name.charAt(0).toUpperCase() : '?'}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <CardTitle className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors mb-1.5 truncate">

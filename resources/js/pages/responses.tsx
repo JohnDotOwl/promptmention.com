@@ -149,11 +149,15 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                               const getFavicon = (modelName: string) => {
                                 switch(modelName) {
                                   case 'gemini-2.0-flash':
-                                    return 'https://www.google.com/s2/favicons?domain=ai.google.dev&sz=256';
+                                  case 'gemini-2.5-flash-preview-09-2025':
+                                    return 'https://www.google.com/s2/favicons?domain=google.com&sz=256';
                                   case 'gpt-4o-search':
+                                  case 'gpt-oss-120b':
                                     return 'https://www.google.com/s2/favicons?domain=openai.com&sz=256';
                                   case 'mistral-small-latest':
                                     return 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=256';
+                                  case 'llama-4-scout-17b-16e-instruct':
+                                    return 'https://www.google.com/s2/favicons?domain=meta.ai&sz=256';
                                   default:
                                     return null;
                                 }
@@ -163,10 +167,16 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                                 switch(modelName) {
                                   case 'gemini-2.0-flash':
                                     return 'Gemini 2.0 Flash';
+                                  case 'gemini-2.5-flash-preview-09-2025':
+                                    return 'Gemini 2.5 Flash Preview';
                                   case 'gpt-4o-search':
                                     return 'ChatGPT Search';
+                                  case 'gpt-oss-120b':
+                                    return 'GPT OSS 120B';
                                   case 'mistral-small-latest':
                                     return 'Mistral Small';
+                                  case 'llama-4-scout-17b-16e-instruct':
+                                    return 'Llama 4 Scout';
                                   default:
                                     return modelName;
                                 }
@@ -243,10 +253,54 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                           tick={{ transform: 'translate(-3, 0)' }}
                           className="text-xs fill-gray-500 dark:fill-gray-500"
                         />
-                        <Tooltip />
+                        <Tooltip
+                          content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                              const date = new Date(label);
+                              const formattedDate = date.toLocaleDateString('en-US', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              });
+
+                              return (
+                                <div className="bg-background border border-border/50 rounded-lg p-3 shadow-lg">
+                                  <div className="font-medium text-foreground mb-2">
+                                    {formattedDate}
+                                  </div>
+                                  {payload.map((entry, index) => (
+                                    entry.value > 0 && (
+                                      <div key={index} className="flex items-center gap-2 text-sm">
+                                        <div
+                                          className="w-3 h-3 rounded-sm"
+                                          style={{ backgroundColor: entry.color }}
+                                        />
+                                        <span className="text-muted-foreground">
+                                          {entry.name}:
+                                        </span>
+                                        <span className="font-medium">
+                                          {entry.value} responses
+                                        </span>
+                                      </div>
+                                    )
+                                  ))}
+                                  {payload.every(entry => entry.value === 0) && (
+                                    <div className="text-sm text-muted-foreground">
+                                      No responses
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
                         <Bar dataKey="gemini-2.0-flash" fill="#3B82F6" shape={RoundedBar} className="fill-blue-500" />
+                        <Bar dataKey="gemini-2.5-flash-preview-09-2025" fill="#3B82F6" shape={RoundedBar} className="fill-blue-500" />
                         <Bar dataKey="gpt-4o-search" fill="#10B981" shape={RoundedBar} className="fill-emerald-500" />
+                        <Bar dataKey="gpt-oss-120b" fill="#10B981" shape={RoundedBar} className="fill-emerald-500" />
                         <Bar dataKey="mistral-small-latest" fill="#8B5CF6" shape={RoundedBar} className="fill-violet-500" />
+                        <Bar dataKey="llama-4-scout-17b-16e-instruct" fill="#8B5CF6" shape={RoundedBar} className="fill-violet-500" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -289,9 +343,12 @@ export default function Responses({ responses, modelUsageData, responseTimelineD
                             All Models
                           </div>
                         </SelectItem>
-                        <SelectItem value="gemini">Gemini 2.0 Flash</SelectItem>
-                        <SelectItem value="gpt-4o">ChatGPT Search</SelectItem>
-                        <SelectItem value="mistral">Mistral Small</SelectItem>
+                        <SelectItem value="gemini-2.0-flash">Google Gemini 2.0 Flash</SelectItem>
+                        <SelectItem value="gemini-2.5-flash-preview-09-2025">Google Gemini 2.5 Flash Preview</SelectItem>
+                        <SelectItem value="gpt-4o-search">OpenAI ChatGPT Search</SelectItem>
+                        <SelectItem value="gpt-oss-120b">OpenAI GPT OSS 120B</SelectItem>
+                        <SelectItem value="mistral-small-latest">Mistral Small</SelectItem>
+                        <SelectItem value="llama-4-scout-17b-16e-instruct">Meta Llama 4 Scout</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select defaultValue="all-types">

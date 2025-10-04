@@ -92,5 +92,6 @@ export interface ModelUsageData {
 
 export interface ResponseTimelineData {
   date: string
+  timestamp: number
   [modelName: string]: string | number
 }

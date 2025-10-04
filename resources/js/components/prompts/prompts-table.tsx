@@ -140,8 +140,13 @@ function ProgressCircle({ value }: { value: number }) {
 function ModelBadge({ modelName, displayName }: { modelName: string, displayName: string }) {
   const getModelInfo = (model: string) => {
     switch (model) {
+      case 'gemini-2.0-flash':
       case 'gemini-2.5-flash':
         return { name: 'Gemini', color: 'blue', bgColor: 'bg-blue-50', textColor: 'text-blue-700' }
+      case 'gpt-4o-search':
+        return { name: 'ChatGPT', color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-700' }
+      case 'mistral-small-latest':
+        return { name: 'Mistral', color: 'violet', bgColor: 'bg-violet-50', textColor: 'text-violet-700' }
       case 'gpt-oss-120b':
         return { name: 'GPT-OSS', color: 'green', bgColor: 'bg-green-50', textColor: 'text-green-700' }
       case 'llama-4-scout-17b-16e-instruct':

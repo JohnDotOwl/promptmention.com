@@ -86,14 +86,14 @@ const generateHeatmapData = (): HeatmapData[] => {
 
   // Mock visibility data based on the heatmap.md structure
   const visibilityData: { [key: string]: { [model: string]: number | null } } = {
-    'Pay Boy (Us)': { 'mistral-small': 16.7, 'chatgpt-search': 20, 'gemini-2-flash': 16.7 },
-    'BambooHR': { 'mistral-small': 20, 'chatgpt-search': 3.3, 'gemini-2-flash': 10 },
-    'Xero': { 'mistral-small': 13.3, 'chatgpt-search': 13.3, 'gemini-2-flash': 3.3 },
-    'Workday': { 'mistral-small': 20, 'chatgpt-search': null, 'gemini-2-flash': 6.7 },
-    'QuickBooks': { 'mistral-small': 13.3, 'chatgpt-search': 6.7, 'gemini-2-flash': 3.3 },
-    'Talenox': { 'mistral-small': 6.7, 'chatgpt-search': 6.7, 'gemini-2-flash': 6.7 },
-    'Deputy': { 'mistral-small': 10, 'chatgpt-search': 3.3, 'gemini-2-flash': 3.3 },
-    'Gusto': { 'mistral-small': 13.3, 'chatgpt-search': 3.3, 'gemini-2-flash': null },
+    'Pay Boy (Us)': { 'gemini-2-5-flash': 16.7, 'gpt-oss-120b': 20, 'llama-4-scout': 16.7 },
+    'BambooHR': { 'gemini-2-5-flash': 20, 'gpt-oss-120b': 3.3, 'llama-4-scout': 10 },
+    'Xero': { 'gemini-2-5-flash': 13.3, 'gpt-oss-120b': 13.3, 'llama-4-scout': 3.3 },
+    'Workday': { 'gemini-2-5-flash': 20, 'gpt-oss-120b': null, 'llama-4-scout': 6.7 },
+    'QuickBooks': { 'gemini-2-5-flash': 13.3, 'gpt-oss-120b': 6.7, 'llama-4-scout': 3.3 },
+    'Talenox': { 'gemini-2-5-flash': 6.7, 'gpt-oss-120b': 6.7, 'llama-4-scout': 6.7 },
+    'Deputy': { 'gemini-2-5-flash': 10, 'gpt-oss-120b': 3.3, 'llama-4-scout': 3.3 },
+    'Gusto': { 'gemini-2-5-flash': 13.3, 'gpt-oss-120b': 3.3, 'llama-4-scout': null },
   }
 
   return competitors.map(competitor => ({
@@ -330,7 +330,7 @@ export default function MonitorShow({ id, monitor }: PageProps) {
   const [monitorDescription, setMonitorDescription] = useState('A variety of prompts to track your brand across AI models.')
   const [monitorLanguage, setMonitorLanguage] = useState('en-US')
   const [monitorCountry, setMonitorCountry] = useState('US')
-  const [selectedModels, setSelectedModels] = useState(['chatgpt-search', 'gemini-2-flash', 'mistral-small'])
+  const [selectedModels, setSelectedModels] = useState(['google-search', 'perplexity-search', 'google-ai-overviews'])
   
   // Monitor data is passed as prop from controller
 
@@ -1373,47 +1373,47 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                             </TableHead>
                             <TableHead className="p-0 text-center">
                               <div className="m-[1px] flex h-[36px] w-full items-center justify-center gap-2 rounded p-1 text-xs font-medium dark:bg-gray-800">
-                                <img 
-                                  alt="Mistral Small" 
-                                  loading="lazy" 
-                                  width="16" 
-                                  height="16" 
-                                  decoding="async" 
+                                <img
+                                  alt="Gemini 2.5 Flash"
+                                  loading="lazy"
+                                  width="16"
+                                  height="16"
+                                  decoding="async"
                                   data-nimg="1"
-                                  src="/llm-icons/mistral.svg"
+                                  src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=256"
                                   style={{ color: 'transparent' }}
                                 />
-                                Mistral Small
+                                Gemini 2.5 Flash
                               </div>
                             </TableHead>
                             <TableHead className="p-0 text-center">
                               <div className="m-[1px] flex h-[36px] w-full items-center justify-center gap-2 rounded p-1 text-xs font-medium dark:bg-gray-800">
-                                <img 
-                                  alt="ChatGPT Search" 
-                                  loading="lazy" 
-                                  width="16" 
-                                  height="16" 
-                                  decoding="async" 
+                                <img
+                                  alt="GPT-OSS 120B"
+                                  loading="lazy"
+                                  width="16"
+                                  height="16"
+                                  decoding="async"
                                   data-nimg="1"
-                                  src="/llm-icons/openai.svg"
+                                  src="https://www.google.com/s2/favicons?domain=cerebras.ai&sz=256"
                                   style={{ color: 'transparent' }}
                                 />
-                                ChatGPT Search
+                                GPT-OSS 120B
                               </div>
                             </TableHead>
                             <TableHead className="p-0 text-center">
                               <div className="m-[1px] flex h-[36px] w-full items-center justify-center gap-2 rounded p-1 text-xs font-medium dark:bg-gray-800">
-                                <img 
-                                  alt="Gemini 2.0 Flash" 
-                                  loading="lazy" 
-                                  width="16" 
-                                  height="16" 
-                                  decoding="async" 
+                                <img
+                                  alt="Llama 4 Scout"
+                                  loading="lazy"
+                                  width="16"
+                                  height="16"
+                                  decoding="async"
                                   data-nimg="1"
-                                  src="/llm-icons/gemini.svg"
+                                  src="https://www.google.com/s2/favicons?domain=meta.com&sz=256"
                                   style={{ color: 'transparent' }}
                                 />
-                                Gemini 2.0 Flash
+                                Llama 4 Scout
                               </div>
                             </TableHead>
                           </TableRow>
@@ -1427,18 +1427,18 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                                 </div>
                               </TableCell>
                               <TableCell className="p-0 text-center">
-                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['mistral-small'])}`}>
-                                  {row.visibility['mistral-small'] !== null ? `${row.visibility['mistral-small']}%` : '-'}
+                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['gemini-2-5-flash'])}`}>
+                                  {row.visibility['gemini-2-5-flash'] !== null ? `${row.visibility['gemini-2-5-flash']}%` : '-'}
                                 </div>
                               </TableCell>
                               <TableCell className="p-0 text-center">
-                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['chatgpt-search'])}`}>
-                                  {row.visibility['chatgpt-search'] !== null ? `${row.visibility['chatgpt-search']}%` : '-'}
+                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['gpt-oss-120b'])}`}>
+                                  {row.visibility['gpt-oss-120b'] !== null ? `${row.visibility['gpt-oss-120b']}%` : '-'}
                                 </div>
                               </TableCell>
                               <TableCell className="p-0 text-center">
-                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['gemini-2-flash'])}`}>
-                                  {row.visibility['gemini-2-flash'] !== null ? `${row.visibility['gemini-2-flash']}%` : '-'}
+                                <div className={`m-[1px] flex h-[36px] items-center justify-center rounded p-1 text-xs ${getVisibilityColor(row.visibility['llama-4-scout'])}`}>
+                                  {row.visibility['llama-4-scout'] !== null ? `${row.visibility['llama-4-scout']}%` : '-'}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1579,20 +1579,10 @@ export default function MonitorShow({ id, monitor }: PageProps) {
                           <p className="text-sm text-muted-foreground">Select the models you want to monitor.</p>
                           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 mt-4">
                             {[
-                              { id: 'chatgpt-search', name: 'ChatGPT Search', description: 'Access web search results with ChatGPT', icon: '/llm-icons/openai.svg' },
-                              { id: 'perplexity-search', name: 'Perplexity Search', description: 'Online model with real-time knowledge', icon: '/llm-icons/perplexity.svg' },
-                              { id: 'google-ai', name: 'Google AI Overviews', description: 'Google AI Overviews inside Google Search', icon: '/llm-icons/google.svg' },
-                              { id: 'gpt-4o', name: 'GPT 4o', description: 'For complex, multi-step tasks', icon: '/llm-icons/openai.svg' },
-                              { id: 'gpt-4o-mini', name: 'GPT 4o mini', description: 'Small model for fast, lightweight tasks', icon: '/llm-icons/openai.svg' },
-                              { id: 'perplexity', name: 'Perplexity', description: 'Offline model from Perplexity', icon: '/llm-icons/perplexity.svg' },
-                              { id: 'deepseek', name: 'DeepSeek', description: 'DeepSeek Chat', icon: '/llm-icons/deepseek.svg' },
-                              { id: 'llama-3-3', name: 'Llama 3.3 70B', description: "Facebook's Llama 3.3 70B", icon: '/llm-icons/meta.svg' },
-                              { id: 'qwen-32b', name: 'Qwen 32B', description: 'Reinforcement Learning model', icon: '/llm-icons/qwen.svg' },
-                              { id: 'gemini-2-flash', name: 'Gemini 2.0 Flash', description: 'Model for complex reasoning from Google', icon: '/llm-icons/gemini.svg' },
-                              { id: 'grok-3', name: 'Grok 3', description: 'Model for general tasks', icon: '/llm-icons/grok.svg' },
-                              { id: 'mistral-large', name: 'Mistral Large', description: 'Mistral Large', icon: '/llm-icons/mistral.svg' },
-                              { id: 'mistral-small', name: 'Mistral Small', description: 'Mistral Small', icon: '/llm-icons/mistral.svg' },
-                              { id: 'claude-3-7', name: 'Claude 3.7 Sonnet', description: 'For complex, multi-step tasks', icon: '/llm-icons/claude.svg' },
+                              { id: 'google-search', name: 'Google.com', description: 'Google Search engine', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=256' },
+                              { id: 'perplexity-search', name: 'Perplexity Search', description: 'Online model with real-time knowledge', icon: 'https://www.google.com/s2/favicons?domain=perplexity.ai&sz=256' },
+                              { id: 'google-ai-overviews', name: 'Google AI Overviews', description: 'Google AI Overviews inside Google Search', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=256' },
+                              { id: 'google-ai-mode', name: 'Google AI Mode', description: 'Google AI Mode with enhanced capabilities', icon: 'https://www.google.com/s2/favicons?domain=google.com&sz=256' },
                             ].map((model) => (
                               <button
                                 key={model.id}

@@ -387,6 +387,20 @@ export default function MonitorShow({ id, monitor, prompts }: PageProps) {
     return allResponses
   }, [prompts])
 
+  // Get unique models from responses for the filter dropdown
+  const uniqueModels = useMemo(() => {
+    const models = new Map()
+    monitorResponses.forEach(response => {
+      if (response.model && response.model.id) {
+        models.set(response.model.id, response.model)
+      }
+    })
+    return Array.from(models.values())
+  }, [monitorResponses])
+
+  // Handle empty responses case
+  const hasResponses = monitorResponses.length > 0
+
   // Handle sorting
   const handleSort = (column: string, direction: 'asc' | 'desc') => {
     setSortConfig({ column, direction })
@@ -1087,8 +1101,8 @@ export default function MonitorShow({ id, monitor, prompts }: PageProps) {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all-models">All Models</SelectItem>
-                            {monitor.models.map((model) => (
-                              <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                            {uniqueModels.map((model) => (
+                              <SelectItem key={model.id} value={model.id}>{model.displayName}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -1105,19 +1119,28 @@ export default function MonitorShow({ id, monitor, prompts }: PageProps) {
                     </div>
 
                     {/* Reusable Responses Table */}
-                    <ResponsesTable 
-                      responses={filteredResponses}
-                      onSort={handleResponseSort}
-                      sortConfig={responseSortConfig}
-                    />
+                    {hasResponses ? (
+                      <ResponsesTable
+                        responses={filteredResponses}
+                        onSort={handleResponseSort}
+                        sortConfig={responseSortConfig}
+                      />
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <h3 className="text-lg font-medium mb-2">No responses yet</h3>
+                        <p className="text-sm">This monitor hasn't generated any AI responses yet. Responses will appear here once prompts are tested with AI models.</p>
+                      </div>
+                    )}
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between gap-8">
-                      <div className="text-muted-foreground flex grow justify-end text-sm whitespace-nowrap">
-                        <p className="text-muted-foreground text-sm whitespace-nowrap">
-                          <span className="text-foreground">1-{Math.min(25, filteredResponses.length)}</span> of <span className="text-foreground">{filteredResponses.length}</span>
-                        </p>
-                      </div>
+                    {hasResponses && (
+                      <div className="flex items-center justify-between gap-8">
+                        <div className="text-muted-foreground flex grow justify-end text-sm whitespace-nowrap">
+                          <p className="text-muted-foreground text-sm whitespace-nowrap">
+                            <span className="text-foreground">1-{Math.min(25, filteredResponses.length)}</span> of <span className="text-foreground">{filteredResponses.length}</span>
+                          </p>
+                        </div>
                       <div>
                         <nav aria-label="pagination" className="mx-auto flex w-full justify-center">
                           <ul className="flex flex-row items-center gap-1">

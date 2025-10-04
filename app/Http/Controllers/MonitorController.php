@@ -297,7 +297,7 @@ class MonitorController extends Controller
                         )
                         ->orderBy('created_at', 'desc')
                         ->get()
-                        ->map(function ($response) {
+                        ->map(function ($response) use ($monitor) {
                             // Safe JSON parsing with fallbacks
                             $competitors = [];
                             $citations = [];
@@ -318,18 +318,101 @@ class MonitorController extends Controller
                                 }
                             }
 
+                            // Transform model name to display name
+                            $modelId = $response->model_name ?? 'unknown';
+                            $modelName = $response->model_name ?? 'Unknown Model';
+                            $modelDisplayName = $modelName;
+                            $modelIcon = "https://www.google.com/s2/favicons?domain=" . parse_url($monitor->website_url, PHP_URL_HOST) . "&sz=256";
+                            $modelColor = "#3b82f6";
+
+                            switch ($response->model_name) {
+                                case 'gemini-2.5-flash-preview-09-2025':
+                                case 'gemini-2.5-flash':
+                                    $modelDisplayName = 'Gemini';
+                                    $modelIcon = "https://www.google.com/s2/favicons?domain=gemini.google.com&sz=256";
+                                    $modelColor = "#4285f4";
+                                    break;
+                                case 'gpt-oss-120b':
+                                    $modelDisplayName = 'GPT-OSS';
+                                    $modelIcon = "https://www.google.com/s2/favicons?domain=cerebras.ai&sz=256";
+                                    $modelColor = "#06b6d4";
+                                    break;
+                                case 'llama-4-scout-17b-16e-instruct':
+                                    $modelDisplayName = 'Llama-4';
+                                    $modelIcon = "https://www.google.com/s2/favicons?domain=meta.com&sz=256";
+                                    $modelColor = "#8b5cf6";
+                                    break;
+                            }
+
+                            // Create brand mentions array
+                            $brandMentions = [];
+                            if ($response->brand_mentioned) {
+                                $brandMentions[] = [
+                                    'brandName' => $monitor->name ?? 'Brand',
+                                    'sentiment' => $response->sentiment ?? 'neutral',
+                                    'mentioned' => true
+                                ];
+                            } else {
+                                $brandMentions[] = [
+                                    'brandName' => $monitor->name ?? 'Brand',
+                                    'sentiment' => 'neutral',
+                                    'mentioned' => false
+                                ];
+                            }
+
+                            // Create competitor mentions array
+                            $competitorMentions = [];
+                            foreach ($competitors as $competitor) {
+                                $competitorMentions[] = [
+                                    'competitorName' => $competitor,
+                                    'mentioned' => true
+                                ];
+                            }
+
+                            // Create citations structure
+                            $citationsData = null;
+                            if (!empty($citations)) {
+                                $citationSources = [];
+                                $citationMapping = [];
+                                $citationPositions = [];
+
+                                foreach ($citations as $index => $citation) {
+                                    if (is_string($citation)) {
+                                        $citationSources[] = [
+                                            'url' => $citation,
+                                            'title' => 'Source ' . ($index + 1)
+                                        ];
+                                        $citationMapping[$citation] = $index;
+                                    }
+                                }
+
+                                $citationsData = [
+                                    'sources' => $citationSources,
+                                    'mapping' => $citationMapping,
+                                    'positions' => [],
+                                    'count' => count($citationSources)
+                                ];
+                            }
+
                             return [
                                 'id' => $response->id ?? 'N/A',
-                                'model_name' => $response->model_name ?? 'Unknown Model',
-                                'response_text' => $response->response_text ?? 'No response text available',
-                                'brand_mentioned' => (bool) ($response->brand_mentioned ?? false),
-                                'sentiment' => $response->sentiment ?? 'neutral',
-                                'visibility_score' => (float) ($response->visibility_score ?? 0.0),
-                                'competitors_mentioned' => $competitors,
-                                'citation_sources' => $citations,
-                                'tokens_used' => (int) ($response->tokens_used ?? 0),
+                                'text' => $response->response_text ?? 'No response text available',
+                                'textWithCitations' => $response->response_text ?? 'No response text available',
+                                'model' => [
+                                    'id' => $modelId,
+                                    'name' => $modelName,
+                                    'displayName' => $modelDisplayName,
+                                    'icon' => $modelIcon,
+                                    'color' => $modelColor
+                                ],
+                                'visibility' => (float) ($response->visibility_score ?? 0.0),
+                                'brandMentions' => $brandMentions,
+                                'competitorMentions' => $competitorMentions,
+                                'answered' => $response->created_at ?? now()->toISOString(),
+                                'promptId' => $response->prompt_id,
+                                'tokens' => (int) ($response->tokens_used ?? 0),
                                 'cost' => (float) ($response->cost ?? 0.0),
-                                'created_at' => $response->created_at ?? now()->toISOString()
+                                'citations' => $citationsData
                             ];
                         });
                 }

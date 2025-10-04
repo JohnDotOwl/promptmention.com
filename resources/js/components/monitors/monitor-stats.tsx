@@ -25,16 +25,48 @@ function StatChart({ data, color, dataKey = 'value', title }: StatChartProps) {
   const chartColor = colorMap[color as keyof typeof colorMap] || colorMap['blue-500']
   const gradientId = `gradient-${dataKey}-${color.replace('-', '')}`
 
+  // Enhanced tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-lg p-3 shadow-xl">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            {title || 'Value'}
+          </p>
+          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+            {color === 'blue-500' && `${payload[0].value}%`}
+            {color === 'orange-500' && `${payload[0].value} mentions`}
+            {color === 'purple-500' && `Rank ${payload[0].value}`}
+            {!(color === 'blue-500' || color === 'orange-500' || color === 'purple-500') && payload[0].value}
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <div className="h-full w-full">
       <div className="relative h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+          <AreaChart
+            data={data}
+            margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+          >
             <defs>
               <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chartColor} stopOpacity="0.4" />
-                <stop offset="95%" stopColor={chartColor} stopOpacity="0.1" />
+                <stop offset="5%" stopColor={chartColor} stopOpacity="0.6" />
+                <stop offset="50%" stopColor={chartColor} stopOpacity="0.3" />
+                <stop offset="95%" stopColor={chartColor} stopOpacity="0.05" />
               </linearGradient>
+              {/* Add glow effect */}
+              <filter id={`glow-${gradientId}`}>
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
             </defs>
             <XAxis
               dataKey="date"
@@ -47,32 +79,22 @@ function StatChart({ data, color, dataKey = 'value', title }: StatChartProps) {
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 shadow-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {title || 'Value'}
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {payload[0].value}
-                      </p>
-                    </div>
-                  )
-                }
-                return null
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
               dataKey={dataKey}
               stroke={chartColor}
-              strokeWidth={2}
+              strokeWidth={2.5}
               fillOpacity={1}
               fill={`url(#${gradientId})`}
-              dot={{ fill: chartColor, strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, fill: chartColor }}
+              dot={false}
+              activeDot={{
+                r: 6,
+                fill: chartColor,
+                stroke: 'white',
+                strokeWidth: 2,
+                filter: `url(#glow-${gradientId})`
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>

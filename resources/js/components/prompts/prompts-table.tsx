@@ -131,7 +131,7 @@ function ProgressCircle({ value }: { value: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-medium text-gray-900 -ml-2">{value}%</span>
+        <span className="text-xs font-medium text-gray-900 -ml-2">{Math.round(value)}%</span>
       </div>
     </div>
   )
@@ -237,8 +237,8 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   Intent
                 </SortableHeader>
               </th>
-              <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '120px'}}>
-                Model
+              <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '140px'}}>
+                Models
               </th>
               <th className="text-muted-foreground px-2 text-left align-middle font-medium whitespace-nowrap h-11" style={{width: '65px'}}>
                 <div className="flex items-center gap-1.5">
@@ -290,10 +290,22 @@ export function PromptsTable({ prompts, onSort, sortConfig }: PromptsTableProps)
                   {getIntentBadge(prompt.intent || 'informational')}
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
-                  <ModelBadge
-                    modelName={prompt.model_name || 'Unknown Model'}
-                    displayName={prompt.model_display_name || 'Unknown Model'}
-                  />
+                  <div className="flex flex-wrap gap-1">
+                    {prompt.models && prompt.models.length > 0 ? (
+                      prompt.models.map((modelName, index) => (
+                        <ModelBadge
+                          key={modelName}
+                          modelName={modelName}
+                          displayName={prompt.model_display_names?.[index] || modelName}
+                        />
+                      ))
+                    ) : (
+                      <ModelBadge
+                        modelName="Unknown Model"
+                        displayName="Unknown Model"
+                      />
+                    )}
+                  </div>
                 </td>
                 <td className="p-2 align-middle whitespace-nowrap">
                   <ProgressCircle value={prompt.visibility || 0} />

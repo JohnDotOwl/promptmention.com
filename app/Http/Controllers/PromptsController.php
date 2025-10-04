@@ -43,8 +43,8 @@ class PromptsController extends Controller
     {
         $user = Auth::user();
 
-        // Get all prompts with their responses, creating separate rows for each prompt-model combination
-        $promptRows = [];
+        // Group prompts by text and date, collecting all models for each prompt
+        $promptGroups = [];
 
         $prompts = DB::table('prompts')
             ->join('monitors', 'prompts.monitor_id', '=', 'monitors.id')
@@ -57,39 +57,44 @@ class PromptsController extends Controller
             ->orderBy('prompts.created_at', 'desc')
             ->get();
 
+        // Group prompts by text and date
+        $groupedPrompts = [];
         foreach ($prompts as $prompt) {
-            // Get responses for this prompt (all prompts now have responses)
+            $dateKey = date('Y-m-d', strtotime($prompt->created_at));
+            $groupKey = $prompt->text . '|' . $dateKey;
+
+            if (!isset($groupedPrompts[$groupKey])) {
+                $groupedPrompts[$groupKey] = [
+                    'prompt' => $prompt,
+                    'models' => [],
+                    'model_display_names' => [],
+                    'response_count' => 0
+                ];
+            }
+        }
+
+        // Get responses for each group and collect models
+        foreach ($groupedPrompts as $groupKey => $group) {
+            $prompt = $group['prompt'];
+
             $responses = DB::table('responses')
                 ->where('prompt_id', $prompt->id)
                 ->select('id', 'model_name', 'response_text', 'brand_mentioned', 'sentiment', 'visibility_score', 'competitors_mentioned', 'citation_sources', 'created_at')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Create a separate row for each response (prompt-model combination)
+            $models = [];
+            $modelDisplayNames = [];
+            $totalVisibilityScore = 0;
+            $competitorCounts = [];
+
             foreach ($responses as $response) {
-                // Safe JSON parsing for index page
-                $competitors = [];
-                $citations = [];
+                // Collect model information
+                $modelName = $response->model_name ?? 'Unknown Model';
+                $modelDisplayName = $modelName;
 
-                if ($response->competitors_mentioned) {
-                    try {
-                        $competitors = json_decode($response->competitors_mentioned, true) ?? [];
-                    } catch (Exception $e) {
-                        $competitors = [];
-                    }
-                }
-
-                if ($response->citation_sources) {
-                    try {
-                        $citations = json_decode($response->citation_sources, true) ?? [];
-                    } catch (Exception $e) {
-                        $citations = [];
-                    }
-                }
-
-                // Get model display name
-                $modelDisplayName = $response->model_name ?? 'Unknown Model';
-                switch ($response->model_name) {
+                switch ($modelName) {
+                    case 'gemini-2.5-flash-preview-09-2025':
                     case 'gemini-2.5-flash':
                         $modelDisplayName = 'Gemini';
                         break;
@@ -101,34 +106,37 @@ class PromptsController extends Controller
                         break;
                 }
 
-                $promptRows[] = [
-                    'id' => $prompt->id ?? 'N/A',
-                    'text' => $prompt->text ?? 'Untitled Prompt',
-                    'type' => $prompt->type ?? 'brand-specific',
-                    'intent' => $prompt->intent ?? 'informational',
-                    'responseCount' => 1, // Each row represents 1 response
-                    'visibility' => (float) ($prompt->visibility_percentage ?? 0.0),
-                    'language' => [
-                        'code' => $prompt->language_code ?? 'en',
-                        'name' => $prompt->language_name ?? 'English',
-                        'flag' => $prompt->language_flag ?? '🇺🇸'
-                    ],
-                    'monitor' => [
-                        'id' => (int) ($prompt->monitor_id ?? 0),
-                        'name' => $prompt->monitor_name ?? 'Unknown Monitor'
-                    ],
-                    'model_name' => $response->model_name ?? 'Unknown Model',
-                    'model_display_name' => $modelDisplayName,
-                    'response_id' => $response->id ?? null,
-                    'brand_mentioned' => (bool) ($response->brand_mentioned ?? false),
-                    'sentiment' => $response->sentiment ?? 'neutral',
-                    'visibility_score' => (float) ($response->visibility_score ?? 0.0),
-                    'competitors_mentioned' => $competitors,
-                    'citation_sources' => $citations,
-                    'response_created_at' => $response->created_at ?? now()->toISOString(),
-                    'created' => $this->safeFormatDate($prompt->created_at ?? null)
-                ];
+                if (!in_array($modelName, $models)) {
+                    $models[] = $modelName;
+                    $modelDisplayNames[] = $modelDisplayName;
+                }
+
+                $totalVisibilityScore += (float) ($response->visibility_score ?? 0.0);
             }
+
+            // Calculate average visibility
+            $avgVisibility = $responses->count() > 0 ? $totalVisibilityScore / $responses->count() : 0.0;
+
+            $promptGroups[] = [
+                'id' => $prompt->id ?? 'N/A',
+                'text' => $prompt->text ?? 'Untitled Prompt',
+                'type' => $prompt->type ?? 'brand-specific',
+                'intent' => $prompt->intent ?? 'informational',
+                'responseCount' => $responses->count(),
+                'visibility' => $avgVisibility,
+                'language' => [
+                    'code' => $prompt->language_code ?? 'en',
+                    'name' => $prompt->language_name ?? 'English',
+                    'flag' => $prompt->language_flag ?? '🇺🇸'
+                ],
+                'monitor' => [
+                    'id' => (int) ($prompt->monitor_id ?? 0),
+                    'name' => $prompt->monitor_name ?? 'Unknown Monitor'
+                ],
+                'models' => $models,
+                'model_display_names' => $modelDisplayNames,
+                'created' => $this->safeFormatDate($prompt->created_at ?? null)
+            ];
         }
 
         // Get user's monitors for status checking
@@ -152,7 +160,7 @@ class PromptsController extends Controller
             });
 
         return Inertia::render('prompts', [
-            'prompts' => collect($promptRows),
+            'prompts' => collect($promptGroups),
             'monitors' => $monitors
         ]);
     }

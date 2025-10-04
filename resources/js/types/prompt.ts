@@ -52,6 +52,8 @@ export interface Prompt {
   }
   monitor: Monitor
   responses: Response[]
+  models: string[] // Array of model names for this prompt
+  model_display_names: string[] // Array of model display names
   modelStatus: Record<string, ModelStatus>
   created: string
   updated?: string

@@ -28,6 +28,19 @@ import { type CompetitorsPageProps } from '@/types/competitors';
 export default function Competitors() {
     const { user, competitors, stats, domainAnalysis, monitors, onboardingCompleted, hasData } = usePage<CompetitorsPageProps>().props;
 
+    // Helper function to validate website URLs
+    const isValidWebsiteUrl = (url: string | null | undefined): boolean => {
+        if (!url || typeof url !== 'string') return false;
+
+        try {
+            // Basic URL validation
+            const urlObj = new URL(url);
+            return urlObj.protocol === 'https:' || urlObj.protocol === 'http:';
+        } catch {
+            return false;
+        }
+    };
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Competitors',
@@ -264,7 +277,7 @@ export default function Competitors() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {competitors.map((competitor, index) => (
+                                    {competitors.filter(competitor => competitor.name && competitor.name !== 'Unknown' && competitor.name.trim() !== '').map((competitor, index) => (
                                         <Card key={index} className="relative overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border-2 hover:border-red-200 dark:hover:border-red-900">
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-bl-full transform translate-x-16 -translate-y-16 group-hover:scale-150 transition-transform duration-300" />
 
@@ -314,19 +327,16 @@ export default function Competitors() {
                                                         </p>
                                                     )}
 
-                                                    {competitor.website && (
+                                                    {competitor.website && isValidWebsiteUrl(competitor.website) && (
                                                         <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 group-hover:from-gray-100 group-hover:to-gray-50 dark:group-hover:from-gray-800 dark:group-hover:to-gray-800/50 transition-all border border-gray-200 dark:border-gray-700">
                                                             <div className="flex items-center gap-2 text-sm flex-1 min-w-0">
                                                                 <Globe className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                                                                 <span className="text-gray-700 dark:text-gray-300 font-medium truncate">
-                                                                    {competitor.website ?
-                                                                        competitor.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] :
-                                                                        'No website'
-                                                                    }
+                                                                    {competitor.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}
                                                                 </span>
                                                             </div>
                                                             <Link
-                                                                href={competitor.website || '#'}
+                                                                href={competitor.website}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 rounded-md hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors flex-shrink-0"
@@ -357,16 +367,24 @@ export default function Competitors() {
                                                                 Track
                                                             </Link>
                                                         </Button>
-                                                        <Button
+                                                              <Button
                                                             variant="outline"
                                                             size="sm"
                                                             className="flex-1 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                            asChild
+                                                            asChild={competitor.website && isValidWebsiteUrl(competitor.website)}
+                                                            disabled={!competitor.website || !isValidWebsiteUrl(competitor.website)}
                                                         >
-                                                            <Link href={competitor.website || '#'} target="_blank">
-                                                                <Eye className="h-4 w-4 mr-1.5" />
-                                                                Visit
-                                                            </Link>
+                                                            {competitor.website && isValidWebsiteUrl(competitor.website) ? (
+                                                                <Link href={competitor.website} target="_blank" rel="noopener noreferrer">
+                                                                    <Eye className="h-4 w-4 mr-1.5" />
+                                                                    Visit
+                                                                </Link>
+                                                            ) : (
+                                                                <>
+                                                                    <Eye className="h-4 w-4 mr-1.5" />
+                                                                    No Website
+                                                                </>
+                                                            )}
                                                         </Button>
                                                     </div>
                                                 </div>

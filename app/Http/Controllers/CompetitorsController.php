@@ -75,16 +75,25 @@ class CompetitorsController extends Controller
         if ($domainAnalysis && $domainAnalysis->competitors) {
             $domainCompetitors = json_decode($domainAnalysis->competitors, true);
             if (is_array($domainCompetitors)) {
-                $competitors = array_map(function($competitor) use ($domainAnalysis) {
+                $processedCompetitors = [];
+                foreach ($domainCompetitors as $competitor) {
+                    $result = null;
+
                     // Handle both string domains and competitor objects
                     if (is_string($competitor)) {
                         // Extract company name from domain
                         $domain = $competitor;
                         $companyName = $this->extractCompanyNameFromDomain($domain);
+
+                        // Skip if company name is empty or invalid
+                        if (empty($companyName) || $companyName === 'Unknown') {
+                            continue;
+                        }
+
                         $website = $this->formatWebsiteUrl($domain);
                         $description = $this->generateCompetitorDescription($companyName, $domainAnalysis->industry);
 
-                        return [
+                        $result = [
                             'name' => $companyName,
                             'website' => $website,
                             'description' => $description,
@@ -93,23 +102,27 @@ class CompetitorsController extends Controller
                         ];
                     } elseif (is_array($competitor)) {
                         // Handle existing competitor objects
-                        return [
-                            'name' => $competitor['name'] ?? 'Unknown',
+                        $competitorName = $competitor['name'] ?? null;
+
+                        // Skip if competitor name is empty or Unknown
+                        if (empty($competitorName) || $competitorName === 'Unknown') {
+                            continue;
+                        }
+
+                        $result = [
+                            'name' => $competitorName,
                             'website' => isset($competitor['website']) ? $this->formatWebsiteUrl($competitor['website']) : null,
                             'description' => $competitor['description'] ?? null,
                             'industry' => $competitor['industry'] ?? $domainAnalysis->industry,
                             'source' => 'domain_analysis'
                         ];
-                    } else {
-                        return [
-                            'name' => 'Unknown',
-                            'website' => null,
-                            'description' => null,
-                            'industry' => $domainAnalysis->industry,
-                            'source' => 'domain_analysis'
-                        ];
                     }
-                }, $domainCompetitors);
+
+                    if ($result !== null) {
+                        $processedCompetitors[] = $result;
+                    }
+                }
+                $competitors = $processedCompetitors;
             }
             $industry = $domainAnalysis->industry;
         } elseif ($onboardingProgress) {
@@ -119,7 +132,12 @@ class CompetitorsController extends Controller
         // Collect competitors from monitors
         foreach ($monitors as $monitor) {
             foreach ($monitor['competitors'] as $monitorCompetitor) {
-                $competitorName = $monitorCompetitor['name'] ?? 'Unknown';
+                $competitorName = $monitorCompetitor['name'] ?? null;
+
+                // Skip if competitor name is empty or Unknown
+                if (empty($competitorName) || $competitorName === 'Unknown') {
+                    continue;
+                }
 
                 // Avoid duplicates
                 $exists = false;
@@ -133,7 +151,7 @@ class CompetitorsController extends Controller
                 if (!$exists) {
                     $competitors[] = [
                         'name' => $competitorName,
-                        'website' => $monitorCompetitor['website'] ?? null,
+                        'website' => isset($monitorCompetitor['website']) ? $this->formatWebsiteUrl($monitorCompetitor['website']) : null,
                         'description' => $monitorCompetitor['description'] ?? null,
                         'industry' => $monitorCompetitor['industry'] ?? null,
                         'source' => 'monitor',
@@ -213,15 +231,53 @@ class CompetitorsController extends Controller
     }
 
     /**
-     * Format website URL with proper protocol
+     * Format website URL with proper protocol and domain validation
      */
-    private function formatWebsiteUrl(string $url): string
+    private function formatWebsiteUrl(string $url): ?string
     {
-        // Add protocol if missing
-        if (!preg_match('/^https?:\/\//', $url)) {
-            return 'https://' . $url;
+        if (empty($url)) {
+            return null;
         }
-        return $url;
+
+        // Remove protocol and www for processing
+        $cleanUrl = preg_replace('/^https?:\/\//', '', $url);
+        $cleanUrl = preg_replace('/^www\./', '', $cleanUrl);
+
+        // Check if it's a valid domain format
+        if (!preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/', $cleanUrl)) {
+            return null;
+        }
+
+        // Add TLD if missing (e.g., "graphcore" -> "graphcore.ai")
+        if (!preg_match('/\.[a-zA-Z]{2,}$/', $cleanUrl)) {
+            // Common domain extensions for tech companies
+            $techExtensions = ['ai', 'io', 'tech', 'co', 'app', 'dev', 'cloud', 'xyz'];
+
+            // Special cases for known companies
+            $specialDomains = [
+                'graphcore' => 'graphcore.ai',
+                'nvidia' => 'nvidia.com',
+                'groq' => 'groq.com',
+                'amd' => 'amd.com',
+                'ibm' => 'ibm.com',
+                'hp' => 'hp.com'
+            ];
+
+            foreach ($specialDomains as $domain => $fullDomain) {
+                if (strtolower($cleanUrl) === $domain) {
+                    $cleanUrl = $fullDomain;
+                    break;
+                }
+            }
+
+            // If no special case found, try to add .com by default
+            if (!preg_match('/\.[a-zA-Z]{2,}$/', $cleanUrl)) {
+                $cleanUrl .= '.com';
+            }
+        }
+
+        // Add protocol back
+        return 'https://' . $cleanUrl;
     }
 
     /**

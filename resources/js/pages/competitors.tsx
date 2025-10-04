@@ -1,20 +1,18 @@
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Swords,
   Target,
   TrendingUp,
-  Users,
   Globe,
   BarChart3,
   Eye,
   Plus,
   Monitor,
-  AlertTriangle,
   CheckCircle,
   Building2,
   Search,
@@ -26,7 +24,7 @@ import {
 import { type CompetitorsPageProps } from '@/types/competitors';
 
 export default function Competitors() {
-    const { user, competitors, stats, domainAnalysis, monitors, onboardingCompleted, hasData } = usePage<CompetitorsPageProps>().props;
+    const { user, competitors, stats, domainAnalysis, monitors, hasData } = usePage<CompetitorsPageProps>().props;
 
     // Helper function to validate website URLs
     const isValidWebsiteUrl = (url: string | null | undefined): boolean => {

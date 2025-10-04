@@ -2,13 +2,12 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { Head } from '@inertiajs/react'
 import AppLayout from '@/layouts/app-layout'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { 
+import {
   Bot,
   ChevronDown,
   Info,
@@ -17,18 +16,22 @@ import {
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Target,
+  TrendingUp,
+  Globe,
+  DollarSign
 } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, LineChart, Line, Legend } from 'recharts'
 import type { BreadcrumbItem } from '@/types'
 import type { PromptSortConfig } from '@/types/prompt'
 import { PromptsTable } from '@/components/prompts/prompts-table'
 import { ResponsesTable } from '@/components/responses/responses-table'
-import type { Response, ResponseSortConfig } from '@/types/response'
+import type { ResponseSortConfig } from '@/types/response'
 import { MentionsTable } from '@/components/mentions/mentions-table'
 import { mockMentions } from '@/data/mentions'
-import type { Mention, MentionSortConfig } from '@/types/mention'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import type { MentionSortConfig } from '@/types/mention'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Copy, CircleHelp } from 'lucide-react'
@@ -1172,6 +1175,7 @@ export default function MonitorShow({ id, monitor, prompts }: PageProps) {
                         </nav>
                       </div>
                     </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1511,6 +1515,472 @@ export default function MonitorShow({ id, monitor, prompts }: PageProps) {
                       </table>
                     </div>
                   </Card>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Answer Gap Tab */}
+          {activeTab === 'answer-gap' && (
+            <div className="py-6">
+              <div className="px-6">
+                <div className="space-y-6">
+                  {/* Header Section */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">Answer Gap Analysis</h2>
+                      <p className="text-muted-foreground mt-1">
+                        Identify questions where your brand should be mentioned but isn't. Discover opportunities to improve your AI visibility.
+                      </p>
+                    </div>
+                    <Button className="cursor-pointer">
+                      Generate New Analysis
+                    </Button>
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                            <Target className="h-5 w-5 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Total Gaps</p>
+                            <p className="text-2xl font-bold">24</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                            <TrendingUp className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">High Priority</p>
+                            <p className="text-2xl font-bold">8</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                            <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Avg. Search Volume</p>
+                            <p className="text-2xl font-bold">1.2K</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Est. Opportunity</p>
+                            <p className="text-2xl font-bold">$45K</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Select defaultValue="all-priorities">
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue>All Priorities</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-priorities">All Priorities</SelectItem>
+                          <SelectItem value="high">High Priority</SelectItem>
+                          <SelectItem value="medium">Medium Priority</SelectItem>
+                          <SelectItem value="low">Low Priority</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select defaultValue="all-models">
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue>
+                            <div className="flex items-center gap-2">
+                              <Bot className="w-4 h-4" />
+                              All Models
+                            </div>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-models">All Models</SelectItem>
+                          {monitor.models.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select defaultValue="all-categories">
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue>All Categories</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all-categories">All Categories</SelectItem>
+                          <SelectItem value="pricing">Pricing</SelectItem>
+                          <SelectItem value="features">Features</SelectItem>
+                          <SelectItem value="comparison">Comparison</SelectItem>
+                          <SelectItem value="alternatives">Alternatives</SelectItem>
+                          <SelectItem value="reviews">Reviews</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      24 opportunities found
+                    </div>
+                  </div>
+
+                  {/* Answer Gaps Table */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Answer Gap Opportunities</CardTitle>
+                      <CardDescription>
+                        Questions where competitors are mentioned but your brand is missing. Click on any question to see detailed analysis and suggested responses.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="relative w-full overflow-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[400px]">Question</TableHead>
+                              <TableHead>Category</TableHead>
+                              <TableHead>Priority</TableHead>
+                              <TableHead>Search Volume</TableHead>
+                              <TableHead>Competitors Mentioned</TableHead>
+                              <TableHead>Models</TableHead>
+                              <TableHead>Opportunity Score</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {/* High Priority Gap */}
+                            <TableRow className="hover:bg-red-50/50 dark:hover:bg-red-900/10">
+                              <TableCell className="font-medium">
+                                <div>
+                                  <p className="font-medium">What is the best payroll software for small businesses?</p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Your brand missing from 3 out of 4 AI model responses
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Comparison</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                                  High
+                                </Badge>
+                              </TableCell>
+                              <TableCell>2.1K/mo</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary">QuickBooks</Badge>
+                                  <Badge variant="secondary">Gusto</Badge>
+                                  <Badge variant="secondary">+2</Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=16" alt="Gemini" className="w-4 h-4" />
+                                  <img src="https://www.google.com/s2/favicons?domain=openai.com&sz=16" alt="ChatGPT" className="w-4 h-4" />
+                                  <img src="https://www.google.com/s2/favicons?domain=cerebras.ai&sz=16" alt="GPT-OSS" className="w-4 h-4" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                    <span className="font-medium">92</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button variant="outline" size="sm">View Analysis</Button>
+                                  <Button size="sm">Generate Response</Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+
+                            {/* Medium Priority Gap */}
+                            <TableRow className="hover:bg-orange-50/50 dark:hover:bg-orange-900/10">
+                              <TableCell className="font-medium">
+                                <div>
+                                  <p className="font-medium">How much does payroll software cost per month?</p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Missing from 2 out of 4 AI model responses
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Pricing</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                  Medium
+                                </Badge>
+                              </TableCell>
+                              <TableCell>1.8K/mo</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary">ADP</Badge>
+                                  <Badge variant="secondary">Square</Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=16" alt="Gemini" className="w-4 h-4" />
+                                  <img src="https://www.google.com/s2/favicons?domain=cerebras.ai&sz=16" alt="GPT-OSS" className="w-4 h-4" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <span className="font-medium">76</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button variant="outline" size="sm">View Analysis</Button>
+                                  <Button size="sm">Generate Response</Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+
+                            {/* Low Priority Gap */}
+                            <TableRow className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
+                              <TableCell className="font-medium">
+                                <div>
+                                  <p className="font-medium">Payroll software with employee self-service features</p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Missing from 1 out of 4 AI model responses
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Features</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                  Low
+                                </Badge>
+                              </TableCell>
+                              <TableCell>850/mo</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary">Workday</Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <img src="https://www.google.com/s2/favicons?domain=cerebras.ai&sz=16" alt="GPT-OSS" className="w-4 h-4" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <span className="font-medium">54</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button variant="outline" size="sm">View Analysis</Button>
+                                  <Button size="sm">Generate Response</Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+
+                            {/* More gaps... */}
+                            <TableRow>
+                              <TableCell className="font-medium">
+                                <div>
+                                  <p className="font-medium">Best payroll software for remote teams</p>
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    Missing from 2 out of 4 AI model responses
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">Comparison</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                  Medium
+                                </Badge>
+                              </TableCell>
+                              <TableCell>1.2K/mo</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary">Deel</Badge>
+                                  <Badge variant="secondary">Remote</Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=16" alt="Gemini" className="w-4 h-4" />
+                                  <img src="https://www.google.com/s2/favicons?domain=meta.com&sz=16" alt="Llama" className="w-4 h-4" />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <span className="font-medium">68</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button variant="outline" size="sm">View Analysis</Button>
+                                  <Button size="sm">Generate Response</Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Pagination */}
+                      <div className="flex items-center justify-between gap-8 mt-4">
+                        <div className="text-muted-foreground flex grow justify-end text-sm whitespace-nowrap">
+                          <p className="text-muted-foreground text-sm whitespace-nowrap">
+                            <span className="text-foreground">1-4</span> of <span className="text-foreground">24</span>
+                          </p>
+                        </div>
+                        <div>
+                          <nav aria-label="pagination" className="mx-auto flex w-full justify-center">
+                            <ul className="flex flex-row items-center gap-1">
+                              <li>
+                                <Button variant="outline" size="sm" className="h-9 w-9 p-0" disabled>
+                                  <ChevronFirst className="h-4 w-4" />
+                                  <span className="sr-only">Go to first page</span>
+                                </Button>
+                              </li>
+                              <li>
+                                <Button variant="outline" size="sm" className="h-9 w-9 p-0" disabled>
+                                  <ChevronLeft className="h-4 w-4" />
+                                  <span className="sr-only">Go to previous page</span>
+                                </Button>
+                              </li>
+                              <li>
+                                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                                  <ChevronRight className="h-4 w-4" />
+                                  <span className="sr-only">Go to next page</span>
+                                </Button>
+                              </li>
+                              <li>
+                                <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+                                  <ChevronLast className="h-4 w-4" />
+                                  <span className="sr-only">Go to last page</span>
+                                </Button>
+                              </li>
+                            </ul>
+                          </nav>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Opportunity Insights */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-red-600" />
+                          Top Opportunity Categories
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                              <span className="font-medium">Pricing Questions</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">8 gaps</span>
+                              <Badge variant="secondary" className="text-xs">High Priority</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                              <span className="font-medium">Feature Comparisons</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">6 gaps</span>
+                              <Badge variant="secondary" className="text-xs">Medium Priority</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                              <span className="font-medium">Alternative Options</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">4 gaps</span>
+                              <Badge variant="secondary" className="text-xs">Low Priority</Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Target className="h-5 w-5 text-green-600" />
+                          Recommended Actions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                            <h4 className="font-medium text-green-800 dark:text-green-200 mb-1">
+                              Optimize High-Priority Gaps First
+                            </h4>
+                            <p className="text-sm text-green-700 dark:text-green-300">
+                              Focus on pricing and comparison questions with search volume over 1K/month for maximum impact.
+                            </p>
+                          </div>
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                            <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-1">
+                              Create Targeted Content
+                            </h4>
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              Develop blog posts and FAQ pages addressing these specific questions to improve AI model training data.
+                            </p>
+                          </div>
+                          <div className="p-3 bg-orange-50 dark:bg-orange-900/10 rounded-lg">
+                            <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-1">
+                              Monitor Competitor Strategies
+                            </h4>
+                            <p className="text-sm text-orange-700 dark:text-orange-300">
+                              Analyze how competitors are being mentioned in AI responses to understand their positioning strategy.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </div>

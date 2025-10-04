@@ -1,10 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { MonitorCard } from '@/components/monitors/monitor-card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Monitor, AlertCircle, RefreshCw, TrendingUp, Eye, MessageSquare, BarChart3 } from 'lucide-react';
+import { Plus, Monitor, AlertCircle, RefreshCw, TrendingUp, Eye, MessageSquare } from 'lucide-react';
 import { type Monitor as MonitorType } from '@/types/monitor';
 
 interface MonitorsPageProps {

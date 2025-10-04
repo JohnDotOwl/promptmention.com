@@ -590,68 +590,122 @@ class DashboardController extends Controller
     private function getTopBrands($user): array
     {
         try {
-            // Get real brands from database
-            $brands = [];
+            // Get user's monitors to ensure we only show relevant brands
+            $monitorIds = [];
+            if ($this->tableExists('monitors')) {
+                $monitorIds = DB::table('monitors')
+                    ->where('user_id', $user->id)
+                    ->pluck('id')
+                    ->toArray();
+            }
 
-            if ($this->tableExists('brands')) {
-                $dbBrands = DB::table('brands')
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+            if (empty($monitorIds)) {
+                return [];
+            }
 
-                // Define colors for brands
-                $colors = ['bg-lime-500', 'bg-gray-500', 'bg-blue-500', 'bg-amber-500', 'bg-cyan-500', 'bg-pink-500', 'bg-red-500', 'bg-green-500', 'bg-purple-500'];
+            // Calculate brand mentions from user's monitor responses
+            $brandMentions = [];
+            if ($this->tableExists('responses')) {
+                // Get brands mentioned in the last 30 days
+                $responsesWithBrands = DB::table('responses')
+                    ->whereIn('monitor_id', $monitorIds)
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->where('brand_mentioned', true)
+                    ->get(['response_text', 'brand_mention_count']);
 
-                foreach ($dbBrands as $index => $brand) {
-                    $domain = null;
-                    $favicon = null;
+                // Extract brand names from response text (simplified approach)
+                // In a real implementation, you'd want to use proper NLP or structured data
+                foreach ($responsesWithBrands as $response) {
+                    // Look for brand patterns in response text
+                    $brands = [];
 
-                    // Extract domain from website URL or use brand name
-                    if (!empty($brand->website)) {
-                        $website = $brand->website;
+                    // Common brand patterns for this system
+                    $brandPatterns = [
+                        'RecordOwl',
+                        'sgpbusiness\.com',
+                        'singaporedb\.com',
+                        'sccb\.com\.sg',
+                        'NVIDIA',
+                        'Graphcore',
+                        'Groq'
+                    ];
 
-                        // Handle specific brand domains
-                        $brandDomains = [
-                            'NVIDIA' => 'nvidia.com',
-                            'Graphcore' => 'graphcore.ai',
-                            'Groq' => 'groq.com'
-                        ];
-
-                        if (isset($brandDomains[$brand->name])) {
-                            $domain = $brandDomains[$brand->name];
-                            $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
-                        } else {
-                            // Add https:// if missing for proper parsing
-                            if (!preg_match('/^https?:\/\//', $website)) {
-                                $website = 'https://' . $website;
-                            }
-
-                            $url = parse_url($website);
-                            if (isset($url['host'])) {
-                                $domain = $url['host'];
-                                // Remove www. prefix if present
-                                $domain = preg_replace('/^www\./', '', $domain);
-                                $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
-                            }
+                    foreach ($brandPatterns as $pattern) {
+                        if (preg_match("/\b$pattern\b/i", $response->response_text)) {
+                            $brandName = str_replace(['.com', '.sg', '.ai'], '', $pattern);
+                            $brandName = str_replace('\\', '', $brandName);
+                            $brandMentions[$brandName] = ($brandMentions[$brandName] ?? 0) + ($response->brand_mention_count ?? 1);
                         }
                     }
-
-                    // Generate fake visibility score for now (decreasing order)
-                    $visibilityScore = max(20, 85 - ($index * 10));
-
-                    $brands[] = [
-                        'name' => $brand->name,
-                        'domain' => $domain ?: 'unknown.com',
-                        'favicon' => $favicon,
-                        'visibilityScore' => $visibilityScore,
-                        'mentions' => 0, // No data collection yet
-                        'color' => $colors[$index % count($colors)],
-                    ];
                 }
             }
 
-            // If no brands found, return empty array
-            if (empty($brands)) {
+            // If no mentions found, try to get brands from database with proper user filtering
+            if (empty($brandMentions) && $this->tableExists('brands')) {
+                // Get brands that are either owned by user or have no owner (system brands)
+                $dbBrands = DB::table('brands')
+                    ->where(function($query) use ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhereNull('user_id');
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                foreach ($dbBrands as $brand) {
+                    $brandMentions[$brand->name] = 0; // No mentions found in responses
+                }
+            }
+
+            if (empty($brandMentions)) {
                 return [];
+            }
+
+            // Sort by mention count and take top brands
+            arsort($brandMentions);
+            $topBrands = array_slice($brandMentions, 0, 9, true);
+
+            // Define colors for brands
+            $colors = ['bg-lime-500', 'bg-gray-500', 'bg-blue-500', 'bg-amber-500', 'bg-cyan-500', 'bg-pink-500', 'bg-red-500', 'bg-green-500', 'bg-purple-500'];
+
+            $brands = [];
+            $index = 0;
+            foreach ($topBrands as $brandName => $mentionCount) {
+                $domain = null;
+                $favicon = null;
+
+                // Handle specific brand domains
+                $brandDomains = [
+                    'RecordOwl' => 'recordowl.com',
+                    'NVIDIA' => 'nvidia.com',
+                    'Graphcore' => 'graphcore.ai',
+                    'Groq' => 'groq.com',
+                    'sgpbusiness' => 'sgpbusiness.com',
+                    'singaporedb' => 'singaporedb.com',
+                    'sccb' => 'sccb.com.sg'
+                ];
+
+                if (isset($brandDomains[$brandName])) {
+                    $domain = $brandDomains[$brandName];
+                    $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
+                } else {
+                    // Try to guess domain from brand name
+                    $domain = strtolower($brandName) . '.com';
+                    $favicon = "https://www.google.com/s2/favicons?domain={$domain}&sz=256";
+                }
+
+                // Calculate visibility score based on mentions
+                $visibilityScore = min(100, max(20, 30 + ($mentionCount * 10)));
+
+                $brands[] = [
+                    'name' => $brandName,
+                    'domain' => $domain,
+                    'favicon' => $favicon,
+                    'visibilityScore' => $visibilityScore,
+                    'mentions' => $mentionCount,
+                    'color' => $colors[$index % count($colors)],
+                ];
+
+                $index++;
             }
 
             return $brands;

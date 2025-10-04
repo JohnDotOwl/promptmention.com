@@ -284,6 +284,7 @@ class MonitorController extends Controller
                         ->where('prompt_id', $prompt->id)
                         ->select(
                             'id',
+                            'prompt_id',
                             'model_name',
                             'response_text',
                             'brand_mentioned',
@@ -421,7 +422,7 @@ class MonitorController extends Controller
                 $avgVisibility = 0.0;
                 if ($responses->count() > 0) {
                     $totalVisibility = $responses->reduce(function ($sum, $response) {
-                        return $sum + ($response['visibility_score'] ?? 0.0);
+                        return $sum + ($response['visibility'] ?? 0.0);
                     }, 0);
                     $avgVisibility = $totalVisibility / $responses->count();
                 }
@@ -432,42 +433,31 @@ class MonitorController extends Controller
                 $modelStatus = [];
 
                 foreach ($responses as $response) {
-                    $modelName = $response['model_name'];
-                    $modelDisplayName = $modelName;
+                    // Extract model info from the nested structure created in the map function
+                    $modelId = $response['model']['id'] ?? 'unknown';
+                    $modelName = $response['model']['name'] ?? 'Unknown Model';
+                    $modelDisplayName = $response['model']['displayName'] ?? $modelName;
+                    $answered = $response['answered'] ?? now()->toISOString();
 
-                    // Convert model names to display names
-                    switch ($modelName) {
-                        case 'gemini-2.5-flash-preview-09-2025':
-                        case 'gemini-2.5-flash':
-                            $modelDisplayName = 'Gemini';
-                            break;
-                        case 'gpt-oss-120b':
-                            $modelDisplayName = 'GPT-OSS';
-                            break;
-                        case 'llama-4-scout-17b-16e-instruct':
-                            $modelDisplayName = 'Llama-4';
-                            break;
-                    }
-
-                    if (!in_array($modelName, $models)) {
-                        $models[] = $modelName;
+                    if (!in_array($modelId, $models)) {
+                        $models[] = $modelId;
                         $modelDisplayNames[] = $modelDisplayName;
                     }
 
-                    // Build model status
-                    if (!isset($modelStatus[$modelName])) {
-                        $modelStatus[$modelName] = [
+                    // Build model status using modelId as the key
+                    if (!isset($modelStatus[$modelId])) {
+                        $modelStatus[$modelId] = [
                             'has_response' => true,
                             'response_count' => 0,
                             'last_response' => null
                         ];
                     }
-                    $modelStatus[$modelName]['response_count']++;
+                    $modelStatus[$modelId]['response_count']++;
 
                     // Update last response if this one is more recent
-                    $currentLast = $modelStatus[$modelName]['last_response'];
-                    if ($currentLast === null || $response['created_at'] > $currentLast) {
-                        $modelStatus[$modelName]['last_response'] = $response['created_at'];
+                    $currentLast = $modelStatus[$modelId]['last_response'];
+                    if ($currentLast === null || $answered > $currentLast) {
+                        $modelStatus[$modelId]['last_response'] = $answered;
                     }
                 }
 

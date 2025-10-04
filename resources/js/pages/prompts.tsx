@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types'
-import { Head, usePage } from '@inertiajs/react'
+import { Head } from '@inertiajs/react'
 import { PromptsTable } from '@/components/prompts/prompts-table'
 import RedisStatusIndicator from '@/components/prompts/redis-status-indicator'
 import { useState } from 'react'

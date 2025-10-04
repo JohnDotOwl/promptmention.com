@@ -16,7 +16,7 @@ const plans = [
             { name: 'Priority support', included: false },
         ],
         cta: 'Start free trial',
-        popular: false,
+        popular: true,
     },
     {
         name: 'Professional',
@@ -32,7 +32,7 @@ const plans = [
             { name: 'Priority support', included: true },
         ],
         cta: 'Start free trial',
-        popular: true,
+        popular: false,
     },
     {
         name: 'Enterprise',

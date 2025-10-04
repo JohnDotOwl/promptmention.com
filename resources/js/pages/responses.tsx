@@ -5,11 +5,10 @@ import { ResponsesTable } from '@/components/responses/responses-table'
 import { useState } from 'react'
 import { type ResponseSortConfig, type Response, type ModelUsageData, type ResponseTimelineData } from '@/types/response'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Filter, Bot, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast } from 'lucide-react'
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Rectangle } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 
 const breadcrumbs: BreadcrumbItem[] = [
   {

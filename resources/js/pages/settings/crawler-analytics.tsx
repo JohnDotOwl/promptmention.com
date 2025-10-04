@@ -1,7 +1,6 @@
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
-import HeadingSmall from '@/components/heading-small';
 import { CopyButton } from '@/components/ui/copy-button';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';

@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
-import { useSmartPolling } from '@/hooks/use-smart-polling'
+// import { useSmartPolling } from '@/hooks/use-smart-polling'
 
 interface QueueInfo {
   name: string
@@ -93,27 +93,27 @@ export default function RedisStatusIndicator({ monitors }: RedisStatusIndicatorP
     setIsLoading(false)
   }, [monitors, fetchQueueStatus, fetchMonitorStatus])
 
-  // Smart polling for queue status updates
-  const queuePolling = useSmartPolling({
-    interval: 5000,
-    priority: 'high', // High priority for queue monitoring
-    pauseWhenHidden: true,
-    maxFailures: 3,
-    shouldPoll: () => {
-      // Only poll if there are pending jobs or processing monitors
-      const hasPendingJobs = (queueStatus?.total_jobs ?? 0) > 0 || 
-        Object.values(monitorStatuses).some(status => 
-          status.status !== 'completed'
-        );
-      return hasPendingJobs;
-    },
-    onSuccess: () => {
-      setLastUpdated(new Date());
-    },
-    onError: (error) => {
-      console.error('Queue polling failed:', error);
-    }
-  });
+  // Smart polling for queue status updates (disabled - causing spam requests)
+  // const queuePolling = useSmartPolling({
+  //   interval: 5000,
+  //   priority: 'high', // High priority for queue monitoring
+  //   pauseWhenHidden: true,
+  //   maxFailures: 3,
+  //   shouldPoll: () => {
+  //     // Only poll if there are pending jobs or processing monitors
+  //     const hasPendingJobs = (queueStatus?.total_jobs ?? 0) > 0 ||
+  //       Object.values(monitorStatuses).some(status =>
+  //         status.status !== 'completed'
+  //       );
+  //     return hasPendingJobs;
+  //   },
+  //   onSuccess: () => {
+  //     setLastUpdated(new Date());
+  //   },
+  //   onError: (error) => {
+  //     console.error('Queue polling failed:', error);
+  //   }
+  // });
 
   useEffect(() => {
     // Initial fetch

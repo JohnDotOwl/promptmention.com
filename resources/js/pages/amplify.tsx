@@ -22,6 +22,17 @@ interface BrandContext {
     recentActivity: boolean;
 }
 
+interface Message {
+    id: number;
+    type: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+    richData?: {
+        type: 'insight' | 'metrics' | 'comparison' | 'recommendation';
+        data: Record<string, unknown>;
+    };
+}
+
 interface ConversationMessage {
     id: string;
     type: 'user' | 'assistant';
@@ -76,7 +87,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
     const [conversations, setConversations] = useState(defaultConversations);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState(true);
-    const [selectedModel, setSelectedModel] = useState<string>(userPreferredModel || 'cerebras-gpt-oss-120b');
+    const [selectedModel] = useState<string>(userPreferredModel || 'cerebras-gpt-oss-120b');
     const [isStreaming, setIsStreaming] = useState(false);
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -103,35 +114,8 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    
-    const handleSendMessage = useCallback(async (message: string, conversationId?: string | null) => {
-        if (!message.trim()) return;
-
-        // Add user message immediately for better UX
-        const userMessage: ConversationMessage = {
-            id: Date.now().toString(),
-            type: 'user',
-            content: message,
-            timestamp: new Date(),
-        };
-
-        setMessages(prev => [...prev, userMessage]);
-        setInputMessage('');
-        setIsTyping(true);
-        setShowSuggestions(false);
-
-        // Always use streaming for Cerebras model, even if availableModels is empty
-        const currentModel = availableModels[selectedModel];
-        const useStreaming = selectedModel === 'cerebras-gpt-oss-120b' || currentModel?.streaming;
-
-        if (useStreaming) {
-            await handleStreamingMessage(message, conversationId);
-        } else {
-            await handleRegularMessage(message, conversationId);
-        }
-    }, [availableModels, selectedModel, handleStreamingMessage, handleRegularMessage]);
-
-    const handleStreamingMessage = async (message: string, conversationId?: string | null) => {
+    // Define handler functions before using them in useCallback
+    const handleStreamingMessageInternal = async (message: string, conversationId?: string | null) => {
         // Create placeholder for streaming message
         const messageId = (Date.now() + 1).toString();
         setStreamingMessageId(messageId);
@@ -245,7 +229,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         }
     };
 
-    const handleRegularMessage = async (message: string, conversationId?: string | null) => {
+    const handleRegularMessageInternal = async (message: string, conversationId?: string | null) => {
         try {
             const response = await fetch('/amplify/chat', {
                 method: 'POST',
@@ -300,6 +284,33 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
             setIsTyping(false);
         }
     };
+
+    const handleSendMessage = useCallback(async (message: string, conversationId?: string | null) => {
+        if (!message.trim()) return;
+
+        // Add user message immediately for better UX
+        const userMessage: ConversationMessage = {
+            id: Date.now().toString(),
+            type: 'user',
+            content: message,
+            timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputMessage('');
+        setIsTyping(true);
+        setShowSuggestions(false);
+
+        // Always use streaming for Cerebras model, even if availableModels is empty
+        const currentModel = availableModels[selectedModel];
+        const useStreaming = selectedModel === 'cerebras-gpt-oss-120b' || currentModel?.streaming;
+
+        if (useStreaming) {
+            await handleStreamingMessageInternal(message, conversationId);
+        } else {
+            await handleRegularMessageInternal(message, conversationId);
+        }
+    }, [availableModels, selectedModel, activeConversationId, handleStreamingMessageInternal, handleRegularMessageInternal]);
 
     
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -471,7 +482,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                             {/* Model Info */}
                             <div className="text-right">
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-sm font-medium text-gray-900">GPT-OSS-120B</span>
+                                    <span className="text-sm font-medium text-gray-900">LLama 4 Scout</span>
                                     <span className="px-2 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-full">
                                         Powered by Cerebras AI
                                     </span>

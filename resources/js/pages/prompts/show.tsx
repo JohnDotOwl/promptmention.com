@@ -7,28 +7,20 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { 
-  ArrowLeftIcon, 
-  CalendarIcon, 
-  GlobeIcon, 
-  HashIcon, 
-  PercentIcon, 
-  MessageSquareIcon, 
-  TargetIcon, 
-  BotIcon, 
-  ThumbsUpIcon, 
-  ThumbsDownIcon, 
-  MinusIcon, 
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  GlobeIcon,
+  BotIcon,
+  ThumbsUpIcon,
+  ThumbsDownIcon,
+  MinusIcon,
   ShuffleIcon,
-  ExternalLinkIcon,
-  CopyIcon,
   DollarSignIcon,
   ZapIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { type Prompt, type Response } from '@/types/prompt';
+import { type Prompt } from '@/types/prompt';
 
 interface PageProps {
   prompt: Prompt;

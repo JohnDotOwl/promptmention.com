@@ -226,6 +226,7 @@ interface SuggestedActionsProps {
     onCompetitorAnalysis: () => void;
     onOptimizationTips: () => void;
     onTrendSearch?: () => void;
+    onEnableSearch?: () => void;
     hasData: boolean;
     suggestedPrompts?: {
         performance_analysis?: PromptData & { data_insight?: DataInsight };
@@ -242,6 +243,7 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
     onCompetitorAnalysis,
     onOptimizationTips,
     onTrendSearch,
+    onEnableSearch,
     hasData,
     suggestedPrompts
 }) => {
@@ -285,6 +287,8 @@ export const SuggestedActions: React.FC<SuggestedActionsProps> = ({
 
     const handleTrendSearch = () => {
         const prompt = suggestedPrompts?.trend_search?.prompt || 'What are the latest industry trends and news?';
+        // Auto-enable search for trend search to ensure DuckDuckGo is triggered
+        onEnableSearch?.();
         onTrendSearch?.();
         setTimeout(() => {
             const event = new CustomEvent('executePrompt', { detail: prompt });

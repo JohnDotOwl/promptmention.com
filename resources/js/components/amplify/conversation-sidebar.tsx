@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, BarChart3, TrendingUp, Users, FileText, Plus, Search } from 'lucide-react';
+import { MessageSquare, BarChart3, TrendingUp, Users, FileText, Plus, Search, Trash2 } from 'lucide-react';
 
 interface Conversation {
     id: string;
@@ -14,6 +14,7 @@ interface ConversationSidebarProps {
     conversations: Conversation[];
     onNewConversation: () => void;
     onSelectConversation: (id: string) => void;
+    onDeleteConversation: (id: string) => void;
     activeConversationId?: string;
     brandName?: string | null;
     totalMentions?: number;
@@ -48,6 +49,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     conversations,
     onNewConversation,
     onSelectConversation,
+    onDeleteConversation,
     activeConversationId,
     brandName,
     totalMentions = 0,
@@ -55,12 +57,22 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
 }) => {
     const [searchQuery, setSearchQuery] = React.useState('');
 
+    const handleDeleteConversation = (e: React.MouseEvent, conversationId: string) => {
+        e.stopPropagation(); // Prevent conversation selection
+        onDeleteConversation(conversationId);
+    };
+
     const filteredConversations = conversations.filter(conv =>
         conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const formatTimestamp = (date: Date) => {
+        // Handle invalid or undefined dates
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+            return 'Unknown date';
+        }
+
         const now = new Date();
         const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
@@ -166,9 +178,18 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                                                 <h4 className="text-sm font-medium text-gray-900 truncate" title={conversation.title}>
                                                     {truncateText(conversation.title, 25)}
                                                 </h4>
-                                                {conversation.unread && (
-                                                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {conversation.unread && (
+                                                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => handleDeleteConversation(e, conversation.id)}
+                                                        className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 rounded"
+                                                        title="Delete conversation"
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                             </div>
                                             <p className="text-xs text-gray-600 truncate mb-1" title={conversation.lastMessage}>
                                                 {truncateText(conversation.lastMessage, 40)}

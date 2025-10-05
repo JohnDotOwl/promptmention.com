@@ -153,6 +153,22 @@ class CerebrasAIService
             CURLOPT_TIMEOUT => config('cerebras.timeout', 120),
         ]);
 
+        // Send search metadata if available
+        if (isset($context['searchResults']) && $context['searchResults']['success'] === true) {
+            $this->sendStreamChunk([
+                'type' => 'search_metadata',
+                'search_metadata' => [
+                    'performed' => true,
+                    'query' => $context['searchResults']['query'],
+                    'totalResults' => $context['searchResults']['total_results'],
+                    'sources' => $context['searchResults']['sources'],
+                    'searchTime' => $context['searchResults']['timestamp'],
+                    'enhancedQuery' => $context['searchResults']['enhanced_query'] ?? $context['searchResults']['query'],
+                    'mcpInfo' => $context['searchResults']['mcp_info'] ?? []
+                ]
+            ]);
+        }
+
         $result = curl_exec($ch);
 
         if (curl_errno($ch)) {

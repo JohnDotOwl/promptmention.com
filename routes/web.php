@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('amplify/conversations', [AmplifyController::class, 'getConversations'])->name('amplify.conversations');
     Route::post('amplify/conversations', [AmplifyController::class, 'createConversation'])->name('amplify.conversations.create');
     Route::get('amplify/conversations/{id}/messages', [AmplifyController::class, 'getConversationMessages'])->name('amplify.conversations.messages');
+    Route::delete('amplify/conversations/{id}', [AmplifyController::class, 'deleteConversation'])->name('amplify.conversations.delete');
     Route::get('profile', [ProfileController::class, 'index'])->name('profile');
     Route::patch('profile', [ProfileController::class, 'update'])->name('brand-profile.update');
     Route::get('competitors', [CompetitorsController::class, 'index'])->name('competitors');

@@ -7,6 +7,16 @@ import { UserMessage } from '@/components/amplify/user-message';
 import { AssistantMessage } from '@/components/amplify/assistant-message';
 import { SuggestedActions } from '@/components/amplify/action-card';
 import { ConversationSidebar, defaultConversations } from '@/components/amplify/conversation-sidebar';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Define TypeScript interfaces
 interface BrandContext {
@@ -102,6 +112,8 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [searchEnabled, setSearchEnabled] = useState(userSearchEnabled || false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +130,14 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
             });
         } catch (error) {
             console.error('Failed to save search preference:', error);
+        }
+    };
+
+    // Enable search for trend search
+    const enableSearch = () => {
+        if (!searchEnabled) {
+            setSearchEnabled(true);
+            saveSearchPreference(true);
         }
     };
 
@@ -206,6 +226,15 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                     prev.map(msg =>
                                         msg.id === messageId
                                             ? { ...msg, content: accumulatedContent }
+                                            : msg
+                                    )
+                                );
+                            } else if (data.type === 'search_metadata') {
+                                // Update the streaming message with search metadata
+                                setMessages(prev =>
+                                    prev.map(msg =>
+                                        msg.id === messageId
+                                            ? { ...msg, searchMetadata: data.search_metadata }
                                             : msg
                                     )
                                 );
@@ -499,6 +528,59 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
         };
     }, [handleSendMessage]);
 
+    const handleDeleteConversation = (conversationId: string) => {
+        setConversationToDelete(conversationId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteConversation = async () => {
+        if (!conversationToDelete) return;
+
+        try {
+            const response = await fetch(`/amplify/conversations/${conversationToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete conversation');
+            }
+
+            // Remove conversation from local state
+            setConversations(prev => prev.filter(conv => conv.id !== conversationToDelete));
+
+            // If the deleted conversation was active, reset to new conversation state
+            if (activeConversationId === conversationToDelete) {
+                setActiveConversationId(null);
+                setMessages([]);
+                setShowSuggestions(true);
+                if (initialMessage) {
+                    setMessages([{
+                        id: Date.now().toString(),
+                        type: 'assistant',
+                        content: initialMessage,
+                        timestamp: new Date(),
+                    }]);
+                }
+            }
+
+        } catch (error) {
+            console.error('Failed to delete conversation:', error);
+            // You could add a toast notification here
+        } finally {
+            setDeleteConfirmOpen(false);
+            setConversationToDelete(null);
+        }
+    };
+
+    const cancelDeleteConversation = () => {
+        setDeleteConfirmOpen(false);
+        setConversationToDelete(null);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Amplify" />
@@ -609,6 +691,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                         conversations={conversations}
                         onNewConversation={handleNewConversation}
                         onSelectConversation={handleSelectConversation}
+                        onDeleteConversation={handleDeleteConversation}
                         activeConversationId={activeConversationId}
                         brandName={brandContext.brandName}
                         totalMentions={brandContext.totalMentions}
@@ -630,6 +713,7 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                                         onCompetitorAnalysis={() => {}}
                                         onOptimizationTips={() => {}}
                                         onTrendSearch={() => {}}
+                                        onEnableSearch={enableSearch}
                                         hasData={brandContext.hasData}
                                         suggestedPrompts={suggestedPrompts}
                                     />
@@ -723,6 +807,26 @@ export default function Amplify({ auth, brandContext, suggestedPrompts, initialM
                 </div>
             </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this conversation? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelDeleteConversation}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteConversation} className="bg-red-600 hover:bg-red-700">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

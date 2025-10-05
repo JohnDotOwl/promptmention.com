@@ -942,6 +942,46 @@ class AmplifyController extends Controller
     }
 
     /**
+     * Delete conversation
+     */
+    public function deleteConversation(Request $request, $id)
+    {
+        $user = Auth::user();
+
+        try {
+            $conversation = AmplifyConversation::where('user_id', $user->id)
+                ->where('id', $id)
+                ->firstOrFail();
+
+            // Soft delete by archiving the conversation
+            $conversation->archive();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Conversation deleted successfully'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Conversation not found'
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to delete conversation', [
+                'conversation_id' => $id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete conversation'
+            ], 500);
+        }
+    }
+
+    /**
      * Get or create conversation
      */
     private function getOrCreateConversation($user, $conversationId, $firstMessage)
